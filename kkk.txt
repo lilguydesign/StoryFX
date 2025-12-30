@@ -1,0 +1,24 @@
+taskkill /F /IM StoryFX.exe 2>$null
+Remove-Item -Recurse -Force .\dist\StoryFX -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force .\build\StoryFX -ErrorAction SilentlyContinue
+
+pyinstaller --noconfirm --clean `
+  --name StoryFX `
+  --windowed `
+  --onedir `
+  --hidden-import PySimpleGUI `
+  --hidden-import psutil `
+  --collect-all PySimpleGUI `
+  --collect-all psutil `
+  --collect-submodules ui `
+  --collect-submodules engine `
+  --add-data "ui;ui" `
+  --add-data "engine;engine" `
+  --add-data "config;config" `
+  --add-data "assets;assets" `
+  --add-data "runner.py;." `
+  --add-data "scheduler.py;." `
+  main.py
+
+add duplication on matrix selection
+auto refreh profile and matrix

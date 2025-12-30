@@ -1,0 +1,52 @@
+{
+  "albums": [
+    {
+      "name": "Before After",
+      "kind": "multi",
+      "album_size": 11,
+      "count_per_post": 3
+    },
+    {
+      "name": "La Promotion Finit",
+      "kind": "intro",
+      "album_size": 1,
+      "count_per_post": 1
+    },
+    {
+      "name": "Motivations Stories",
+      "kind": "multi",
+      "album_size": 220,
+      "count_per_post": 9
+    },
+    {
+      "name": "Advices Stories",
+      "kind": "multi",
+      "album_size": 115,
+      "count_per_post": 5
+    },
+    {
+      "name": "Dubaï Vidéos Mar 2024",
+      "kind": "multi",
+      "album_size": 223,
+      "count_per_post": 9
+    },
+    {
+      "name": "Never Give Up",
+      "kind": "intro",
+      "album_size": 1,
+      "count_per_post": 1
+    },
+    {
+      "name": "Témoignages JK",
+      "kind": "multi",
+      "album_size": 499,
+      "count_per_post": 12
+    },
+    {
+      "name": "Dubaï Render Mar 2024",
+      "kind": "multi",
+      "album_size": 387,
+      "count_per_post": 11
+    }
+  ]
+}

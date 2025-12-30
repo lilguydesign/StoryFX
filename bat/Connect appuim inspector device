@@ -1,0 +1,21 @@
+C:\Tools\ADB_StoryFX\adb.exe kill-server
+C:\Tools\ADB_StoryFX\adb.exe start-server
+C:\Tools\ADB_StoryFX\adb.exe connect 192.168.1.88:5557
+C:\Tools\ADB_StoryFX\adb.exe devices
+
+
+fermer app first
+
+C:\Tools\ADB_StoryFX\adb.exe kill-server
+C:\Tools\ADB_StoryFX\adb.exe start-server
+C:\Tools\ADB_StoryFX\adb.exe connect 192.168.1.88:5557
+C:\Tools\ADB_StoryFX\adb.exe devices
+
+
+C:\Tools\ADB_StoryFX\adb.exe kill-server
+C:\Tools\ADB_StoryFX\adb.exe start-server
+C:\Tools\ADB_StoryFX\adb.exe connect 192.168.1.123:5555
+C:\Tools\ADB_StoryFX\adb.exe devices
+
+
+try C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\storyfx\bat\adb_usb.bat

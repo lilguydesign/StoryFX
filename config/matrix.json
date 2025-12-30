@@ -1,0 +1,669 @@
+{
+  "rows": [
+    {
+      "device": "S23_Master",
+      "platform": "WhatsApp",
+      "system": "Hurry+Images",
+      "engine": "intro+multi",
+      "album": "La Promotion Finit",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S23_Master",
+      "platform": "WhatsApp",
+      "system": "Motivations_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Motivations Stories",
+      "count": 9
+    },
+    {
+      "device": "S23_Master",
+      "platform": "WhatsApp",
+      "system": "Never_Give_Up+Images",
+      "engine": "intro+multi",
+      "album": "Never Give Up",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S23_Master",
+      "platform": "WhatsApp",
+      "system": "Images_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Render Mar 2024",
+      "count": 11
+    },
+    {
+      "device": "S23_Master",
+      "platform": "WhatsApp",
+      "system": "Video_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Vidéos Mar 2024",
+      "count": 9
+    },
+    {
+      "device": "S23_Master",
+      "platform": "WhatsApp",
+      "system": "Advices_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Advices Stories",
+      "count": 5
+    },
+        {
+      "device": "S20",
+      "platform": "WhatsApp",
+      "system": "Hurry+Images",
+      "engine": "intro+multi",
+      "album": "La Promotion Finit",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S20",
+      "platform": "WhatsApp",
+      "system": "Motivations_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Motivations Stories",
+      "count": 9
+    },
+    {
+      "device": "S20",
+      "platform": "WhatsApp",
+      "system": "Never_Give_Up+Images",
+      "engine": "intro+multi",
+      "album": "Never Give Up",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S20",
+      "platform": "WhatsApp",
+      "system": "Images_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Render Mar 2024",
+      "count": 11
+    },
+    {
+      "device": "S20",
+      "platform": "WhatsApp",
+      "system": "Video_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Vidéos Mar 2024",
+      "count": 9
+    },
+    {
+      "device": "S20",
+      "platform": "WhatsApp",
+      "system": "Advices_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Advices Stories",
+      "count": 5
+    },
+    {
+      "device": "S23_WA",
+      "platform": "WhatsApp",
+      "system": "Hurry+Images",
+      "engine": "intro+multi",
+      "album": "La Promotion Finit",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S23_WA",
+      "platform": "WhatsApp",
+      "system": "Motivations_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Motivations Stories",
+      "count": 9
+    },
+    {
+      "device": "S23_WA",
+      "platform": "WhatsApp",
+      "system": "Never_Give_Up+Images",
+      "engine": "intro+multi",
+      "album": "Never Give Up",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S23_WA",
+      "platform": "WhatsApp",
+      "system": "Images_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Render Mar 2024",
+      "count": 11
+    },
+    {
+      "device": "S23_WA",
+      "platform": "WhatsApp",
+      "system": "Video_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Vidéos Mar 2024",
+      "count": 9
+    },
+    {
+      "device": "S23_WA",
+      "platform": "WhatsApp",
+      "system": "Advices_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Advices Stories",
+      "count": 5
+    },
+    {
+      "device": "A16",
+      "platform": "WhatsApp",
+      "system": "Hurry+Images",
+      "engine": "intro+multi",
+      "album": "La Promotion Finit",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "A16",
+      "platform": "WhatsApp",
+      "system": "Motivations_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Motivations Stories",
+      "count": 9
+    },
+    {
+      "device": "A16",
+      "platform": "WhatsApp",
+      "system": "Never_Give_Up+Images",
+      "engine": "intro+multi",
+      "album": "Never Give Up",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "A16",
+      "platform": "WhatsApp",
+      "system": "Images_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Render Mar 2024",
+      "count": 11
+    },
+    {
+      "device": "A16",
+      "platform": "WhatsApp",
+      "system": "Video_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Vidéos Mar 2024",
+      "count": 9
+    },
+    {
+      "device": "A16",
+      "platform": "WhatsApp",
+      "system": "Advices_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Advices Stories",
+      "count": 5
+    },
+    {
+      "device": "G2_A16",
+      "platform": "WhatsApp",
+      "system": "Hurry+Images",
+      "engine": "intro+multi",
+      "album": "La Promotion Finit",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "G2_A16",
+      "platform": "WhatsApp",
+      "system": "Motivations_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Motivations Stories",
+      "count": 9
+    },
+    {
+      "device": "G2_A16",
+      "platform": "WhatsApp",
+      "system": "Never_Give_Up+Images",
+      "engine": "intro+multi",
+      "album": "Never Give Up",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "G2_A16",
+      "system": "Images_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Render Mar 2024",
+      "platform": "WhatsApp",
+      "page": "",
+      "page_name": "",
+      "album_size": 0,
+      "count": 11
+    },
+    {
+      "device": "G2_A16",
+      "platform": "WhatsApp",
+      "system": "Video_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Vidéos Mar 2024",
+      "count": 9
+    },
+    {
+      "device": "G2_A16",
+      "platform": "WhatsApp",
+      "system": "Advices_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Advices Stories",
+      "count": 5
+    },
+    {
+      "device": "A17",
+      "platform": "WhatsApp",
+      "system": "Hurry+Images",
+      "engine": "intro+multi",
+      "album": "La Promotion Finit",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "A17",
+      "platform": "WhatsApp",
+      "system": "Motivations_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Motivations Stories",
+      "count": 9
+    },
+    {
+      "device": "A17",
+      "platform": "WhatsApp",
+      "system": "Never_Give_Up+Images",
+      "engine": "intro+multi",
+      "album": "Never Give Up",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "A17",
+      "platform": "WhatsApp",
+      "system": "Images_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Render Mar 2024",
+      "count": 11
+    },
+    {
+      "device": "A17",
+      "platform": "WhatsApp",
+      "system": "Video_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Vidéos Mar 2024",
+      "count": 9
+    },
+    {
+      "device": "A17",
+      "platform": "WhatsApp",
+      "system": "Advices_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Advices Stories",
+      "count": 5
+    },
+    {
+      "device": "S23_IG",
+      "platform": "Instagram",
+      "system": "Hurry+Images",
+      "engine": "intro+multi",
+      "album": "La Promotion Finit",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S23_IG",
+      "platform": "Instagram",
+      "system": "Motivations_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Motivations Stories",
+      "count": 9
+    },
+    {
+      "device": "S23_IG",
+      "platform": "Instagram",
+      "system": "Never_Give_Up+Images",
+      "engine": "intro+multi",
+      "album": "Never Give Up",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S23_IG",
+      "platform": "Instagram",
+      "system": "Images_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Render Mar 2024",
+      "count": 11
+    },
+    {
+      "device": "S23_IG",
+      "platform": "Instagram",
+      "system": "Video_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Vidéos Mar 2024",
+      "count": 9
+    },
+    {
+      "device": "S23_IG",
+      "platform": "Instagram",
+      "system": "Advices_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Advices Stories",
+      "count": 5
+    },
+    {
+      "device": "S23_FB_CM",
+      "system": "Hurry+Images",
+      "engine": "intro+multi",
+      "album": "La Promotion Finit",
+      "album2": "Témoignages JK",
+      "platform": "Facebook",
+      "page": "Cameroun",
+      "page_name": "Jerry Kamgang",
+      "album_size": 0,
+      "count": 12
+    },
+    {
+      "device": "S23_FB_CM",
+      "platform": "Facebook",
+      "system": "Motivations_Stories",
+      "engine": "multi",
+      "page": "Cameroun",
+      "page_name": "Jerry Kamgang",
+      "album": "",
+      "album2": "Motivations Stories",
+      "count": 9
+    },
+    {
+      "device": "S23_FB_CM",
+      "platform": "Facebook",
+      "system": "Never_Give_Up+Images",
+      "engine": "intro+multi",
+      "page": "Cameroun",
+      "page_name": "Jerry Kamgang",
+      "album": "Never Give Up",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S23_FB_CM",
+      "platform": "Facebook",
+      "system": "Images_Dubai",
+      "engine": "multi",
+      "page": "Cameroun",
+      "page_name": "Jerry Kamgang",
+      "album": "",
+      "album2": "Dubaï Render Mar 2024",
+      "count": 11
+    },
+    {
+      "device": "S23_FB_CM",
+      "platform": "Facebook",
+      "system": "Video_Dubai",
+      "engine": "multi",
+      "page": "Cameroun",
+      "page_name": "Jerry Kamgang",
+      "album": "",
+      "album2": "Dubaï Vidéos Mar 2024",
+      "count": 9
+    },
+    {
+      "device": "S23_FB_CM",
+      "platform": "Facebook",
+      "system": "Advices_Stories",
+      "engine": "multi",
+      "page": "Cameroun",
+      "page_name": "Jerry Kamgang",
+      "album": "",
+      "album2": "Advices Stories",
+      "count": 5
+    },
+    {
+      "device": "S23_FB_CI",
+      "system": "Hurry+Images",
+      "engine": "intro+multi",
+      "album": "La Promotion Finit",
+      "album2": "Témoignages JK",
+      "platform": "Facebook",
+      "page": "Côte d'Ivoire",
+      "page_name": "Jerry Kamgang Côte d’Ivoire",
+      "album_size": 0,
+      "count": 12
+    },
+    {
+      "device": "S23_FB_CI",
+      "platform": "Facebook",
+      "system": "Motivations_Stories",
+      "engine": "multi",
+      "page": "Côte d'Ivoire",
+      "page_name": "Jerry Kamgang Côte d’Ivoire",
+      "album": "",
+      "album2": "Motivations Stories",
+      "count": 9
+    },
+    {
+      "device": "S23_FB_CI",
+      "platform": "Facebook",
+      "system": "Never_Give_Up+Images",
+      "engine": "intro+multi",
+      "page": "Côte d'Ivoire",
+      "page_name": "Jerry Kamgang Côte d’Ivoire",
+      "album": "Never Give Up",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S23_FB_CI",
+      "platform": "Facebook",
+      "system": "Images_Dubai",
+      "engine": "multi",
+      "page": "Côte d'Ivoire",
+      "page_name": "Jerry Kamgang Côte d’Ivoire",
+      "album": "",
+      "album2": "Dubaï Render Mar 2024",
+      "count": 11
+    },
+    {
+      "device": "S23_FB_CI",
+      "platform": "Facebook",
+      "system": "Video_Dubai",
+      "engine": "multi",
+      "page": "Côte d'Ivoire",
+      "page_name": "Jerry Kamgang Côte d’Ivoire",
+      "album": "",
+      "album2": "Dubaï Vidéos Mar 2024",
+      "count": 9
+    },
+    {
+      "device": "S23_FB_CI",
+      "platform": "Facebook",
+      "system": "Advices_Stories",
+      "engine": "multi",
+      "page": "Côte d'Ivoire",
+      "page_name": "Jerry Kamgang Côte d’Ivoire",
+      "album": "",
+      "album2": "Advices Stories",
+      "count": 5
+    },
+    {
+      "device": "S23_TikTok",
+      "platform": "TikTok",
+      "system": "Hurry+Images",
+      "engine": "intro+multi",
+      "album": "La Promotion Finit",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S23_TikTok",
+      "platform": "TikTok",
+      "system": "Motivations_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Motivations Stories",
+      "count": 9
+    },
+    {
+      "device": "S23_TikTok",
+      "platform": "TikTok",
+      "system": "Never_Give_Up+Images",
+      "engine": "intro+multi",
+      "album": "Never Give Up",
+      "album2": "Témoignages JK",
+      "count": 12
+    },
+    {
+      "device": "S23_TikTok",
+      "platform": "TikTok",
+      "system": "Images_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Render Mar 2024",
+      "count": 11
+    },
+    {
+      "device": "S23_TikTok",
+      "platform": "TikTok",
+      "system": "Video_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Vidéos Mar 2024",
+      "count": 9
+    },
+    {
+      "device": "S23_TikTok",
+      "platform": "TikTok",
+      "system": "Advices_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Advices Stories",
+      "count": 5
+    },
+    {
+      "device": "A16",
+      "system": "Before_After",
+      "engine": "multi",
+      "platform": "WhatsApp",
+      "page": "",
+      "page_name": "",
+      "album_size": 11,
+      "count": 3,
+      "album": "",
+      "album2": "Before After"
+    },
+    {
+      "device": "G2_A16",
+      "system": "Before_After",
+      "engine": "multi",
+      "platform": "WhatsApp",
+      "page": "",
+      "page_name": "",
+      "album_size": 11,
+      "count": 3,
+      "album": "",
+      "album2": "Before After"
+    },
+    {
+      "device": "S23_FB_CI",
+      "system": "Before_After",
+      "engine": "multi",
+      "album": "",
+      "album2": "Before After",
+      "platform": "Facebook",
+      "page": "Côte d'Ivoire",
+      "page_name": "Jerry Kamgang Côte d'Ivoire",
+      "album_size": 11,
+      "count": 3
+    },
+    {
+      "device": "S23_FB_CM",
+      "system": "Before_After",
+      "engine": "multi",
+      "album": "",
+      "album2": "Before After",
+      "platform": "Facebook",
+      "page": "Cameroun",
+      "page_name": "Jerry Kamgang",
+      "album_size": 11,
+      "count": 3
+    },
+    {
+      "device": "S23_IG",
+      "system": "Before_After",
+      "engine": "multi",
+      "album": "",
+      "album2": "Before After",
+      "platform": "Instagram",
+      "page": "",
+      "page_name": "",
+      "album_size": 11,
+      "count": 3
+    },
+    {
+      "device": "S23_Master",
+      "system": "Before_After",
+      "engine": "multi",
+      "platform": "WhatsApp",
+      "page": "",
+      "page_name": "",
+      "album_size": 11,
+      "count": 3,
+      "album": "",
+      "album2": "Before After"
+    },
+    {
+      "device": "S23_TikTok",
+      "system": "Before_After",
+      "engine": "multi",
+      "album": "",
+      "album2": "Before After",
+      "platform": "TikTok",
+      "page": "",
+      "page_name": "",
+      "album_size": 11,
+      "count": 3
+    },
+    {
+      "device": "A17",
+      "system": "Before_After",
+      "engine": "multi",
+      "platform": "WhatsApp",
+      "page": "",
+      "page_name": "",
+      "album_size": 11,
+      "count": 3,
+      "album": "",
+      "album2": "Before After"
+    }
+  ]
+}

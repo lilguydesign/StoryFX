@@ -1,0 +1,52 @@
+{
+  "WhatsApp": {
+    "share_entry": {
+      "default": "//android.widget.TextView[@resource-id=\"com.android.intentresolver:id/text1\" and @text=\"WhatsApp Business\"]"
+    },
+    "my_status": {
+      "default": "//*[@resource-id='com.whatsapp.w4b:id/contactpicker_row_name' and contains(@text,'My status')]"
+    },
+    "send_button": {
+      "default": "//android.widget.ImageButton[@content-desc='Send']"
+    }
+  },
+  "Facebook": {
+    "share_entry": {
+      "default": "XPATH_FACEBOOK_SHARE_ICON",
+      "S23_Master": "XPATH_FACEBOOK_SHARE_ICON",
+      "S23_IG": "XPATH_FACEBOOK_SHARE_ICON",
+      "S23_FB_CM": "XPATH_FACEBOOK_SHARE_ICON",
+      "S23_FB_CI": "XPATH_FACEBOOK_SHARE_ICON",
+      "S23_TikTok": "XPATH_FACEBOOK_SHARE_ICON",
+      "A16": "XPATH_FACEBOOK_SHARE_ICON",
+      "G2_A16": "XPATH_FACEBOOK_SHARE_ICON",
+      "A17": "XPATH_FACEBOOK_SHARE_ICON"
+    }
+  },
+  "Instagram": {
+    "share_entry": {
+      "default": "XPATH_INSTAGRAM_SHARE_ICON",
+      "S23_Master": "XPATH_INSTAGRAM_SHARE_ICON",
+      "S23_IG": "XPATH_INSTAGRAM_SHARE_ICON",
+      "S23_FB_CM": "XPATH_INSTAGRAM_SHARE_ICON",
+      "S23_FB_CI": "XPATH_INSTAGRAM_SHARE_ICON",
+      "S23_TikTok": "XPATH_INSTAGRAM_SHARE_ICON",
+      "A16": "XPATH_INSTAGRAM_SHARE_ICON",
+      "G2_A16": "XPATH_INSTAGRAM_SHARE_ICON",
+      "A17": "XPATH_INSTAGRAM_SHARE_ICON"
+    }
+  },
+  "TikTok": {
+    "share_entry": {
+      "default": "XPATH_TIKTOK_SHARE_ICON",
+      "S23_Master": "XPATH_TIKTOK_SHARE_ICON",
+      "S23_IG": "XPATH_TIKTOK_SHARE_ICON",
+      "S23_FB_CM": "XPATH_TIKTOK_SHARE_ICON",
+      "S23_FB_CI": "XPATH_TIKTOK_SHARE_ICON",
+      "S23_TikTok": "XPATH_TIKTOK_SHARE_ICON",
+      "A16": "XPATH_TIKTOK_SHARE_ICON",
+      "G2_A16": "XPATH_TIKTOK_SHARE_ICON",
+      "A17": "XPATH_TIKTOK_SHARE_ICON"
+    }
+  }
+}
