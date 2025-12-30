@@ -438,7 +438,10 @@ def scheduler_loop() -> None:
 
     # 🔥 Nouvelle version PRO : démarrage Appium (ADB StoryFX + attente)
     print("[StoryFX] Vérification Appium…")
-    ensure_appium_running()
+    try:
+        ensure_appium_running()
+    except Exception as e:
+        print(f"[{PROJECT_NAME}] [WARN] Appium pas prêt au boot: {e}")
     print(f"[{PROJECT_NAME}] Scheduler prêt ✅")
 
     last_fired = set()
@@ -543,8 +546,8 @@ def scheduler_loop() -> None:
                     "--count", str(job["count"]),
                 ]
 
-            # --- EXÉCUTER LE JOB ---
-            ensure_appium_running()  # ← ajoute ceci ici
+            # # --- EXÉCUTER LE JOB ---
+            # ensure_appium_running()  # ← ajoute ceci ici
 
             print(
                 f"[{PROJECT_NAME}] {display_time} → Lancement {job['device']} | Sys={job['system']} | Plat={job['platform']}")

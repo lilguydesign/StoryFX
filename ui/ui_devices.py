@@ -36,6 +36,7 @@ ADB_PORT_STORYFX = "5038"                      # IMPORTANT: ne touche pas 5037
 from typing import Dict, Any, List, Tuple
 import re
 from subprocess import Popen, PIPE
+import subprocess, time, socket, os, shutil, requests
 
 from ui.ui_paths_helpers import (
     adb_run,
@@ -155,144 +156,316 @@ def _is_emulator_serial(serial: str) -> bool:
     s = (serial or "").lower()
     return ("emulator" in s) or ("5554" in s)
 
-def launch_appium_from_bat():
+def launch_appium_from_bat(win=None) -> bool:
+    import subprocess, time, socket
+
+    def _log(msg: str):
+        if win:
+            win.write_event_value("-RUNNER-LOG-", msg)
+        else:
+            print(msg, flush=True)
+
+    bat = r"C:\Tools\Lancer_Appium_StoryFX.bat"  # adapte si besoin
+
     try:
-        bat_path = Path(__file__).resolve().parents[1] / "Lancer_Appium_StoryFX.bat"
-        subprocess.Popen(str(bat_path), shell=True)
-        return True
-    except Exception:
+        p = subprocess.Popen(
+            ["cmd", "/c", bat],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+    except Exception as e:
+        _log(f"[Appium] BAT launch error: {e!r}")
         return False
+
+    # laisse le temps au .bat de lancer appium
+    time.sleep(1.0)
+
+    # check port
+    try:
+        with socket.create_connection((APPIUM_HOST, APPIUM_PORT), timeout=0.5):
+            _log("[Appium] BAT: port OK ✅")
+            return True
+    except Exception:
+        # lire quelques lignes du .bat
+        out = ""
+        try:
+            if p.stdout:
+                for _ in range(40):
+                    line = p.stdout.readline()
+                    if not line:
+                        break
+                    out += line
+        except Exception:
+            pass
+
+        _log(f"[Appium] BAT: port NOT open ❌\n--- bat output ---\n{out}")
+        return False
+
 
 
 # ============================================================
 # 3) ASSURER APPIUM → PORT 4723 + ADB PORT 5038
 # ============================================================
-def ensure_appium_running(win=None) -> bool:
-    """
-    SAFE: ne tue ni adb global, ni node global.
-    - Assure adb StoryFX sur port 5038
-    - Démarre Appium sur 4723 avec --adb-port 5038
-    - Ne touche pas FormaFX (adb 5037 + émulateur)
-    """
+def find_appium_cmd() -> str | None:
+    import os, shutil, subprocess
 
-    # 1) Si Appium est déjà UP -> OK (mais on vérifie le STATUS, pas juste le port)
+    # 1) si déjà dans PATH
+    p = shutil.which("appium.cmd") or shutil.which("appium")
+    if p:
+        return p
+
+    # 2) fallback direct sur le chemin connu (ton where appium)
+    hard = r"C:\Users\lilgu\AppData\Roaming\npm\appium.cmd"
+    if os.path.exists(hard):
+        return hard
+
+    # 3) npm prefix -g => chemin global npm
+    try:
+        npm = shutil.which("npm") or "npm"
+        prefix = subprocess.check_output([npm, "prefix", "-g"], text=True).strip()
+        candidate = os.path.join(prefix, "node_modules", ".bin", "appium.cmd")
+        if os.path.exists(candidate):
+            return candidate
+    except Exception:
+        pass
+
+    return None
+
+def ensure_appium_running(win=None) -> bool:
+    import os, time, socket, shutil, subprocess, requests
+
+    def _log(msg: str):
+        if win:
+            win.write_event_value("-RUNNER-LOG-", msg)
+        else:
+            print(msg, flush=True)
+
+    t0 = time.time()
+    _log("[Appium] ensure_appium_running() start")
+
+    # 0) anti-freeze global (max 30s ici)
+    MAX_TOTAL = 30
+
+    def _time_left():
+        return MAX_TOTAL - (time.time() - t0)
+
+    # 1) Appium déjà UP ?
+    _log(f"[Appium] check existing server {APPIUM_HOST}:{APPIUM_PORT} ...")
     try:
         with socket.create_connection((APPIUM_HOST, APPIUM_PORT), timeout=0.5):
-            # ✅ health check /status
             try:
                 r = requests.get(f"http://{APPIUM_HOST}:{APPIUM_PORT}/wd/hub/status", timeout=0.8)
                 if r.status_code == 200:
+                    _log("[Appium] already UP ✅")
                     return True
             except Exception:
-                # port ouvert mais appium pas prêt → on continue pour relancer/attendre
                 pass
     except Exception:
         pass
 
-    # 2) Démarrer le serveur ADB StoryFX sur 5038 (sans impacter 5037)
+    # 2) ADB 5038 + PATH process (StoryFX)
+    _log(f"[Appium] adb start-server on port {ADB_PORT_STORYFX} ...")
+
     env = os.environ.copy()
     env["ANDROID_ADB_SERVER_PORT"] = str(ADB_PORT_STORYFX)
 
+    # PATCH PATH (IMPORTANT: ordre = nodejs -> npm -> adb -> PATH existant)
+    node_path = r"C:\Program Files\nodejs"
+    npm_bin_path = r"C:\Users\lilgu\AppData\Roaming\npm"
+    adb_path = r"C:\Tools\ADB_StoryFX"
+
+    env["PATH"] = ";".join([
+        node_path,
+        npm_bin_path,
+        adb_path,
+        env.get("PATH", ""),
+    ])
+
+    _log("[Appium] PATH patched (nodejs + npm + adb)")
+
+    # start adb 5038
     try:
         subprocess.run(
             [ADB_STORYFX, "start-server"],
             env=env,
             capture_output=True,
-            text=True
+            text=True,
+            timeout=5,
+            check=False,
         )
+        _log("[Appium] adb start-server OK")
     except Exception as e:
-        if win:
-            win.write_event_value(
-                "-RUNNER-LOG-",
-                f"[StoryFX] [WARN] adb start-server 5038 failed: {e!r}"
-            )
-        # on continue quand même
+        _log(f"[Appium] WARN adb start-server failed: {e!r}")
 
-    # 3) Démarrer Appium
-    appium_bin = shutil.which("appium") or shutil.which("appium.cmd") or "appium"
+    # 3) Start Appium
+    appium_bin = find_appium_cmd() or "appium"
+    _log(f"[Appium] resolved appium_bin = {appium_bin!r}")
 
-    cmd = [
-        appium_bin,
+    # --- log file Appium (indispensable pour diagnostiquer quand stdout ne sort rien)
+    log_dir = r"C:\Temp"
+    os.makedirs(log_dir, exist_ok=True)
+    appium_log = os.path.join(log_dir, "storyfx_appium.log")
+    # 🔥 IMPORTANT : supprimer l'ancien log Appium (évite de lire une vieille erreur)
+    try:
+        if os.path.exists(appium_log):
+            os.remove(appium_log)
+    except Exception:
+        pass
+
+    args = [
         "--allow-cors",
         "--relaxed-security",
         "--base-path", "/wd/hub",
         "--address", APPIUM_HOST,
         "--port", str(APPIUM_PORT),
-        "--adb-port", str(ADB_PORT_STORYFX),
+        # "--adb-port", str(ADB_PORT_STORYFX),
+
+        # 🔥 DEBUG LOGS (sinon tu ne vois rien)
+        "--log", appium_log,
+        "--log-level", "debug",
     ]
+    _log(f"[Appium] log file = {appium_log}")
 
     proc = None
-    env["PATH"] = r"C:\Tools\ADB_StoryFX;" + env.get("PATH", "")
+    _log(f"[Appium] launching: {appium_bin} {' '.join(args)}")
 
     try:
-        proc = subprocess.Popen(
-            " ".join(cmd),
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            shell=True,
-        )
-    except FileNotFoundError:
-        # fallback : on tente de lancer via le .bat (si 'appium' n'est pas dans le PATH)
-        if launch_appium_from_bat():
-            # attendre que 4723 écoute
-            for _ in range(60):  # ~15s
-                try:
-                    with socket.create_connection((APPIUM_HOST, APPIUM_PORT), timeout=0.5):
-                        return True
-                except Exception:
-                    time.sleep(0.25)
+        if str(appium_bin).lower().endswith(".cmd"):
+            proc = subprocess.Popen(
+                ["cmd", "/c", appium_bin, *args],
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                stdin=subprocess.DEVNULL,
+            )
+        else:
+            proc = subprocess.Popen(
+                [appium_bin, *args],
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                stdin=subprocess.DEVNULL,
+            )
+    except (FileNotFoundError, OSError) as e:
+        _log(f"[Appium] launch error: {e!r}. fallback .bat ...")
+        if launch_appium_from_bat(win=win):
+            _log("[Appium] launched from .bat, waiting port...")
+            proc = None  # lancé par bat, pas de proc à gérer ici
+        else:
+            raise RuntimeError("[Appium] introuvable (PATH) et .bat fallback a échoué.")
 
-        msg = "[Appium] introuvable. Installe Appium ou ajoute-le au PATH (ou vérifie Lancer_Appium_StoryFX.bat)."
-        if win:
-            win.write_event_value("-RUNNER-LOG-", msg)
-        return False
+    # 3.1) Pump logs Appium en live (si proc géré par Python)
+    import threading
 
-    # 4) Attendre que 4723 écoute (port ouvert)
+    def _pump_appium_logs(p):
+        try:
+            if not p or not p.stdout:
+                return
+            for line in p.stdout:
+                line = (line or "").rstrip()
+                if line:
+                    _log(f"[Appium][OUT] {line}")
+        except Exception as e:
+            _log(f"[Appium][OUT] (log pump error: {e!r})")
+
+    if proc and proc.stdout:
+        threading.Thread(target=_pump_appium_logs, args=(proc,), daemon=True).start()
+
+    # 3.2) Lire rapidement le fichier log Appium (même si stdout est vide)
+    time.sleep(0.8)
+    try:
+        if os.path.exists(appium_log):
+            with open(appium_log, "r", encoding="utf-8", errors="replace") as f:
+                tail = f.read()[-2000:]  # derniers caractères
+            if tail.strip():
+                _log("[Appium][LOGTAIL]\n" + tail.strip())
+        else:
+            _log(f"[Appium] log file not found yet: {appium_log}")
+    except Exception as e:
+        _log(f"[Appium] cannot read log file: {e!r}")
+
+    # 3bis) si le process meurt direct, on récupère le log tout de suite
+    if proc:
+        time.sleep(0.6)
+        rc = proc.poll()
+        if rc is not None:
+            out = ""
+            try:
+                out = proc.stdout.read() if proc.stdout else ""
+            except Exception:
+                pass
+            raise RuntimeError(f"[Appium] process exited immediately rc={rc}\n--- output ---\n{out}")
+
+    # 4) Attendre port (avec logs + détection crash + fallback .bat)
+    _log("[Appium] waiting for port to listen ...")
     port_ok = False
-    for _ in range(60):  # ~15 sec
+
+    # 4a) attente port (30s)
+    for i in range(120):  # 120 * 0.25s = 30s
+        if proc:
+            rc = proc.poll()
+            if rc is not None:
+                raise RuntimeError(
+                    f"[Appium] Appium s'est fermé pendant l'attente (rc={rc}). "
+                    f"Regarde les logs [Appium][OUT] juste au-dessus."
+                )
         try:
             with socket.create_connection((APPIUM_HOST, APPIUM_PORT), timeout=0.5):
                 port_ok = True
                 break
         except Exception:
+            _log(f"[Appium] attente port {APPIUM_PORT}... ({i + 1}/120)")
             time.sleep(0.25)
 
-    # ✅ Si le port n'est même pas ouvert → erreur classique
+    # 4b) fallback .bat si port toujours pas ouvert
     if not port_ok:
-        # (ton code de récupération logs Appium reste après)
-        pass
-    else:
-        # 4bis) ✅ Vérifier que Appium répond vraiment (status OK)
-        try:
-            for _ in range(20):
+        _log("[Appium] port not open. trying fallback .bat ...")
+        if launch_appium_from_bat(win=win):  # <-- passe win si ta fonction l'accepte
+            for j in range(120):  # 30s de plus
                 try:
-                    r = requests.get(f"http://{APPIUM_HOST}:{APPIUM_PORT}/wd/hub/status", timeout=0.8)
-                    if r.status_code == 200:
-                        return True
+                    with socket.create_connection((APPIUM_HOST, APPIUM_PORT), timeout=0.5):
+                        port_ok = True
+                        break
                 except Exception:
+                    _log(f"[Appium] (bat) attente port {APPIUM_PORT}... ({j + 1}/120)")
                     time.sleep(0.25)
-        except Exception:
-            pass
 
-    # 5) Si ça ne démarre pas, on récupère quelques lignes du log Appium
-    out = ""
-    if proc and proc.stdout:
+    # 4c) dernier recours : raise avec output
+    if not port_ok:
+        out = ""
+        if proc:
+            try:
+                out, _ = proc.communicate(timeout=1.0)
+            except Exception:
+                out = ""
+        raise RuntimeError(
+            f"[Appium] Port {APPIUM_PORT} ne s'est jamais ouvert.\n"
+            f"--- output ---\n{out}"
+        )
+
+    # 5) Attendre /status
+    _log("[Appium] port OK. waiting /status ...")
+    for _ in range(20):
         try:
-            for _ in range(40):
-                line = proc.stdout.readline()
-                if not line:
-                    break
-                out += line
+            r = requests.get(f"http://{APPIUM_HOST}:{APPIUM_PORT}/wd/hub/status", timeout=0.8)
+            if r.status_code == 200:
+                _log("[Appium] status OK ✅")
+                return True
         except Exception:
-            pass
+            _log("[Appium] attente /wd/hub/status ...")
+            time.sleep(0.25)
 
-    raise RuntimeError(
-        f"Appium ne démarre pas sur {APPIUM_HOST}:{APPIUM_PORT}. "
-        f"Vérifie que la commande 'appium' existe et que le port n'est pas occupé.\n"
-        f"--- Appium output ---\n{out}"
-    )
+    out = ""
+    if proc:
+        try:
+            out, _ = proc.communicate(timeout=1.0)
+        except Exception:
+            out = "[Appium] (no logs / still running)"
+
+    raise RuntimeError(f"[Appium] /status not ready.\n--- output ---\n{out}")
 
 # ==========================================================================
 # 🔥 0. Helpers génériques : mapping, labels, adb devices

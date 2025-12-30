@@ -1,9 +1,19 @@
 @echo off
-title Appium StoryFX
+setlocal
+cd /d %~dp0
 
-set ANDROID_ADB_SERVER_PORT=5038
-set PATH=C:\Tools\ADB_StoryFX;%PATH%
+echo ==== TEST ENV ====
+where node
+where npm
+where npx
+echo ==================
 
-appium --allow-cors --relaxed-security --base-path /wd/hub --port 4723
+echo.
+echo ==== START APPIUM ====
+npx appium --allow-cors --relaxed-security --base-path /wd/hub --address 127.0.0.1 --port 4723 --adb-port 5038
+echo =====================
 
+echo.
+echo Exit code: %errorlevel%
+echo.
 pause
