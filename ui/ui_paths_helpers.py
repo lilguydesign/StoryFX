@@ -59,11 +59,11 @@ def strip_ansi(s: str) -> str:
     """Supprime les codes couleurs ANSI (Appium, HTTP, etc.) d'une ligne."""
     return ANSI_RE.sub("", s)
 
-def adb_run(cmd: str):
+def adb_run(cmd: str, port: int | None = None):
     """
     Exécute une commande ADB :
         - Remplace "adb" par ADB_PATH
-        - Force env sur port 5038
+        - Force env sur le port (par défaut 5038)
         - Retourne (code, sortie)
     """
     try:
@@ -74,19 +74,25 @@ def adb_run(cmd: str):
         elif cmd == "adb":
             cmd = f"\"{ADB_PATH}\""
 
+        # ✅ port ADB : par défaut 5038 (StoryFX), sinon override
+        env = os.environ.copy()
+        if port is None:
+            env.update(ADB_ENV)  # garde ton 5038 par défaut
+        else:
+            env["ANDROID_ADB_SERVER_PORT"] = str(port)
+
         proc = subprocess.run(
             cmd,
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            env=ADB_ENV,
+            env=env,
         )
         return proc.returncode, proc.stdout
 
     except Exception as e:
         return 1, str(e)
-
 
 # ==========================================================================
 # 🔥 3. JSON LOAD & SAVE HELPER

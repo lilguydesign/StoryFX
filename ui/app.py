@@ -246,15 +246,69 @@ def main():
 
             # --- 1) Scanner & connecter (USB → Wi-Fi)
             if ev == "-DEV_SCAN_CONNECT-":
-                log = auto_connect_all_devices(profiles)
-                win["-DEV_LOG-"].update(log)
+                from ui.ui_devices import list_devices_pro
+                import threading
+
+                # ✅ Phase 1 (ms) : afficher état ADB immédiat
+                win["-DEV_LOG-"].update("⏳ Scan & connect en cours...\n")
+                win["-DEV_LOG-"].update(list_devices_pro(with_ping=False), append=True)
+
+                # ✅ Phase 2 (lente) : vraie auto-connexion en background
+                def _worker_scan():
+                    # 1) Travail principal (long)
+                    full = auto_connect_all_devices(profiles)
+
+                    # 2) Affichage IMMÉDIAT du résultat principal
+                    win.write_event_value("-DEV_SCAN_DONE-", full)
+
+                    # 3) LANCER le ping APRÈS (sans bloquer)
+                    from ui.ui_devices import list_devices_pro
+                    pinged = list_devices_pro(with_ping=True)
+                    win.write_event_value("-DEV_PING_DONE-", pinged)
+
+                threading.Thread(target=_worker_scan, daemon=True).start()
                 continue
 
             # --- 2) `adb devices` PRO
             if ev in ("-DEV_LIST-", "-DEV_DEVICES-"):
                 from ui.ui_devices import list_devices_pro
-                log = list_devices_pro()
-                win["-DEV_LOG-"].update(log)
+                import threading
+
+                # 1) Phase rapide : ADB seulement (millisecondes)
+                log_fast = list_devices_pro(with_ping=False)
+                win["-DEV_LOG-"].update(log_fast)
+
+                # 2) Phase lente : Ping (en background), puis update UI
+                def _worker_ping():
+                    log_full = list_devices_pro(with_ping=True)
+                    win.write_event_value("-DEV_PING_DONE-", log_full)
+
+                threading.Thread(target=_worker_ping, daemon=True).start()
+
+                continue
+
+            if ev == "-DEV_PING_DONE-":
+                full = vals.get("-DEV_PING_DONE-", "")
+                if full:
+                    win["-DEV_LOG-"].update(full)
+                continue
+
+            if ev == "-DEV_SCAN_DONE-":
+                full = vals.get("-DEV_SCAN_DONE-", "")
+                if full:
+                    win["-DEV_LOG-"].update(full)
+                continue
+
+            if ev == "-DEV_CONNECT_ALL_DONE-":
+                full = vals.get("-DEV_CONNECT_ALL_DONE-", "")
+                if full:
+                    win["-DEV_LOG-"].update(full)
+                continue
+
+            if ev == "-DEV_DISCONNECT_DONE-":
+                full = vals.get("-DEV_DISCONNECT_DONE-", "")
+                if full:
+                    win["-DEV_LOG-"].update(full)
                 continue
 
             # --- 3) Copier serial(s) détectés en USB
@@ -269,16 +323,52 @@ def main():
 
             # --- 4) Connecter TOUT (connexion PRO)
             if ev == "-DEV_CONNECT_ALL-":
-                from ui.ui_devices import connect_all_devices
-                log = connect_all_devices()
-                win["-DEV_LOG-"].update(log)
+                from ui.ui_devices import list_devices_pro, connect_all_devices
+                import threading
+
+                # ✅ Phase 1 (ms) : état ADB immédiat
+                win["-DEV_LOG-"].update("⏳ Connecter tout en cours...\n")
+                win["-DEV_LOG-"].update(list_devices_pro(with_ping=False), append=True)
+
+                # ✅ Phase 2 (lente) : connect_all_devices en background
+                def _worker_connect_all():
+                    # 1) Connexion globale (long)
+                    full = connect_all_devices()
+
+                    # 2) Affichage immédiat
+                    win.write_event_value("-DEV_CONNECT_ALL_DONE-", full)
+
+                    # 3) Ping APRÈS
+                    from ui.ui_devices import list_devices_pro
+                    pinged = list_devices_pro(with_ping=True)
+                    win.write_event_value("-DEV_PING_DONE-", pinged)
+
+                threading.Thread(target=_worker_connect_all, daemon=True).start()
                 continue
 
             # --- 5) Déconnecter TOUT (reset adb)
             if ev == "-DEV_DISCONNECT-":
-                from ui.ui_devices import disconnect_all_devices
-                log = disconnect_all_devices()
-                win["-DEV_LOG-"].update(log)
+                from ui.ui_devices import list_devices_pro, disconnect_all_devices
+                import threading
+
+                # ✅ Phase 1 (ms) : état ADB immédiat
+                win["-DEV_LOG-"].update("⏳ Déconnecter tout en cours...\n")
+                win["-DEV_LOG-"].update(list_devices_pro(with_ping=False), append=True)
+
+                # ✅ Phase 2 (lente) : disconnect_all_devices en background
+                def _worker_disconnect():
+                    # 1) Reset ADB (long)
+                    full = disconnect_all_devices()
+
+                    # 2) Affichage immédiat
+                    win.write_event_value("-DEV_DISCONNECT_DONE-", full)
+
+                    # 3) Ping APRÈS
+                    from ui.ui_devices import list_devices_pro
+                    pinged = list_devices_pro(with_ping=True)
+                    win.write_event_value("-DEV_PING_DONE-", pinged)
+
+                threading.Thread(target=_worker_disconnect, daemon=True).start()
                 continue
 
             # --- 6) Effacer le log

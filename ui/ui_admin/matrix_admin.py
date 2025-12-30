@@ -5,8 +5,23 @@ import PySimpleGUI as sg
 from ui.ui_paths_helpers import MATRIX, save_json
 from ui.ui_paths_helpers import INTRO_ALBUM_CHOICES, MULTI_ALBUM_CHOICES
 from ui.tabs.ui_tabs_admin import refresh_matrix_table
+
+
 import copy
 
+# ✅ Mapping des colonnes triables (UI -> champ JSON)
+SORT_FIELDS = {
+    "device": "device",
+    "system": "system",
+    "engine": "engine",
+    "album intro": "album",
+    "album multi": "album2",
+    "platform": "platform",
+    "pays": "page",
+    "page_name": "page_name",
+    "count": "count",
+    "album_size": "album_size",
+}
 
 def handle_matrix_events(ev, vals, win, matrix_rows, albums_dict):
     """
@@ -49,6 +64,28 @@ def handle_matrix_events(ev, vals, win, matrix_rows, albums_dict):
         return True
 
     # ======================================================================
+    # 🔥 1 bis) Trier la matrix (comme Excel)
+    # ======================================================================
+    if ev == "-M_SORT-":
+        key_ui = (vals.get("-M_SORT_KEY-") or "device").strip()
+        asc = bool(vals.get("-M_SORT_ASC-", True))
+
+        field = SORT_FIELDS.get(key_ui, "device")
+
+        def _norm(v):
+            if v is None:
+                return ""
+            if isinstance(v, (int, float)):
+                return v
+            return str(v).strip().lower()
+
+        matrix_rows.sort(key=lambda r: _norm(r.get(field)), reverse=not asc)
+
+        save_json(MATRIX, {"rows": matrix_rows})
+        refresh_matrix_table(win, matrix_rows)
+        return True
+
+    # ======================================================================
     # 🔥 2) Ajout / Mise à jour d'une ligne MATRIX
     # ======================================================================
     if ev in ("-M_ADD-", "-M_UPDATE-"):
@@ -87,16 +124,19 @@ def handle_matrix_events(ev, vals, win, matrix_rows, albums_dict):
                 return True
 
             # ✅ Mettre à jour toutes les lignes sélectionnées
+            multi_sel = len(sel) > 1
+
             for idx in sel:
                 if 0 <= idx < len(matrix_rows):
-                    # Option 1 : remplacer toute la ligne par 'data'
-                    # matrix_rows[idx] = data
 
-                    # ✅ Option 2 (recommandée) : ne mettre à jour que les champs saisis
-                    # Ici on met à jour au moins le device (ton besoin principal)
+                    # 1) Toujours : update device (c’est l’identifiant)
                     matrix_rows[idx]["device"] = data["device"]
 
-                    # Si tu veux aussi appliquer system/engine/album/platform/page/page_name :
+                    # 2) Si multi-sélection : NE PAS écraser le reste
+                    if multi_sel:
+                        continue
+
+                    # 3) Si sélection unique : update complet (comportement normal)
                     matrix_rows[idx]["system"] = data["system"]
                     matrix_rows[idx]["engine"] = data["engine"]
                     matrix_rows[idx]["album"] = data["album"]

@@ -272,10 +272,22 @@ def handle_scheduler_events(ev, vals, win, scheduler_ref, albums_dict, matrix_ro
         #   - tout ce qui contient [StoryFX]
         #   - tout ce qui commence par [Scheduler]
         #   - les messages Appium de haut niveau ([Appium] ... )
-        if ("[StoryFX]" in txt) or txt.startswith("[Scheduler]") or txt.startswith("[Appium]"):
+        keep = (
+            ("[StoryFX]" in txt)
+            or txt.startswith("[Scheduler]")
+            or txt.startswith("[Appium]")
+            or txt.startswith("Traceback")
+            or txt.startswith("File ")
+            or "WebDriverException" in txt
+            or "uiautomator2" in txt.lower()
+            or "instrumentation" in txt.lower()
+            or "unknown server-side error" in txt.lower()
+        )
+
+        if keep:
             append_log(win, "[Scheduler] " + txt)
-        # le reste (par ex. identifiants de session, etc.) on jette
         return True
+
 
     # Fin du scheduler
     if ev == "-SCHED-DONE-":

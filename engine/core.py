@@ -412,6 +412,14 @@ def make_driver(device_id: str, platform_version: Optional[str] = None, profile:
                 options.set_capability(f"appium:{k}", v)
 
             ensure_appium_running()
+            # ✅ Reset UiAutomator2 côté device avant nouvelle session (évite zombie)
+            try:
+                subprocess.run([ADB_PATH, "-s", device_id, "shell", "am", "force-stop", "io.appium.uiautomator2.server"], env=ADB_ENV, check=False)
+                subprocess.run([ADB_PATH, "-s", device_id, "shell", "am", "force-stop", "io.appium.uiautomator2.server.test"], env=ADB_ENV, check=False)
+                time.sleep(0.3)
+            except Exception:
+                pass
+
             driver = webdriver.Remote(server_url, options=options)
         else:
             driver = webdriver.Remote(server_url, desired_capabilities=caps)
@@ -430,6 +438,14 @@ def make_driver(device_id: str, platform_version: Optional[str] = None, profile:
     except Exception:
         log("[StoryFX] [ERROR] Failed to create driver :")
         traceback.print_exc()   # même niveau de détails que dans VS Code
+        # ✅ Log clair de l'erreur (très important dans Scheduler)
+        try:
+            import traceback as _tb
+            log("[StoryFX] [DEBUG] Exception Appium détaillée :")
+            for line in _tb.format_exc().splitlines():
+                log(line)
+        except Exception:
+            pass
 
         # 🔊 Forcer le volume puis jouer le son d’alerte
         try:

@@ -94,17 +94,33 @@ def build_profiles_tab():
         values=[],
         key="-PROF_TABLE-",
         auto_size_columns=True,
-        display_row_numbers=False,
+        display_row_numbers=True,  # ✅ indice
+        select_mode=sg.TABLE_SELECT_MODE_EXTENDED,  # ✅ multi-select
         enable_events=True,
         expand_x=True,
         expand_y=True,
         justification="center",
     )
 
+    sort_row = [
+        sg.Text("Trier par"),
+        sg.Combo(
+            ["enabled", "name", "device_id", "adb_serial", "tcpip_ip", "tcpip_port",
+             "platform_version", "offset_minutes", "rows"],
+            key="-P_SORT_KEY-",
+            default_value="name",
+            readonly=True,
+            size=(16, 1),
+        ),
+        sg.Checkbox("A→Z", key="-P_SORT_ASC-", default=True),
+        sg.Button("Trier", key="-P_SORT-"),
+    ]
+
     # 🔥 LIGNE 1 — on met le bouton Coller juste après adb_serial
     bottom_row1 = [
         sg.Text("name"),
         sg.Input(key="-P_NAME-", size=(12, 1)),
+        sg.Input("", key="-P_NAME_ORIG-", visible=False),
 
         sg.Text("device_id"),
         sg.Input(key="-P_DEVICE-", size=(18, 1)),
@@ -159,12 +175,14 @@ def build_profiles_tab():
 
     layout = [
         [table],
+        sort_row,  # ✅ nouveau
         bottom_row1,
         bottom_row2,
         bottom_row3,
         bottom_row4,
-        bottom_row5,  # ✅ AJOUT
+        bottom_row5,
     ]
+
     return layout
 
 
@@ -246,6 +264,18 @@ def build_matrix_tab():
             sg.Text("Total count:", size=(10, 1)),
             sg.Text("0", key="-MAT_TOTAL-", size=(6, 1)),
         ],
+        [
+            sg.Text("Trier par"),
+            sg.Combo(
+                ["device", "system", "engine", "album intro", "album multi", "platform", "pays", "page_name", "count"],
+                key="-M_SORT_KEY-",
+                default_value="device",
+                readonly=True,
+                size=(14, 1),
+            ),
+            sg.Checkbox("A→Z", key="-M_SORT_ASC-", default=True),
+            sg.Button("Trier", key="-M_SORT-"),
+        ],
 
         [
             sg.Text("device"),
@@ -324,7 +354,10 @@ def refresh_profiles_table(win, profiles: dict, matrix_rows: list):
             counts[dev] += 1
 
     data = []
-    for name, cfg in sorted(profiles.items()):
+    names = getattr(win, "_prof_view_names", None) or sorted(profiles.keys())
+
+    for name in names:
+        cfg = profiles.get(name, {})
         device_id       = cfg.get("device_id", "")
         adb_serial      = cfg.get("adb_serial", "")
         tcpip_ip        = cfg.get("tcpip_ip", "")

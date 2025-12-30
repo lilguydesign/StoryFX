@@ -1,14 +1,5 @@
 {
   "profiles": {
-    "S23_Master": {
-      "device_id": "192.168.10.118:5556",
-      "platform_version": "16",
-      "offset_minutes": 42,
-      "adb_serial": "R5CX9421YKL",
-      "tcpip_ip": "192.168.10.118",
-      "tcpip_port": 5556,
-      "enabled": true
-    },
     "S23_IG": {
       "label": "S23 IG",
       "adb_serial": "RFCW20VEB4J",
@@ -17,7 +8,12 @@
       "device_id": "192.168.10.56:5555",
       "platform_version": "16",
       "offset_minutes": 12,
-      "enabled": false
+      "enabled": true,
+      "appium_overrides": {},
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
+      }
     },
     "S23_FB_CM": {
       "device_id": "192.168.10.56:5555",
@@ -46,35 +42,40 @@
       "adb_serial": "RFCW20VEB4J",
       "enabled": true
     },
-    "G2_A16": {
-      "label": "A16.2",
-      "adb_serial": "R58Y9054K7X",
-      "tcpip_ip": "192.168.10.98",
-      "tcpip_port": 5559,
-      "device_id": "192.168.10.98:5559",
-      "platform_version": "15",
-      "offset_minutes": 24,
-      "enabled": true
+    "JK682_S20": {
+      "enabled": true,
+      "device_id": "192.168.10.69:5560",
+      "platform_version": "13",
+      "offset_minutes": 54,
+      "adb_serial": "RF8N91GSGYW",
+      "tcpip_ip": "192.168.10.69",
+      "tcpip_port": 5560,
+      "appium_overrides": {
+        "uiautomator2ServerInstallTimeout": 180000,
+        "uiautomator2ServerLaunchTimeout": 180000,
+        "adbExecTimeout": 250000,
+        "newCommandTimeout": 300
+      },
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
+      }
     },
-    "A16": {
-      "device_id": "192.168.10.222:5557",
-      "platform_version": "15",
-      "offset_minutes": 30,
-      "adb_serial": "R58Y91061VR",
-      "tcpip_ip": "192.168.10.222",
-      "tcpip_port": 5557,
-      "enabled": true
+    "JK650_S23": {
+      "device_id": "192.168.10.118:5556",
+      "platform_version": "16",
+      "offset_minutes": 42,
+      "adb_serial": "R5CX9421YKL",
+      "tcpip_ip": "192.168.10.118",
+      "tcpip_port": 5556,
+      "enabled": true,
+      "appium_overrides": {},
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
+      }
     },
-    "A17": {
-      "device_id": "192.168.10.31:5558",
-      "platform_version": "15",
-      "offset_minutes": 36,
-      "adb_serial": "R58YA0VYPNV",
-      "tcpip_ip": "192.168.10.31",
-      "tcpip_port": 5558,
-      "enabled": true
-    },
-    "S23_WA": {
+    "JK657_S23+": {
       "device_id": "192.168.10.56:5555",
       "platform_version": "16",
       "offset_minutes": 48,
@@ -88,32 +89,42 @@
         "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
       }
     },
-    "S20": {
+    "JK675_A16_2": {
+      "label": "A16.2",
+      "adb_serial": "R58Y9054K7X",
+      "tcpip_ip": "192.168.10.98",
+      "tcpip_port": 5559,
+      "device_id": "192.168.10.98:5559",
+      "platform_version": "15",
+      "offset_minutes": 24,
       "enabled": true,
-      "device_id": "192.168.10.69:5560",
-      "platform_version": "13",
-      "offset_minutes": 54,
-      "adb_serial": "RF8N91GSGYW",
-      "tcpip_port": 5560,
-      "tcpip_ip": "192.168.10.69",
-      "appium_overrides": {
-        "uiautomator2ServerInstallTimeout": 180000,
-        "uiautomator2ServerLaunchTimeout": 180000,
-        "adbExecTimeout": 250000,
-        "newCommandTimeout": 300
-      },
+      "appium_overrides": {},
       "gallery": {
         "appPackage": "com.sec.android.gallery3d",
         "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
       }
     },
-    "Jerry Kamgang": {
-      "device_id": "192.168.10.56:5555",
-      "platform_version": "16",
-      "offset_minutes": 48,
-      "adb_serial": "RFCW20VEB4J",
-      "tcpip_ip": "192.168.10.56",
-      "tcpip_port": 5555,
+    "JK677_A16": {
+      "device_id": "192.168.10.213:5557",
+      "platform_version": "15",
+      "offset_minutes": 30,
+      "adb_serial": "R58Y91061VR",
+      "tcpip_ip": "192.168.10.213",
+      "tcpip_port": 5557,
+      "enabled": true,
+      "appium_overrides": {},
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
+      }
+    },
+    "JK692_A17": {
+      "device_id": "192.168.10.35:5558",
+      "platform_version": "15",
+      "offset_minutes": 36,
+      "adb_serial": "R58YA0VYPNV",
+      "tcpip_ip": "192.168.10.35",
+      "tcpip_port": 5558,
       "enabled": true,
       "appium_overrides": {},
       "gallery": {
