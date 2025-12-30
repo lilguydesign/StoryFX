@@ -1,7 +1,7 @@
 EXPORT FOR CHATGPT — TREE + CODE CONTENTS
-VERSION: .006
+VERSION: .012
 ROOT: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\StoryFx
-GENERATED_AT: 2025-12-30 02:29:57
+GENERATED_AT: 2025-12-30 04:01:02
 INCLUDE_SUBDIRS: True
 MAX_DEPTH: 50
 MAX_BYTES_PER_FILE: 500000
@@ -17,7 +17,6 @@ SCAN DIR: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories
 RELATIVE: .
 ############################################################################################################################################
 SUBDIRS:
-  📁 StoryFX/
   📁 assets/
   📁 bat/
   📁 config/
@@ -25,10 +24,10 @@ SUBDIRS:
   📁 ui/
 
 FILES:
-  📄 .export_version.txt (1 bytes)
-  📄 Lancer_Appium_StoryFX.bat (264 bytes)
+  📄 .export_version.txt (2 bytes)
+  📄 Lancer_Appium_StoryFX.bat (190 bytes)
   📄 Lancer_Scheduler.bat (275 bytes)
-  📄 README.md (709 bytes)
+  📄 README.md (11 bytes)
   📄 Share_Ico.txt (108 bytes)
   📄 Start_StoryFX.bat (75 bytes)
   🐍 __init__.py (0 bytes)
@@ -42,7 +41,7 @@ FILES:
   📄 reset_adb_ports.bat (1927 bytes)
   🐍 runner.py (7491 bytes)
   🐍 scheduler.py (19834 bytes)
-  📄 ui_state.json (191 bytes)
+  📄 ui_state.json (186 bytes)
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 CONTENTS (for selected files):
@@ -52,7 +51,7 @@ CONTENTS (for selected files):
 FILE: .export_version.txt
 PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\StoryFx\.export_version.txt
 ============================================================================================================================================
-6
+12
 
 ============================================================================================================================================
 FILE: __init__.py
@@ -186,14 +185,12 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
 @echo off
 title Appium StoryFX
 
-REM ADB StoryFX sur port 5038
 set ANDROID_ADB_SERVER_PORT=5038
 set PATH=C:\Tools\ADB_StoryFX;%PATH%
 
-REM Lancer Appium pour StoryFX
-appium --allow-cors --relaxed-security --base-path /wd/hub --port 4723 --adb-port 5038
+appium --allow-cors --relaxed-security --base-path /wd/hub --port 4723
 
-
+pause
 
 
 ============================================================================================================================================
@@ -422,21 +419,8 @@ if __name__ == "__main__":
 FILE: README.md
 PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\StoryFx\README.md
 ============================================================================================================================================
-WA HUB — Stories Automation
-============================
-1) pip install Appium-Python-Client
-   Run Appium Server at http://localhost:4723
-   Ensure each phone has Developer options + USB/Wireless debugging enabled.
-2) Edit config/*.json OR open the UI:
-   python -m storyfx.ui.app
-3) Manual run:
-   python runner.py --profile A16 --engine multi --album "Motivations Stories" --count 11
-   python runner.py --profile A16 --engine intro --album "Video Dubai"
-4) Scheduler (offset per device):
-   python scheduler.py
-   - Base times are in config/systems.json.
-   - Per-device offset in config/profiles.json (offset_minutes).
-   - Matrix assigns which system runs on which device and with which engine/album.
+# StoryFX
+
 
 
 ============================================================================================================================================
@@ -1363,7 +1347,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
 {
   "profile": "S20",
   "engine": "intro+multi",
-  "album_intro": "La Promotion Finit",
+  "album_intro": "Never Give Up",
   "album_multi": "Témoignages JK",
   "platform": "WhatsApp",
   "page": "",
@@ -1610,7 +1594,7 @@ FILES:
   📄 albums.json (1045 bytes)
   📄 matrix.json (16488 bytes)
   📄 pages.json (155 bytes)
-  📄 profiles.json (2807 bytes)
+  📄 profiles.json (3589 bytes)
   📄 scheduler_clock.json (22 bytes)
   📄 systems.json (539 bytes)
 
@@ -2448,7 +2432,12 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "adb_serial": "RFCW20VEB4J",
       "tcpip_ip": "192.168.10.56",
       "tcpip_port": 5555,
-      "enabled": true
+      "enabled": true,
+      "appium_overrides": {},
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
+      }
     },
     "S20": {
       "enabled": true,
@@ -2463,6 +2452,24 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
         "uiautomator2ServerLaunchTimeout": 180000,
         "adbExecTimeout": 250000,
         "newCommandTimeout": 300
+      },
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
+      }
+    },
+    "Jerry Kamgang": {
+      "device_id": "192.168.10.56:5555",
+      "platform_version": "16",
+      "offset_minutes": 48,
+      "adb_serial": "RFCW20VEB4J",
+      "tcpip_ip": "192.168.10.56",
+      "tcpip_port": 5555,
+      "enabled": true,
+      "appium_overrides": {},
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
       }
     }
   }
@@ -2526,7 +2533,7 @@ SUBDIRS: (none)
 
 FILES:
   🐍 __init__.py (450 bytes)
-  🐍 core.py (34174 bytes)
+  🐍 core.py (34530 bytes)
   🐍 engine_intro.py (4561 bytes)
   🐍 engine_multi.py (10253 bytes)
   🐍 platforms.py (24909 bytes)
@@ -2942,6 +2949,16 @@ def make_driver(device_id: str, platform_version: Optional[str] = None, profile:
         "appPackage": "com.sec.android.gallery3d",
         "appActivity": "com.sec.android.gallery3d.app.GalleryActivity",
     }
+
+    # ✅ Personnalisation par profil (FRONT) pour la Galerie
+    gal = (profile or {}).get("gallery", {}) or {}
+    if isinstance(gal, dict):
+        pkg = (gal.get("appPackage") or "").strip()
+        act = (gal.get("appActivity") or "").strip()
+        if pkg:
+            caps["appPackage"] = pkg
+        if act:
+            caps["appActivity"] = act
 
     if platform_version:
         caps["platformVersion"] = str(platform_version)
@@ -4662,28 +4679,6 @@ def share_to_platform(driver, platform: str, options: dict | None = None) -> Non
 
 
 ############################################################################################################################################
-SCAN DIR: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\StoryFx\StoryFX
-RELATIVE: StoryFX
-############################################################################################################################################
-SUBDIRS: (none)
-
-FILES:
-  📄 README.md (11 bytes)
-
---------------------------------------------------------------------------------------------------------------------------------------------
-CONTENTS (for selected files):
---------------------------------------------------------------------------------------------------------------------------------------------
-
-============================================================================================================================================
-FILE: README.md
-PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\StoryFx\StoryFX\README.md
-============================================================================================================================================
-# StoryFX
-
-
-
-
-############################################################################################################################################
 SCAN DIR: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\StoryFx\ui
 RELATIVE: ui
 ############################################################################################################################################
@@ -4693,10 +4688,10 @@ SUBDIRS:
 
 FILES:
   🐍 app.py (13136 bytes)
-  🐍 ui_devices.py (28454 bytes)
+  🐍 ui_devices.py (29269 bytes)
   🐍 ui_events_router.py (2952 bytes)
   🐍 ui_paths_helpers.py (8606 bytes)
-  🐍 ui_runner.py (12482 bytes)
+  🐍 ui_runner.py (12655 bytes)
   🐍 ui_scheduler.py (9365 bytes)
   🐍 ui_time.py (6602 bytes)
 
@@ -5097,10 +5092,17 @@ CONVENTIONS :
       dans l'affichage (ex: S23 (WA, IG, FB_CM, FB_CI, TikTok) (192.168.1.123:5555)).
     - Les serials USB sont affichés UNIQUEMENT dans la section USB.
 """
+import shutil
+
 import os
+import time
 import socket
 import subprocess
-import time
+
+APPIUM_HOST = "127.0.0.1"
+APPIUM_PORT = 4723
+ADB_STORYFX = r"C:\Tools\ADB_StoryFX\adb.exe"   # ton adb séparé
+ADB_PORT_STORYFX = "5038"                      # IMPORTANT: ne touche pas 5037
 
 from typing import Dict, Any, List, Tuple
 import re
@@ -5140,21 +5142,21 @@ def start_android_studio_adb():
 # ============================================================
 # 2) ADB STORYFX → PORT 5038
 # ============================================================
-def start_storyfx_adb():
-    """
-    Lance le serveur ADB StoryFX (port 5038).
-    Utilisé pour gérer les téléphones en WiFi + Appium.
-    """
-
-    # FORCER UNIQUEMENT CE PROCESSUS À UTILISER 5038
-    os.environ["ANDROID_ADB_SERVER_PORT"] = "5038"
-
-    STORYFX_ADB = r"C:\Tools\ADB_StoryFX\adb.exe"
-
-    # Redémarrage complet
-    subprocess.run([STORYFX_ADB, "kill-server"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.run([STORYFX_ADB, "start-server"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
+# def start_storyfx_adb():
+#     """
+#     Lance le serveur ADB StoryFX (port 5038).
+#     Utilisé pour gérer les téléphones en WiFi + Appium.
+#     """
+#
+#     # FORCER UNIQUEMENT CE PROCESSUS À UTILISER 5038
+#     os.environ["ANDROID_ADB_SERVER_PORT"] = "5038"
+#
+#     STORYFX_ADB = r"C:\Tools\ADB_StoryFX\adb.exe"
+#
+#     # Redémarrage complet
+#     subprocess.run([STORYFX_ADB, "kill-server"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+#     subprocess.run([STORYFX_ADB, "start-server"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+#
 
 from pathlib import Path
 
@@ -5170,87 +5172,105 @@ def launch_appium_from_bat():
 # ============================================================
 # 3) ASSURER APPIUM → PORT 4723 + ADB PORT 5038
 # ============================================================
-def ensure_appium_running(timeout=15):
+def ensure_appium_running(win=None) -> bool:
     """
-    Assure que Appium tourne AVEC le bon ADB (StoryFX / 5038).
-    Si Appium est OFF → démarre automatiquement :
-        - ADB Android Studio (5037)
-        - ADB StoryFX (5038)
-        - Appium (port 4723)
-    Puis attend jusqu’à ce que Appium soit prêt.
+    SAFE: ne tue ni adb global, ni node global.
+    - Assure adb StoryFX sur port 5038
+    - Démarre Appium sur 4723 avec --adb-port 5038
+    - Ne touche pas FormaFX (adb 5037 + émulateur)
     """
 
-    HOST = "127.0.0.1"
-    PORT = 4723
+    # 1) Si Appium est déjà UP -> OK
+    try:
+        with socket.create_connection((APPIUM_HOST, APPIUM_PORT), timeout=0.5):
+            return True
+    except Exception:
+        pass
 
-    # --------------------------------------------------------
-    # Fonction interne : vérifier si le port Appium est ouvert
-    # --------------------------------------------------------
-    def port_open():
+    # 2) Démarrer le serveur ADB StoryFX sur 5038 (sans impacter 5037)
+    env = os.environ.copy()
+    env["ANDROID_ADB_SERVER_PORT"] = str(ADB_PORT_STORYFX)
+
+    try:
+        subprocess.run(
+            [ADB_STORYFX, "start-server"],
+            env=env,
+            capture_output=True,
+            text=True
+        )
+    except Exception as e:
+        if win:
+            win.write_event_value(
+                "-RUNNER-LOG-",
+                f"[StoryFX] [WARN] adb start-server 5038 failed: {e!r}"
+            )
+        # on continue quand même
+
+    # 3) Démarrer Appium
+    appium_bin = shutil.which("appium") or shutil.which("appium.cmd") or "appium"
+
+    cmd = [
+        appium_bin,
+        "--allow-cors",
+        "--relaxed-security",
+        "--base-path", "/wd/hub",
+        "--address", APPIUM_HOST,
+        "--port", str(APPIUM_PORT),
+        # "--adb-port", str(ADB_PORT_STORYFX),
+    ]
+
+    proc = None
+
+    try:
+        proc = subprocess.Popen(
+            " ".join(cmd),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            shell=True,
+        )
+    except FileNotFoundError:
+        # fallback : on tente de lancer via le .bat (si 'appium' n'est pas dans le PATH)
+        if launch_appium_from_bat():
+            # attendre que 4723 écoute
+            for _ in range(60):  # ~15s
+                try:
+                    with socket.create_connection((APPIUM_HOST, APPIUM_PORT), timeout=0.5):
+                        return True
+                except Exception:
+                    time.sleep(0.25)
+
+        msg = "[Appium] introuvable. Installe Appium ou ajoute-le au PATH (ou vérifie Lancer_Appium_StoryFX.bat)."
+        if win:
+            win.write_event_value("-RUNNER-LOG-", msg)
+        return False
+
+    # 4) Attendre que 4723 écoute vraiment (cas où Popen a réussi)
+    for _ in range(60):  # ~15 sec
         try:
-            s = socket.socket()
-            s.settimeout(0.3)
-            s.connect((HOST, PORT))
-            s.close()
-            return True
-        except:
-            return False
+            with socket.create_connection((APPIUM_HOST, APPIUM_PORT), timeout=0.5):
+                return True
+        except Exception:
+            time.sleep(0.25)
 
-    # --------------------------------------------------------
-    # 1) Appium déjà actif ?
-    # --------------------------------------------------------
-    if port_open():
-        return True
+    # 5) Si ça ne démarre pas, on récupère quelques lignes du log Appium
+    out = ""
+    if proc and proc.stdout:
+        try:
+            for _ in range(40):
+                line = proc.stdout.readline()
+                if not line:
+                    break
+                out += line
+        except Exception:
+            pass
 
-
-    # --------------------------------------------------------
-    # 2) Redémarrer ADB Android Studio (5037)
-    # --------------------------------------------------------
-    start_android_studio_adb()
-
-    # --------------------------------------------------------
-    # 3) Redémarrer ADB StoryFX (5038)
-    # --------------------------------------------------------
-    start_storyfx_adb()
-
-    # 2) Sinon → lancer ton .bat Appium automatiquement
-    launch_appium_from_bat()
-
-    # Appium doit OBLIGATOIREMENT utiliser ADB StoryFX
-    os.environ["ANDROID_ADB_SERVER_PORT"] = "5038"
-    os.environ["PATH"] = r"C:\Tools\ADB_StoryFX;" + os.environ["PATH"]
-
-
-    # --------------------------------------------------------
-    # 4) Lancer Appium AVEC le bon adbPort
-    # --------------------------------------------------------
-    # subprocess.Popen(
-    #     [
-    #         "appium",
-    #         "--allow-cors",
-    #         "--relaxed-security",
-    #         "--base-path", "/wd/hub",
-    #         "--port", str(PORT),
-    #         "--adb-port", "5038",      # 🔥 clé absolue
-    #     ],
-    #     stdout=subprocess.DEVNULL,
-    #     stderr=subprocess.DEVNULL,
-    #     shell=True
-    # )
-
-
-    # --------------------------------------------------------
-    # 5) Attendre que Appium soit prêt
-    # --------------------------------------------------------
-    start_time = time.time()
-
-    while time.time() - start_time < timeout:
-        if port_open():
-            return True
-        time.sleep(0.5)
-
-    # Appium n'a pas démarré
-    return False
+    raise RuntimeError(
+        f"Appium ne démarre pas sur {APPIUM_HOST}:{APPIUM_PORT}. "
+        f"Vérifie que la commande 'appium' existe et que le port n'est pas occupé.\n"
+        f"--- Appium output ---\n{out}"
+    )
 
 # ==========================================================================
 # 🔥 0. Helpers génériques : mapping, labels, adb devices
@@ -6600,7 +6620,7 @@ def handle_runner_events(ev, vals, win, runner_ref, profiles, albums_dict, ui_st
             "[StoryFX]" in txt
             or txt.startswith("[runner]")
             or txt.startswith("Traceback")
-            or txt.startswith("  File ")
+            or txt.startswith("File ")  # ✅ au lieu de "  File "
             or "WebDriverException" in txt
             or "ConnectionRefusedError" in txt
             or "ECONNREFUSED" in txt
@@ -6626,7 +6646,10 @@ def handle_runner_events(ev, vals, win, runner_ref, profiles, albums_dict, ui_st
         reset_phone_to_home(win)
 
         # 🔥 Indispensable : démarrer Appium s'il n'est pas actif
-        ensure_appium_running()
+        ok = ensure_appium_running(win)
+        if not ok:
+            append_log(win, "[UI] Appium indisponible. Vérifie l'installation ou le PATH.")
+            return True
 
         profile_name = vals.get("-PROFILE-")
         if not profile_name:
@@ -7209,7 +7232,7 @@ SUBDIRS: (none)
 
 FILES:
   🐍 __init__.py (513 bytes)
-  🐍 ui_tabs_admin.py (16176 bytes)
+  🐍 ui_tabs_admin.py (16876 bytes)
   🐍 ui_tabs_launcher.py (9034 bytes)
   🐍 ui_tabs_locators.py (2220 bytes)
   🐍 ui_tabs_sched_devices.py (2665 bytes)
@@ -7358,6 +7381,7 @@ def build_profiles_tab():
 
         sg.Text("adb_serial"),
         sg.Input(key="-P_ADB_SERIAL-", size=(14, 1)),
+        sg.Checkbox("Propager serial", key="-P_PROP_SERIAL-", default=False),
         sg.Button("Coller serial", key="-P_PASTE_SERIAL-"),   # 🆕 déplacé ici !
     ]
 
@@ -7396,12 +7420,20 @@ def build_profiles_tab():
         ),
     ]
 
+    bottom_row5 = [
+        sg.Text("Gallery appPackage"),
+        sg.Input(key="-P_GALLERY_PKG-", size=(35, 1)),
+        sg.Text("Gallery appActivity"),
+        sg.Input(key="-P_GALLERY_ACT-", size=(45, 1)),
+    ]
+
     layout = [
         [table],
         bottom_row1,
         bottom_row2,
         bottom_row3,
         bottom_row4,
+        bottom_row5,  # ✅ AJOUT
     ]
     return layout
 
@@ -7443,18 +7475,24 @@ def build_matrix_tab():
         "device", "system", "engine",
         "album_intro", "album_multi",
         "album_size", "count",
-        "platform", "pays", "page",
+        "platform", "pays", "page_name",
     ]
 
     # 🔥 Charger les pays/pages depuis config/pages.json
     pages_file = Path(__file__).resolve().parents[2] / "config" / "pages.json"
     countries, page_names = [], []
+
     if pages_file.exists():
         with pages_file.open("r", encoding="utf-8") as f:
             data = json.load(f)
         for entry in data.get("pages", []):
-            countries.append(entry.get("country", ""))
-            page_names.append(entry.get("name", ""))
+            c = (entry.get("country") or "").strip()
+            n = (entry.get("name") or "").strip()
+            if c:
+                countries.append(c)
+            if n:
+                page_names.append(n)
+
     countries = sorted(set(countries))
     page_names = sorted(set(page_names))
 
@@ -7471,6 +7509,7 @@ def build_matrix_tab():
                 expand_y=True,
                 num_rows=12,
                 display_row_numbers=True,
+                select_mode=sg.TABLE_SELECT_MODE_EXTENDED,  # ✅ multi-sélection
             )
         ],
         [
@@ -7480,7 +7519,7 @@ def build_matrix_tab():
 
         [
             sg.Text("device"),
-            sg.Combo([], key="-M_DEVICE-", size=(12, 1), readonly=True),
+            sg.Combo([], key="-M_DEVICE-", size=(12, 1), readonly=True, enable_events=True),
 
             sg.Text("system"),
             sg.Combo([], key="-M_SYSTEM-", size=(16, 1), readonly=True),
@@ -7522,16 +7561,10 @@ def build_matrix_tab():
 
         [
             sg.Text("Pays"),
-            sg.Combo(
-                countries, key="-M_PAGE-",
-                size=(25, 1), readonly=True,
-            ),
+            sg.Combo(countries, key="-M_PAGE-", size=(25, 1), readonly=True),
 
             sg.Text("Page"),
-            sg.Combo(
-                page_names, key="-M_PNAME-",
-                size=(40, 1), readonly=True,
-            ),
+            sg.Combo(page_names, key="-M_PNAME-", size=(40, 1), readonly=True),
         ],
 
         [
@@ -7539,8 +7572,10 @@ def build_matrix_tab():
             sg.Button("Add row", key="-M_ADD-"),
             sg.Button("Update row", key="-M_UPDATE-"),
             sg.Button("Supprimer row", key="-M_DEL-"),
+            sg.Button("Dupliquer row", key="-M_DUP-"),
         ],
     ]
+
     return layout
 
 
@@ -7582,7 +7617,12 @@ def refresh_profiles_table(win, profiles: dict, matrix_rows: list):
         ])
 
     win["-PROF_TABLE-"].update(values=data)
+    try:
+        win["-M_DEVICE-"].update(values=sorted(profiles.keys()))
+    except Exception:
+        pass
 
+sg.Checkbox("Propager serial", key="-P_PROP_SERIAL-", default=False),
 
 def refresh_systems_table(win, systems):
     data = []
@@ -8283,9 +8323,9 @@ FILES:
   🐍 __init__.py (250 bytes)
   🐍 albums_admin.py (16043 bytes)
   🐍 locators_admin.py (2480 bytes)
-  🐍 matrix_admin.py (5429 bytes)
+  🐍 matrix_admin.py (5488 bytes)
   🐍 pages_admin.py (5011 bytes)
-  🐍 profiles_admin.py (9777 bytes)
+  🐍 profiles_admin.py (11253 bytes)
   🐍 systems_admin.py (5763 bytes)
   🐍 ui_admin.py (3313 bytes)
 
@@ -8930,18 +8970,21 @@ def handle_matrix_events(ev, vals, win, matrix_rows, albums_dict):
         return True
 
     # ======================================================================
-    # 🔥 3) Suppression d'une ligne MATRIX
+    # 🔥 3) Suppression d'une ou plusieurs lignes MATRIX
     # ======================================================================
     if ev == "-M_DEL-":
-        sel = vals["-MAT_TABLE-"]
+        sel = vals.get("-MAT_TABLE-", [])
 
         if not sel:
-            sg.popup_error("Sélectionne d'abord une ligne Matrix.")
+            sg.popup_error("Sélectionne au moins une ligne Matrix.")
             return True
 
-        if sg.popup_yes_no("Supprimer la ligne sélectionnée ?") != "Yes":
+        if sg.popup_yes_no(
+                f"Supprimer {len(sel)} ligne(s) sélectionnée(s) ?"
+        ) != "Yes":
             return True
 
+        # 🔥 supprimer du bas vers le haut (sécurité index)
         for idx in sorted(sel, reverse=True):
             if 0 <= idx < len(matrix_rows):
                 del matrix_rows[idx]
@@ -8949,10 +8992,8 @@ def handle_matrix_events(ev, vals, win, matrix_rows, albums_dict):
         save_json(MATRIX, {"rows": matrix_rows})
         refresh_matrix_table(win, matrix_rows)
 
-        # Recharger les combos albums si tu veux (facultatif)
-        win["-ALBUM-"].update(values=INTRO_ALBUM_CHOICES)
+        sg.popup("Ligne(s) Matrix supprimée(s).")
         return True
-
 
     # ======================================================================
     # 🔥 4) Rafraîchissement complet (Albums → Matrix sync)
@@ -9210,6 +9251,10 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         except Exception:
             win["-P_APPIUM_OVERRIDES-"].update("")
 
+        gal = cfg.get("gallery", {}) or {}
+        win["-P_GALLERY_PKG-"].update(gal.get("appPackage", "com.sec.android.gallery3d"))
+        win["-P_GALLERY_ACT-"].update(gal.get("appActivity", "com.sec.android.gallery3d.app.GalleryActivity"))
+
         return True
 
     # ======================================================================
@@ -9286,6 +9331,17 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         else:
             cfg.pop("appium_overrides", None)
 
+        pkg = (vals.get("-P_GALLERY_PKG-") or "").strip()
+        act = (vals.get("-P_GALLERY_ACT-") or "").strip()
+
+        if pkg or act:
+            cfg["gallery"] = {
+                "appPackage": pkg or "com.sec.android.gallery3d",
+                "appActivity": act or "com.sec.android.gallery3d.app.GalleryActivity",
+            }
+        else:
+            cfg.pop("gallery", None)
+
         profiles[name] = cfg
 
         # ==========================================================
@@ -9307,13 +9363,13 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         # ==========================================================
         # 🔁 PROPAGATION : adb_serial
         # ==========================================================
-        if old_adb_serial and adb_serial and adb_serial != old_adb_serial:
-            for other_name, other_cfg in profiles.items():
-                if other_name == name:
-                    continue
-
-                if other_cfg.get("adb_serial") == old_adb_serial:
-                    other_cfg["adb_serial"] = adb_serial
+        if vals.get("-P_PROP_SERIAL-", False):
+            if old_adb_serial and adb_serial and adb_serial != old_adb_serial:
+                for other_name, other_cfg in profiles.items():
+                    if other_name == name:
+                        continue
+                    if other_cfg.get("adb_serial") == old_adb_serial:
+                        other_cfg["adb_serial"] = adb_serial
 
         # Sauvegarder JSON
         save_json(PROFILES, {"profiles": profiles})
@@ -9348,6 +9404,7 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         save_json(PROFILES, {"profiles": profiles})
         refresh_profiles_table(win, profiles, matrix_rows)
         win["-PROFILE-"].update(values=list(profiles.keys()))
+        win["-M_DEVICE-"].update(values=sorted(profiles.keys()))
 
         # Reset UI
         win["-P_NAME-"].update("")
@@ -9358,6 +9415,9 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         win["-P_PVER-"].update("")
         win["-P_OFFSET-"].update("0")
         win["-P_ENABLED-"].update(True)
+        win["-P_APPIUM_OVERRIDES-"].update("")
+        win["-P_GALLERY_PKG-"].update("")
+        win["-P_GALLERY_ACT-"].update("")
 
         return True
 
@@ -9377,8 +9437,9 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         if idx >= len(names):
             return True
 
+        import copy
         base_name = names[idx]
-        base_cfg = profiles.get(base_name, {}).copy()
+        base_cfg = copy.deepcopy(profiles.get(base_name, {}))
 
         new_name = sg.popup_get_text(
             f"Nouveau profil (copie de {base_name}):",
@@ -9399,6 +9460,17 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         save_json(PROFILES, {"profiles": profiles})
         refresh_profiles_table(win, profiles, matrix_rows)
         win["-PROFILE-"].update(values=list(profiles.keys()))
+
+        gal = base_cfg.get("gallery", {}) or {}
+        app_ov = base_cfg.get("appium_overrides", {})
+        try:
+            import json
+            win["-P_APPIUM_OVERRIDES-"].update(json.dumps(app_ov, ensure_ascii=False, indent=2))
+        except Exception:
+            win["-P_APPIUM_OVERRIDES-"].update("")
+
+        win["-P_GALLERY_PKG-"].update(gal.get("appPackage", "com.sec.android.gallery3d"))
+        win["-P_GALLERY_ACT-"].update(gal.get("appActivity", "com.sec.android.gallery3d.app.GalleryActivity"))
 
         sg.popup(f"Profil dupliqué sous '{new_name}'.")
         return True

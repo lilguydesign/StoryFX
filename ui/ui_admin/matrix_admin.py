@@ -5,6 +5,7 @@ import PySimpleGUI as sg
 from ui.ui_paths_helpers import MATRIX, save_json
 from ui.ui_paths_helpers import INTRO_ALBUM_CHOICES, MULTI_ALBUM_CHOICES
 from ui.tabs.ui_tabs_admin import refresh_matrix_table
+import copy
 
 
 def handle_matrix_events(ev, vals, win, matrix_rows, albums_dict):
@@ -82,38 +83,52 @@ def handle_matrix_events(ev, vals, win, matrix_rows, albums_dict):
 
         if ev == "-M_UPDATE-":
             if not sel:
-                sg.popup_error("Sélectionne d'abord une ligne Matrix à mettre à jour.")
+                sg.popup_error("Sélectionne d'abord une ou plusieurs lignes Matrix à mettre à jour.")
                 return True
-            idx = sel[0]
-            if 0 <= idx < len(matrix_rows):
-                matrix_rows[idx] = data
-        else:  # -M_ADD-
-            matrix_rows.append(data)
 
-        # Sauvegarde
-        save_json(MATRIX, {"rows": matrix_rows})
-        refresh_matrix_table(win, matrix_rows)
+            # ✅ Mettre à jour toutes les lignes sélectionnées
+            for idx in sel:
+                if 0 <= idx < len(matrix_rows):
+                    # Option 1 : remplacer toute la ligne par 'data'
+                    # matrix_rows[idx] = data
 
-        win["-M_ALBUM-"].update(values=INTRO_ALBUM_CHOICES)
-        win["-M_ALBUM2-"].update(values=MULTI_ALBUM_CHOICES)
+                    # ✅ Option 2 (recommandée) : ne mettre à jour que les champs saisis
+                    # Ici on met à jour au moins le device (ton besoin principal)
+                    matrix_rows[idx]["device"] = data["device"]
 
+                    # Si tu veux aussi appliquer system/engine/album/platform/page/page_name :
+                    matrix_rows[idx]["system"] = data["system"]
+                    matrix_rows[idx]["engine"] = data["engine"]
+                    matrix_rows[idx]["album"] = data["album"]
+                    matrix_rows[idx]["album2"] = data["album2"]
+                    matrix_rows[idx]["platform"] = data["platform"]
+                    matrix_rows[idx]["page"] = data["page"]
+                    matrix_rows[idx]["page_name"] = data["page_name"]
+                    matrix_rows[idx]["album_size"] = data.get("album_size", 0)
+                    matrix_rows[idx]["count"] = data.get("count", 11)
 
-        sg.popup("Ligne Matrix ajoutée." if ev == "-M_ADD-" else "Ligne Matrix mise à jour.")
-        return True
+            save_json(MATRIX, {"rows": matrix_rows})
+            refresh_matrix_table(win, matrix_rows)
+
+            sg.popup(f"{len(sel)} ligne(s) Matrix mise(s) à jour.")
+            return True
 
     # ======================================================================
-    # 🔥 3) Suppression d'une ligne MATRIX
+    # 🔥 3) Suppression d'une ou plusieurs lignes MATRIX
     # ======================================================================
     if ev == "-M_DEL-":
-        sel = vals["-MAT_TABLE-"]
+        sel = vals.get("-MAT_TABLE-", [])
 
         if not sel:
-            sg.popup_error("Sélectionne d'abord une ligne Matrix.")
+            sg.popup_error("Sélectionne au moins une ligne Matrix.")
             return True
 
-        if sg.popup_yes_no("Supprimer la ligne sélectionnée ?") != "Yes":
+        if sg.popup_yes_no(
+                f"Supprimer {len(sel)} ligne(s) sélectionnée(s) ?"
+        ) != "Yes":
             return True
 
+        # 🔥 supprimer du bas vers le haut (sécurité index)
         for idx in sorted(sel, reverse=True):
             if 0 <= idx < len(matrix_rows):
                 del matrix_rows[idx]
@@ -121,10 +136,118 @@ def handle_matrix_events(ev, vals, win, matrix_rows, albums_dict):
         save_json(MATRIX, {"rows": matrix_rows})
         refresh_matrix_table(win, matrix_rows)
 
-        # Recharger les combos albums si tu veux (facultatif)
-        win["-ALBUM-"].update(values=INTRO_ALBUM_CHOICES)
+        sg.popup("Ligne(s) Matrix supprimée(s).")
         return True
 
+    # ======================================================================
+    # 🔥 3 bis) Dupliquer une ou plusieurs lignes MATRIX
+    # ======================================================================
+    if ev == "-M_DUP-":
+        sel = vals.get("-MAT_TABLE-", [])
+        if not sel:
+            sg.popup_error("Sélectionne au moins une ligne Matrix à dupliquer.")
+            return True
+
+        target_device = (vals.get("-M_DEVICE-") or "").strip()
+        if not target_device:
+            sg.popup_error("Choisis d'abord un device cible dans le combo 'device'.")
+            return True
+
+        # On mémorise l'index de départ AVANT ajout
+        start_idx = len(matrix_rows)
+
+        created = 0
+        for idx in sel:
+            if 0 <= idx < len(matrix_rows):
+                new_row = copy.deepcopy(matrix_rows[idx])
+
+                # ✅ changer le device vers celui choisi
+                new_row["device"] = target_device
+
+                # ✅ valeurs par défaut (si absentes)
+                new_row.setdefault("platform", "WhatsApp")
+                new_row.setdefault("page", "")
+                new_row.setdefault("page_name", "")
+                new_row.setdefault("album_size", 0)
+                new_row.setdefault("count", 11)
+                new_row.setdefault("album", "")
+                new_row.setdefault("album2", "")
+
+                matrix_rows.append(new_row)
+                created += 1
+
+        if created <= 0:
+            sg.popup_error("Aucune ligne dupliquée (sélection invalide).")
+            return True
+
+        # ✅ indices des nouvelles lignes (ajoutées en bas)
+        new_indices = list(range(start_idx, start_idx + created))
+
+        # ✅ sauvegarde + refresh UNE SEULE FOIS
+        save_json(MATRIX, {"rows": matrix_rows})
+        refresh_matrix_table(win, matrix_rows)
+
+        # ✅ sélectionner automatiquement les nouvelles lignes
+        try:
+            win["-MAT_TABLE-"].update(select_rows=new_indices)
+        except Exception:
+            pass
+
+        # ✅ scroller vers la première nouvelle ligne
+        try:
+            win["-MAT_TABLE-"].Widget.see(new_indices[0])
+        except Exception:
+            pass
+
+        # ✅ charger la 1ère nouvelle ligne dans les champs du bas
+        try:
+            r = matrix_rows[new_indices[0]]
+            win["-M_DEVICE-"].update(r.get("device", ""))
+            win["-M_SYSTEM-"].update(r.get("system", ""))
+            win["-M_ENGINE-"].update(r.get("engine", ""))
+            win["-M_ALBUM-"].update(r.get("album", ""))
+            win["-M_ALBUM2-"].update(r.get("album2", ""))
+            win["-M_ALBUM_SIZE-"].update(str(r.get("album_size", 0)))
+            win["-M_COUNT-"].update(str(r.get("count", 11)))
+            win["-M_PLATFORM-"].update(r.get("platform", "WhatsApp"))
+            win["-M_PAGE-"].update(r.get("page", ""))
+            win["-M_PNAME-"].update(r.get("page_name", ""))
+        except Exception:
+            pass
+
+        # ✅ sélectionner automatiquement les nouvelles lignes
+        try:
+            win["-MAT_TABLE-"].update(select_rows=new_indices)
+        except Exception:
+            pass
+
+        # ✅ forcer le focus (sinon Tk ignore parfois le scroll)
+        try:
+            win["-MAT_TABLE-"].set_focus()
+        except Exception:
+            pass
+
+        # ✅ scroller vraiment vers la 1ère nouvelle ligne (robuste)
+        try:
+            table_widget = win["-MAT_TABLE-"].Widget
+            total = len(matrix_rows)
+            if total > 0:
+                first = new_indices[0]
+                # position entre 0.0 et 1.0
+                frac = max(0.0, min(1.0, first / max(1, total - 1)))
+                table_widget.yview_moveto(frac)  # 🔥 scroll “dur”
+                table_widget.see(first)  # sécurité : s’assurer qu’elle est visible
+        except Exception:
+            pass
+
+        # ✅ forcer un refresh UI (aide énormément)
+        try:
+            win.refresh()
+        except Exception:
+            pass
+
+        sg.popup(f"{created} ligne(s) dupliquée(s) sur le device '{target_device}'.")
+        return True
 
     # ======================================================================
     # 🔥 4) Rafraîchissement complet (Albums → Matrix sync)

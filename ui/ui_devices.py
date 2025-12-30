@@ -19,10 +19,17 @@ CONVENTIONS :
       dans l'affichage (ex: S23 (WA, IG, FB_CM, FB_CI, TikTok) (192.168.1.123:5555)).
     - Les serials USB sont affichés UNIQUEMENT dans la section USB.
 """
+import shutil
+
 import os
+import time
 import socket
 import subprocess
-import time
+
+APPIUM_HOST = "127.0.0.1"
+APPIUM_PORT = 4723
+ADB_STORYFX = r"C:\Tools\ADB_StoryFX\adb.exe"   # ton adb séparé
+ADB_PORT_STORYFX = "5038"                      # IMPORTANT: ne touche pas 5037
 
 from typing import Dict, Any, List, Tuple
 import re
@@ -62,21 +69,21 @@ def start_android_studio_adb():
 # ============================================================
 # 2) ADB STORYFX → PORT 5038
 # ============================================================
-def start_storyfx_adb():
-    """
-    Lance le serveur ADB StoryFX (port 5038).
-    Utilisé pour gérer les téléphones en WiFi + Appium.
-    """
-
-    # FORCER UNIQUEMENT CE PROCESSUS À UTILISER 5038
-    os.environ["ANDROID_ADB_SERVER_PORT"] = "5038"
-
-    STORYFX_ADB = r"C:\Tools\ADB_StoryFX\adb.exe"
-
-    # Redémarrage complet
-    subprocess.run([STORYFX_ADB, "kill-server"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.run([STORYFX_ADB, "start-server"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
+# def start_storyfx_adb():
+#     """
+#     Lance le serveur ADB StoryFX (port 5038).
+#     Utilisé pour gérer les téléphones en WiFi + Appium.
+#     """
+#
+#     # FORCER UNIQUEMENT CE PROCESSUS À UTILISER 5038
+#     os.environ["ANDROID_ADB_SERVER_PORT"] = "5038"
+#
+#     STORYFX_ADB = r"C:\Tools\ADB_StoryFX\adb.exe"
+#
+#     # Redémarrage complet
+#     subprocess.run([STORYFX_ADB, "kill-server"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+#     subprocess.run([STORYFX_ADB, "start-server"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+#
 
 from pathlib import Path
 
@@ -92,87 +99,105 @@ def launch_appium_from_bat():
 # ============================================================
 # 3) ASSURER APPIUM → PORT 4723 + ADB PORT 5038
 # ============================================================
-def ensure_appium_running(timeout=15):
+def ensure_appium_running(win=None) -> bool:
     """
-    Assure que Appium tourne AVEC le bon ADB (StoryFX / 5038).
-    Si Appium est OFF → démarre automatiquement :
-        - ADB Android Studio (5037)
-        - ADB StoryFX (5038)
-        - Appium (port 4723)
-    Puis attend jusqu’à ce que Appium soit prêt.
+    SAFE: ne tue ni adb global, ni node global.
+    - Assure adb StoryFX sur port 5038
+    - Démarre Appium sur 4723 avec --adb-port 5038
+    - Ne touche pas FormaFX (adb 5037 + émulateur)
     """
 
-    HOST = "127.0.0.1"
-    PORT = 4723
+    # 1) Si Appium est déjà UP -> OK
+    try:
+        with socket.create_connection((APPIUM_HOST, APPIUM_PORT), timeout=0.5):
+            return True
+    except Exception:
+        pass
 
-    # --------------------------------------------------------
-    # Fonction interne : vérifier si le port Appium est ouvert
-    # --------------------------------------------------------
-    def port_open():
+    # 2) Démarrer le serveur ADB StoryFX sur 5038 (sans impacter 5037)
+    env = os.environ.copy()
+    env["ANDROID_ADB_SERVER_PORT"] = str(ADB_PORT_STORYFX)
+
+    try:
+        subprocess.run(
+            [ADB_STORYFX, "start-server"],
+            env=env,
+            capture_output=True,
+            text=True
+        )
+    except Exception as e:
+        if win:
+            win.write_event_value(
+                "-RUNNER-LOG-",
+                f"[StoryFX] [WARN] adb start-server 5038 failed: {e!r}"
+            )
+        # on continue quand même
+
+    # 3) Démarrer Appium
+    appium_bin = shutil.which("appium") or shutil.which("appium.cmd") or "appium"
+
+    cmd = [
+        appium_bin,
+        "--allow-cors",
+        "--relaxed-security",
+        "--base-path", "/wd/hub",
+        "--address", APPIUM_HOST,
+        "--port", str(APPIUM_PORT),
+        # "--adb-port", str(ADB_PORT_STORYFX),
+    ]
+
+    proc = None
+
+    try:
+        proc = subprocess.Popen(
+            " ".join(cmd),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            shell=True,
+        )
+    except FileNotFoundError:
+        # fallback : on tente de lancer via le .bat (si 'appium' n'est pas dans le PATH)
+        if launch_appium_from_bat():
+            # attendre que 4723 écoute
+            for _ in range(60):  # ~15s
+                try:
+                    with socket.create_connection((APPIUM_HOST, APPIUM_PORT), timeout=0.5):
+                        return True
+                except Exception:
+                    time.sleep(0.25)
+
+        msg = "[Appium] introuvable. Installe Appium ou ajoute-le au PATH (ou vérifie Lancer_Appium_StoryFX.bat)."
+        if win:
+            win.write_event_value("-RUNNER-LOG-", msg)
+        return False
+
+    # 4) Attendre que 4723 écoute vraiment (cas où Popen a réussi)
+    for _ in range(60):  # ~15 sec
         try:
-            s = socket.socket()
-            s.settimeout(0.3)
-            s.connect((HOST, PORT))
-            s.close()
-            return True
-        except:
-            return False
+            with socket.create_connection((APPIUM_HOST, APPIUM_PORT), timeout=0.5):
+                return True
+        except Exception:
+            time.sleep(0.25)
 
-    # --------------------------------------------------------
-    # 1) Appium déjà actif ?
-    # --------------------------------------------------------
-    if port_open():
-        return True
+    # 5) Si ça ne démarre pas, on récupère quelques lignes du log Appium
+    out = ""
+    if proc and proc.stdout:
+        try:
+            for _ in range(40):
+                line = proc.stdout.readline()
+                if not line:
+                    break
+                out += line
+        except Exception:
+            pass
 
-
-    # --------------------------------------------------------
-    # 2) Redémarrer ADB Android Studio (5037)
-    # --------------------------------------------------------
-    start_android_studio_adb()
-
-    # --------------------------------------------------------
-    # 3) Redémarrer ADB StoryFX (5038)
-    # --------------------------------------------------------
-    start_storyfx_adb()
-
-    # 2) Sinon → lancer ton .bat Appium automatiquement
-    launch_appium_from_bat()
-
-    # Appium doit OBLIGATOIREMENT utiliser ADB StoryFX
-    os.environ["ANDROID_ADB_SERVER_PORT"] = "5038"
-    os.environ["PATH"] = r"C:\Tools\ADB_StoryFX;" + os.environ["PATH"]
-
-
-    # --------------------------------------------------------
-    # 4) Lancer Appium AVEC le bon adbPort
-    # --------------------------------------------------------
-    # subprocess.Popen(
-    #     [
-    #         "appium",
-    #         "--allow-cors",
-    #         "--relaxed-security",
-    #         "--base-path", "/wd/hub",
-    #         "--port", str(PORT),
-    #         "--adb-port", "5038",      # 🔥 clé absolue
-    #     ],
-    #     stdout=subprocess.DEVNULL,
-    #     stderr=subprocess.DEVNULL,
-    #     shell=True
-    # )
-
-
-    # --------------------------------------------------------
-    # 5) Attendre que Appium soit prêt
-    # --------------------------------------------------------
-    start_time = time.time()
-
-    while time.time() - start_time < timeout:
-        if port_open():
-            return True
-        time.sleep(0.5)
-
-    # Appium n'a pas démarré
-    return False
+    raise RuntimeError(
+        f"Appium ne démarre pas sur {APPIUM_HOST}:{APPIUM_PORT}. "
+        f"Vérifie que la commande 'appium' existe et que le port n'est pas occupé.\n"
+        f"--- Appium output ---\n{out}"
+    )
 
 # ==========================================================================
 # 🔥 0. Helpers génériques : mapping, labels, adb devices

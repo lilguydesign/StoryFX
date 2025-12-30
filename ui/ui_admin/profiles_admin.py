@@ -55,6 +55,10 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         except Exception:
             win["-P_APPIUM_OVERRIDES-"].update("")
 
+        gal = cfg.get("gallery", {}) or {}
+        win["-P_GALLERY_PKG-"].update(gal.get("appPackage", "com.sec.android.gallery3d"))
+        win["-P_GALLERY_ACT-"].update(gal.get("appActivity", "com.sec.android.gallery3d.app.GalleryActivity"))
+
         return True
 
     # ======================================================================
@@ -131,6 +135,17 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         else:
             cfg.pop("appium_overrides", None)
 
+        pkg = (vals.get("-P_GALLERY_PKG-") or "").strip()
+        act = (vals.get("-P_GALLERY_ACT-") or "").strip()
+
+        if pkg or act:
+            cfg["gallery"] = {
+                "appPackage": pkg or "com.sec.android.gallery3d",
+                "appActivity": act or "com.sec.android.gallery3d.app.GalleryActivity",
+            }
+        else:
+            cfg.pop("gallery", None)
+
         profiles[name] = cfg
 
         # ==========================================================
@@ -152,13 +167,13 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         # ==========================================================
         # 🔁 PROPAGATION : adb_serial
         # ==========================================================
-        if old_adb_serial and adb_serial and adb_serial != old_adb_serial:
-            for other_name, other_cfg in profiles.items():
-                if other_name == name:
-                    continue
-
-                if other_cfg.get("adb_serial") == old_adb_serial:
-                    other_cfg["adb_serial"] = adb_serial
+        if vals.get("-P_PROP_SERIAL-", False):
+            if old_adb_serial and adb_serial and adb_serial != old_adb_serial:
+                for other_name, other_cfg in profiles.items():
+                    if other_name == name:
+                        continue
+                    if other_cfg.get("adb_serial") == old_adb_serial:
+                        other_cfg["adb_serial"] = adb_serial
 
         # Sauvegarder JSON
         save_json(PROFILES, {"profiles": profiles})
@@ -193,6 +208,7 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         save_json(PROFILES, {"profiles": profiles})
         refresh_profiles_table(win, profiles, matrix_rows)
         win["-PROFILE-"].update(values=list(profiles.keys()))
+        win["-M_DEVICE-"].update(values=sorted(profiles.keys()))
 
         # Reset UI
         win["-P_NAME-"].update("")
@@ -203,6 +219,9 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         win["-P_PVER-"].update("")
         win["-P_OFFSET-"].update("0")
         win["-P_ENABLED-"].update(True)
+        win["-P_APPIUM_OVERRIDES-"].update("")
+        win["-P_GALLERY_PKG-"].update("")
+        win["-P_GALLERY_ACT-"].update("")
 
         return True
 
@@ -222,8 +241,9 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         if idx >= len(names):
             return True
 
+        import copy
         base_name = names[idx]
-        base_cfg = profiles.get(base_name, {}).copy()
+        base_cfg = copy.deepcopy(profiles.get(base_name, {}))
 
         new_name = sg.popup_get_text(
             f"Nouveau profil (copie de {base_name}):",
@@ -244,6 +264,17 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
         save_json(PROFILES, {"profiles": profiles})
         refresh_profiles_table(win, profiles, matrix_rows)
         win["-PROFILE-"].update(values=list(profiles.keys()))
+
+        gal = base_cfg.get("gallery", {}) or {}
+        app_ov = base_cfg.get("appium_overrides", {})
+        try:
+            import json
+            win["-P_APPIUM_OVERRIDES-"].update(json.dumps(app_ov, ensure_ascii=False, indent=2))
+        except Exception:
+            win["-P_APPIUM_OVERRIDES-"].update("")
+
+        win["-P_GALLERY_PKG-"].update(gal.get("appPackage", "com.sec.android.gallery3d"))
+        win["-P_GALLERY_ACT-"].update(gal.get("appActivity", "com.sec.android.gallery3d.app.GalleryActivity"))
 
         sg.popup(f"Profil dupliqué sous '{new_name}'.")
         return True

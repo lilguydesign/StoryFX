@@ -374,6 +374,16 @@ def make_driver(device_id: str, platform_version: Optional[str] = None, profile:
         "appActivity": "com.sec.android.gallery3d.app.GalleryActivity",
     }
 
+    # ✅ Personnalisation par profil (FRONT) pour la Galerie
+    gal = (profile or {}).get("gallery", {}) or {}
+    if isinstance(gal, dict):
+        pkg = (gal.get("appPackage") or "").strip()
+        act = (gal.get("appActivity") or "").strip()
+        if pkg:
+            caps["appPackage"] = pkg
+        if act:
+            caps["appActivity"] = act
+
     if platform_version:
         caps["platformVersion"] = str(platform_version)
 

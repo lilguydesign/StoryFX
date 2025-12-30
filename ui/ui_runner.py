@@ -301,7 +301,7 @@ def handle_runner_events(ev, vals, win, runner_ref, profiles, albums_dict, ui_st
             "[StoryFX]" in txt
             or txt.startswith("[runner]")
             or txt.startswith("Traceback")
-            or txt.startswith("  File ")
+            or txt.startswith("File ")  # ✅ au lieu de "  File "
             or "WebDriverException" in txt
             or "ConnectionRefusedError" in txt
             or "ECONNREFUSED" in txt
@@ -327,7 +327,10 @@ def handle_runner_events(ev, vals, win, runner_ref, profiles, albums_dict, ui_st
         reset_phone_to_home(win)
 
         # 🔥 Indispensable : démarrer Appium s'il n'est pas actif
-        ensure_appium_running()
+        ok = ensure_appium_running(win)
+        if not ok:
+            append_log(win, "[UI] Appium indisponible. Vérifie l'installation ou le PATH.")
+            return True
 
         profile_name = vals.get("-PROFILE-")
         if not profile_name:

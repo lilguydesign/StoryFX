@@ -81,7 +81,12 @@
       "adb_serial": "RFCW20VEB4J",
       "tcpip_ip": "192.168.10.56",
       "tcpip_port": 5555,
-      "enabled": true
+      "enabled": true,
+      "appium_overrides": {},
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
+      }
     },
     "S20": {
       "enabled": true,
@@ -96,6 +101,24 @@
         "uiautomator2ServerLaunchTimeout": 180000,
         "adbExecTimeout": 250000,
         "newCommandTimeout": 300
+      },
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
+      }
+    },
+    "Jerry Kamgang": {
+      "device_id": "192.168.10.56:5555",
+      "platform_version": "16",
+      "offset_minutes": 48,
+      "adb_serial": "RFCW20VEB4J",
+      "tcpip_ip": "192.168.10.56",
+      "tcpip_port": 5555,
+      "enabled": true,
+      "appium_overrides": {},
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
       }
     }
   }

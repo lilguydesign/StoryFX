@@ -111,6 +111,7 @@ def build_profiles_tab():
 
         sg.Text("adb_serial"),
         sg.Input(key="-P_ADB_SERIAL-", size=(14, 1)),
+        sg.Checkbox("Propager serial", key="-P_PROP_SERIAL-", default=False),
         sg.Button("Coller serial", key="-P_PASTE_SERIAL-"),   # 🆕 déplacé ici !
     ]
 
@@ -149,12 +150,20 @@ def build_profiles_tab():
         ),
     ]
 
+    bottom_row5 = [
+        sg.Text("Gallery appPackage"),
+        sg.Input(key="-P_GALLERY_PKG-", size=(35, 1)),
+        sg.Text("Gallery appActivity"),
+        sg.Input(key="-P_GALLERY_ACT-", size=(45, 1)),
+    ]
+
     layout = [
         [table],
         bottom_row1,
         bottom_row2,
         bottom_row3,
         bottom_row4,
+        bottom_row5,  # ✅ AJOUT
     ]
     return layout
 
@@ -196,18 +205,24 @@ def build_matrix_tab():
         "device", "system", "engine",
         "album_intro", "album_multi",
         "album_size", "count",
-        "platform", "pays", "page",
+        "platform", "pays", "page_name",
     ]
 
     # 🔥 Charger les pays/pages depuis config/pages.json
     pages_file = Path(__file__).resolve().parents[2] / "config" / "pages.json"
     countries, page_names = [], []
+
     if pages_file.exists():
         with pages_file.open("r", encoding="utf-8") as f:
             data = json.load(f)
         for entry in data.get("pages", []):
-            countries.append(entry.get("country", ""))
-            page_names.append(entry.get("name", ""))
+            c = (entry.get("country") or "").strip()
+            n = (entry.get("name") or "").strip()
+            if c:
+                countries.append(c)
+            if n:
+                page_names.append(n)
+
     countries = sorted(set(countries))
     page_names = sorted(set(page_names))
 
@@ -224,6 +239,7 @@ def build_matrix_tab():
                 expand_y=True,
                 num_rows=12,
                 display_row_numbers=True,
+                select_mode=sg.TABLE_SELECT_MODE_EXTENDED,  # ✅ multi-sélection
             )
         ],
         [
@@ -233,7 +249,7 @@ def build_matrix_tab():
 
         [
             sg.Text("device"),
-            sg.Combo([], key="-M_DEVICE-", size=(12, 1), readonly=True),
+            sg.Combo([], key="-M_DEVICE-", size=(12, 1), readonly=True, enable_events=True),
 
             sg.Text("system"),
             sg.Combo([], key="-M_SYSTEM-", size=(16, 1), readonly=True),
@@ -275,16 +291,10 @@ def build_matrix_tab():
 
         [
             sg.Text("Pays"),
-            sg.Combo(
-                countries, key="-M_PAGE-",
-                size=(25, 1), readonly=True,
-            ),
+            sg.Combo(countries, key="-M_PAGE-", size=(25, 1), readonly=True),
 
             sg.Text("Page"),
-            sg.Combo(
-                page_names, key="-M_PNAME-",
-                size=(40, 1), readonly=True,
-            ),
+            sg.Combo(page_names, key="-M_PNAME-", size=(40, 1), readonly=True),
         ],
 
         [
@@ -292,8 +302,10 @@ def build_matrix_tab():
             sg.Button("Add row", key="-M_ADD-"),
             sg.Button("Update row", key="-M_UPDATE-"),
             sg.Button("Supprimer row", key="-M_DEL-"),
+            sg.Button("Dupliquer row", key="-M_DUP-"),
         ],
     ]
+
     return layout
 
 
@@ -335,7 +347,12 @@ def refresh_profiles_table(win, profiles: dict, matrix_rows: list):
         ])
 
     win["-PROF_TABLE-"].update(values=data)
+    try:
+        win["-M_DEVICE-"].update(values=sorted(profiles.keys()))
+    except Exception:
+        pass
 
+sg.Checkbox("Propager serial", key="-P_PROP_SERIAL-", default=False),
 
 def refresh_systems_table(win, systems):
     data = []
