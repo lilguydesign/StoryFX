@@ -27,8 +27,8 @@
     {
       "name": "Dubaï Vidéos Mar 2024",
       "kind": "multi",
-      "album_size": 223,
-      "count_per_post": 9
+      "album_size": 382,
+      "count_per_post": 11
     },
     {
       "name": "Never Give Up",
@@ -40,12 +40,12 @@
       "name": "Témoignages JK",
       "kind": "multi",
       "album_size": 499,
-      "count_per_post": 12
+      "count_per_post": 11
     },
     {
       "name": "Dubaï Render Mar 2024",
       "kind": "multi",
-      "album_size": 387,
+      "album_size": 426,
       "count_per_post": 11
     }
   ]

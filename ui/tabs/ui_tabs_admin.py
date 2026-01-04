@@ -124,7 +124,7 @@ def build_profiles_tab():
 
         sg.Text("device_id"),
         sg.Input(key="-P_DEVICE-", size=(18, 1)),
-
+        sg.Checkbox("Propager device", key="-P_PROP_DEVICE-", default=False),
         sg.Text("adb_serial"),
         sg.Input(key="-P_ADB_SERIAL-", size=(14, 1)),
         sg.Checkbox("Propager serial", key="-P_PROP_SERIAL-", default=False),

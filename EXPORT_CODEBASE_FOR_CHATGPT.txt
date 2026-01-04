@@ -1,7 +1,7 @@
 EXPORT FOR CHATGPT — TREE + CODE CONTENTS
-VERSION: .022
+VERSION: .026
 ROOT: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\StoryFx
-GENERATED_AT: 2025-12-30 19:58:03
+GENERATED_AT: 2026-01-03 10:18:31
 INCLUDE_SUBDIRS: True
 MAX_DEPTH: 50
 MAX_BYTES_PER_FILE: 500000
@@ -22,6 +22,7 @@ SUBDIRS:
   📁 config/
   📁 engine/
   📁 ui/
+  📁 variable/
 
 FILES:
   📄 .export_version.txt (2 bytes)
@@ -51,7 +52,7 @@ CONTENTS (for selected files):
 FILE: .export_version.txt
 PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\StoryFx\.export_version.txt
 ============================================================================================================================================
-22
+26
 
 ============================================================================================================================================
 FILE: __init__.py
@@ -1604,10 +1605,10 @@ RELATIVE: config
 SUBDIRS: (none)
 
 FILES:
-  📄 albums.json (1045 bytes)
-  📄 matrix.json (18411 bytes)
+  📄 albums.json (1046 bytes)
+  📄 matrix.json (20448 bytes)
   📄 pages.json (155 bytes)
-  📄 profiles.json (4096 bytes)
+  📄 profiles.json (4906 bytes)
   📄 scheduler_clock.json (44 bytes)
   📄 systems.json (539 bytes)
 
@@ -1648,8 +1649,8 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
     {
       "name": "Dubaï Vidéos Mar 2024",
       "kind": "multi",
-      "album_size": 223,
-      "count_per_post": 9
+      "album_size": 382,
+      "count_per_post": 11
     },
     {
       "name": "Never Give Up",
@@ -1661,12 +1662,12 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "name": "Témoignages JK",
       "kind": "multi",
       "album_size": 499,
-      "count_per_post": 12
+      "count_per_post": 11
     },
     {
       "name": "Dubaï Render Mar 2024",
       "kind": "multi",
-      "album_size": 387,
+      "album_size": 426,
       "count_per_post": 11
     }
   ]
@@ -1685,7 +1686,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "La Promotion Finit",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
       "device": "S23_TikTok",
@@ -1703,7 +1704,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "Never Give Up",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
       "device": "S23_TikTok",
@@ -1721,7 +1722,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "multi",
       "album": "",
       "album2": "Dubaï Vidéos Mar 2024",
-      "count": 9
+      "count": 11
     },
     {
       "device": "S23_TikTok",
@@ -1751,7 +1752,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "La Promotion Finit",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
       "device": "JK650_S23",
@@ -1769,7 +1770,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "Never Give Up",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
       "device": "JK650_S23",
@@ -1787,7 +1788,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "multi",
       "album": "",
       "album2": "Dubaï Vidéos Mar 2024",
-      "count": 9
+      "count": 11
     },
     {
       "device": "JK650_S23",
@@ -1817,7 +1818,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "La Promotion Finit",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
       "device": "S23_IG",
@@ -1835,7 +1836,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "Never Give Up",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
       "device": "S23_IG",
@@ -1853,7 +1854,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "multi",
       "album": "",
       "album2": "Dubaï Vidéos Mar 2024",
-      "count": 9
+      "count": 11
     },
     {
       "device": "S23_IG",
@@ -1886,7 +1887,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "page": "Cameroun",
       "page_name": "Jerry Kamgang",
       "album_size": 0,
-      "count": 12
+      "count": 11
     },
     {
       "device": "S23_FB_CM",
@@ -1908,7 +1909,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "page_name": "Jerry Kamgang",
       "album": "Never Give Up",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
       "device": "S23_FB_CM",
@@ -1930,7 +1931,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "page_name": "Jerry Kamgang",
       "album": "",
       "album2": "Dubaï Vidéos Mar 2024",
-      "count": 9
+      "count": 11
     },
     {
       "device": "S23_FB_CM",
@@ -1965,7 +1966,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "page": "Côte d'Ivoire",
       "page_name": "Jerry Kamgang Côte d’Ivoire",
       "album_size": 0,
-      "count": 12
+      "count": 11
     },
     {
       "device": "S23_FB_CI",
@@ -1987,7 +1988,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "page_name": "Jerry Kamgang Côte d’Ivoire",
       "album": "Never Give Up",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
       "device": "S23_FB_CI",
@@ -2009,7 +2010,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "page_name": "Jerry Kamgang Côte d’Ivoire",
       "album": "",
       "album2": "Dubaï Vidéos Mar 2024",
-      "count": 9
+      "count": 11
     },
     {
       "device": "S23_FB_CI",
@@ -2035,16 +2036,16 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "count": 3
     },
     {
-      "device": "JK675_A16_2",
+      "device": "JK675_A16.2",
       "platform": "WhatsApp",
       "system": "Hurry+Images",
       "engine": "intro+multi",
       "album": "La Promotion Finit",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
-      "device": "JK675_A16_2",
+      "device": "JK675_A16.2",
       "platform": "WhatsApp",
       "system": "Motivations_Stories",
       "engine": "multi",
@@ -2053,16 +2054,16 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "count": 9
     },
     {
-      "device": "JK675_A16_2",
+      "device": "JK675_A16.2",
       "platform": "WhatsApp",
       "system": "Never_Give_Up+Images",
       "engine": "intro+multi",
       "album": "Never Give Up",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
-      "device": "JK675_A16_2",
+      "device": "JK675_A16.2",
       "system": "Images_Dubai",
       "engine": "multi",
       "album": "",
@@ -2074,16 +2075,16 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "count": 11
     },
     {
-      "device": "JK675_A16_2",
+      "device": "JK675_A16.2",
       "platform": "WhatsApp",
       "system": "Video_Dubai",
       "engine": "multi",
       "album": "",
       "album2": "Dubaï Vidéos Mar 2024",
-      "count": 9
+      "count": 11
     },
     {
-      "device": "JK675_A16_2",
+      "device": "JK675_A16.2",
       "platform": "WhatsApp",
       "system": "Advices_Stories",
       "engine": "multi",
@@ -2092,7 +2093,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "count": 5
     },
     {
-      "device": "JK675_A16_2",
+      "device": "JK675_A16.2",
       "system": "Before_After",
       "engine": "multi",
       "platform": "WhatsApp",
@@ -2110,7 +2111,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "La Promotion Finit",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
       "device": "JK692_A17",
@@ -2128,7 +2129,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "Never Give Up",
       "album2": "Témoignages JK",
-      "count": 12
+      "count": 11
     },
     {
       "device": "JK692_A17",
@@ -2146,7 +2147,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "multi",
       "album": "",
       "album2": "Dubaï Vidéos Mar 2024",
-      "count": 9
+      "count": 11
     },
     {
       "device": "JK692_A17",
@@ -2176,7 +2177,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "La Promotion Finit",
       "album2": "Témoignages JK",
-      "count": 12,
+      "count": 11,
       "page": "",
       "page_name": "",
       "album_size": 0
@@ -2200,7 +2201,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "Never Give Up",
       "album2": "Témoignages JK",
-      "count": 12,
+      "count": 11,
       "page": "",
       "page_name": "",
       "album_size": 0
@@ -2224,7 +2225,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "multi",
       "album": "",
       "album2": "Dubaï Vidéos Mar 2024",
-      "count": 9,
+      "count": 11,
       "page": "",
       "page_name": "",
       "album_size": 0
@@ -2260,7 +2261,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "La Promotion Finit",
       "album2": "Témoignages JK",
-      "count": 12,
+      "count": 11,
       "page": "",
       "page_name": "",
       "album_size": 0
@@ -2284,7 +2285,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "Never Give Up",
       "album2": "Témoignages JK",
-      "count": 12,
+      "count": 11,
       "page": "",
       "page_name": "",
       "album_size": 0
@@ -2308,7 +2309,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "multi",
       "album": "",
       "album2": "Dubaï Vidéos Mar 2024",
-      "count": 9,
+      "count": 11,
       "page": "",
       "page_name": "",
       "album_size": 0
@@ -2344,7 +2345,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "La Promotion Finit",
       "album2": "Témoignages JK",
-      "count": 12,
+      "count": 11,
       "page": "",
       "page_name": "",
       "album_size": 0
@@ -2368,7 +2369,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "intro+multi",
       "album": "Never Give Up",
       "album2": "Témoignages JK",
-      "count": 12,
+      "count": 11,
       "page": "",
       "page_name": "",
       "album_size": 0
@@ -2392,7 +2393,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "engine": "multi",
       "album": "",
       "album2": "Dubaï Vidéos Mar 2024",
-      "count": 9,
+      "count": 11,
       "page": "",
       "page_name": "",
       "album_size": 0
@@ -2411,6 +2412,90 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
     },
     {
       "device": "JK682_S20",
+      "system": "Before_After",
+      "engine": "multi",
+      "platform": "WhatsApp",
+      "page": "",
+      "page_name": "",
+      "album_size": 11,
+      "count": 3,
+      "album": "",
+      "album2": "Before After"
+    },
+    {
+      "device": "JK696_A16.3",
+      "platform": "WhatsApp",
+      "system": "Hurry+Images",
+      "engine": "intro+multi",
+      "album": "La Promotion Finit",
+      "album2": "Témoignages JK",
+      "count": 11,
+      "page": "",
+      "page_name": "",
+      "album_size": 0
+    },
+    {
+      "device": "JK696_A16.3",
+      "platform": "WhatsApp",
+      "system": "Motivations_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Motivations Stories",
+      "count": 9,
+      "page": "",
+      "page_name": "",
+      "album_size": 0
+    },
+    {
+      "device": "JK696_A16.3",
+      "platform": "WhatsApp",
+      "system": "Never_Give_Up+Images",
+      "engine": "intro+multi",
+      "album": "Never Give Up",
+      "album2": "Témoignages JK",
+      "count": 11,
+      "page": "",
+      "page_name": "",
+      "album_size": 0
+    },
+    {
+      "device": "JK696_A16.3",
+      "system": "Images_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Render Mar 2024",
+      "platform": "WhatsApp",
+      "page": "",
+      "page_name": "",
+      "album_size": 0,
+      "count": 11
+    },
+    {
+      "device": "JK696_A16.3",
+      "platform": "WhatsApp",
+      "system": "Video_Dubai",
+      "engine": "multi",
+      "album": "",
+      "album2": "Dubaï Vidéos Mar 2024",
+      "count": 11,
+      "page": "",
+      "page_name": "",
+      "album_size": 0
+    },
+    {
+      "device": "JK696_A16.3",
+      "platform": "WhatsApp",
+      "system": "Advices_Stories",
+      "engine": "multi",
+      "album": "",
+      "album2": "Advices Stories",
+      "count": 5,
+      "page": "",
+      "page_name": "",
+      "album_size": 0
+    },
+    {
+      "device": "JK696_A16.3",
       "system": "Before_After",
       "engine": "multi",
       "platform": "WhatsApp",
@@ -2445,11 +2530,11 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
     "S23_IG": {
       "label": "S23 IG",
       "adb_serial": "RFCW20VEB4J",
-      "tcpip_ip": "192.168.10.56",
+      "tcpip_ip": "192.168.10.61",
       "tcpip_port": 5555,
-      "device_id": "192.168.10.56:5555",
+      "device_id": "192.168.10.61:5555",
       "platform_version": "16",
-      "offset_minutes": 12,
+      "offset_minutes": 10,
       "enabled": true,
       "appium_overrides": {},
       "gallery": {
@@ -2458,28 +2543,38 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       }
     },
     "S23_FB_CM": {
-      "device_id": "192.168.10.56:5555",
+      "device_id": "192.168.10.61:5555",
       "platform_version": "16",
-      "offset_minutes": 6,
-      "tcpip_ip": "192.168.10.56",
+      "offset_minutes": 5,
+      "tcpip_ip": "192.168.10.61",
       "tcpip_port": 5555,
       "adb_serial": "RFCW20VEB4J",
-      "enabled": true
+      "enabled": true,
+      "appium_overrides": {},
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
+      }
     },
     "S23_FB_CI": {
-      "device_id": "192.168.10.56:5555",
+      "device_id": "192.168.10.61:5555",
       "platform_version": "16",
-      "offset_minutes": 18,
-      "tcpip_ip": "192.168.10.56",
+      "offset_minutes": 15,
+      "tcpip_ip": "192.168.10.61",
       "tcpip_port": 5555,
       "adb_serial": "RFCW20VEB4J",
-      "enabled": true
+      "enabled": true,
+      "appium_overrides": {},
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
+      }
     },
     "S23_TikTok": {
-      "device_id": "192.168.10.56:5555",
+      "device_id": "192.168.10.61:5555",
       "platform_version": "16",
       "offset_minutes": 0,
-      "tcpip_ip": "192.168.10.56",
+      "tcpip_ip": "192.168.10.61",
       "tcpip_port": 5555,
       "adb_serial": "RFCW20VEB4J",
       "enabled": true
@@ -2488,7 +2583,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       "enabled": true,
       "device_id": "192.168.10.69:5560",
       "platform_version": "13",
-      "offset_minutes": 54,
+      "offset_minutes": 50,
       "adb_serial": "RF8N91GSGYW",
       "tcpip_ip": "192.168.10.69",
       "tcpip_port": 5560,
@@ -2504,11 +2599,11 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       }
     },
     "JK650_S23": {
-      "device_id": "192.168.10.118:5556",
+      "device_id": "10.127.227.252:5556",
       "platform_version": "16",
-      "offset_minutes": 42,
+      "offset_minutes": 40,
       "adb_serial": "R5CX9421YKL",
-      "tcpip_ip": "192.168.10.118",
+      "tcpip_ip": "10.127.227.252",
       "tcpip_port": 5556,
       "enabled": true,
       "appium_overrides": {},
@@ -2518,11 +2613,11 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       }
     },
     "JK657_S23+": {
-      "device_id": "192.168.10.56:5555",
+      "device_id": "192.168.10.61:5555",
       "platform_version": "16",
-      "offset_minutes": 48,
+      "offset_minutes": 45,
       "adb_serial": "RFCW20VEB4J",
-      "tcpip_ip": "192.168.10.56",
+      "tcpip_ip": "192.168.10.61",
       "tcpip_port": 5555,
       "enabled": true,
       "appium_overrides": {},
@@ -2531,28 +2626,28 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
         "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
       }
     },
-    "JK675_A16_2": {
-      "label": "A16.2",
-      "adb_serial": "R58Y9054K7X",
-      "tcpip_ip": "192.168.10.98",
-      "tcpip_port": 5559,
-      "device_id": "192.168.10.98:5559",
+    "JK696_A16.3": {
+      "device_id": "192.168.10.38:5561",
       "platform_version": "15",
-      "offset_minutes": 24,
-      "enabled": true,
+      "offset_minutes": 30,
+      "adb_serial": "RFGYC0PG9WN",
+      "tcpip_ip": "192.168.10.38",
+      "tcpip_port": 5561,
+      "enabled": false,
       "appium_overrides": {},
       "gallery": {
         "appPackage": "com.sec.android.gallery3d",
         "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
       }
     },
-    "JK677_A16": {
-      "device_id": "192.168.10.213:5557",
+    "JK675_A16.2": {
+      "label": "A16.2",
+      "adb_serial": "R58Y9054K7X",
+      "tcpip_ip": "192.168.10.63",
+      "tcpip_port": 5559,
+      "device_id": "192.168.10.63:5559",
       "platform_version": "15",
-      "offset_minutes": 30,
-      "adb_serial": "R58Y91061VR",
-      "tcpip_ip": "192.168.10.213",
-      "tcpip_port": 5557,
+      "offset_minutes": 20,
       "enabled": true,
       "appium_overrides": {},
       "gallery": {
@@ -2561,11 +2656,25 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
       }
     },
     "JK692_A17": {
-      "device_id": "192.168.10.35:5558",
+      "device_id": "192.168.10.38:5557",
       "platform_version": "15",
-      "offset_minutes": 36,
+      "offset_minutes": 25,
+      "adb_serial": "R58Y91061VR",
+      "tcpip_ip": "192.168.10.38",
+      "tcpip_port": 5557,
+      "enabled": true,
+      "appium_overrides": {},
+      "gallery": {
+        "appPackage": "com.sec.android.gallery3d",
+        "appActivity": "com.sec.android.gallery3d.app.GalleryActivity"
+      }
+    },
+    "JK677_A16": {
+      "device_id": "192.168.10.90:5558",
+      "platform_version": "15",
+      "offset_minutes": 35,
       "adb_serial": "R58YA0VYPNV",
-      "tcpip_ip": "192.168.10.35",
+      "tcpip_ip": "192.168.10.90",
       "tcpip_port": 5558,
       "enabled": true,
       "appium_overrides": {},
@@ -2583,7 +2692,7 @@ PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\Sto
 ============================================================================================================================================
 {
   "mode": "manual",
-  "time": "09:00"
+  "time": "07:40"
 }
 
 ============================================================================================================================================
@@ -4807,7 +4916,7 @@ SUBDIRS:
 
 FILES:
   🐍 app.py (16973 bytes)
-  🐍 ui_devices.py (42644 bytes)
+  🐍 ui_devices.py (50707 bytes)
   🐍 ui_events_router.py (2952 bytes)
   🐍 ui_paths_helpers.py (8906 bytes)
   🐍 ui_runner.py (12655 bytes)
@@ -5334,14 +5443,63 @@ LAST_USB_SERIALS: List[str] = []
 # 🔥 Ensure Appium Running (Auto-start si Appium n'est pas lancé)
 # ==========================================================================
 
+# def scan_adb_devices_fast() -> tuple[set, set, str, str]:
+#     """
+#     Scan ultra rapide (preuve 5037 + 5038):
+#     - USB via 5037 (adb_run_sdk)
+#     - Wi-Fi via 5038 (adb_run)
+#     - exécute 5037 et 5038 en parallèle
+#     Retourne:
+#       usb_serials_device, wifi_ids_device, out_5037, out_5038
+#     """
+#
+#     def _usb_5037():
+#         _, out = adb_run_sdk("adb devices")
+#         usb = set()
+#         for serial, status in _parse_adb_devices(out):
+#             if _is_emulator_serial(serial):
+#                 continue
+#             if ":" in serial:
+#                 continue
+#             if status == "device":
+#                 usb.add(serial)
+#         return usb, (out or "")
+#
+#     def _wifi_5038():
+#         _, out = adb_run("adb devices")  # 5038
+#         wifi = set()
+#         for serial, status in _parse_adb_devices(out):
+#             if _is_emulator_serial(serial):
+#                 continue
+#             if ":" in serial and status == "device":
+#                 wifi.add(serial)
+#         return wifi, (out or "")
+#
+#     with ThreadPoolExecutor(max_workers=2) as ex:
+#         f_usb = ex.submit(_usb_5037)
+#         f_wifi = ex.submit(_wifi_5038)
+#         usb, out_5037 = f_usb.result()
+#         wifi, out_5038 = f_wifi.result()
+#
+#     # fallback wifi lecture 5037 si 5038 vide
+#     if not wifi:
+#         for serial, status in _parse_adb_devices(out_5037):
+#             if _is_emulator_serial(serial):
+#                 continue
+#             if ":" in serial and status == "device":
+#                 wifi.add(serial)
+#
+#     return usb, wifi, out_5037, out_5038
+
+
 def scan_adb_devices_fast() -> tuple[set, set, str, str]:
     """
-    Scan ultra rapide (preuve 5037 + 5038):
+    Scan ultra rapide (5037 + 5038):
     - USB via 5037 (adb_run_sdk)
     - Wi-Fi via 5038 (adb_run)
-    - exécute 5037 et 5038 en parallèle
+    - Wi-Fi via 5037 (adb_run_sdk) => TOUJOURS fusionné (pas seulement en fallback)
     Retourne:
-      usb_serials_device, wifi_ids_device, out_5037, out_5038
+      usb_serials_device, wifi_ids_device(UNION 5037+5038), out_5037, out_5038
     """
 
     def _usb_5037():
@@ -5366,21 +5524,24 @@ def scan_adb_devices_fast() -> tuple[set, set, str, str]:
                 wifi.add(serial)
         return wifi, (out or "")
 
+    # Exécuter en parallèle
     with ThreadPoolExecutor(max_workers=2) as ex:
         f_usb = ex.submit(_usb_5037)
-        f_wifi = ex.submit(_wifi_5038)
+        f_wifi38 = ex.submit(_wifi_5038)
         usb, out_5037 = f_usb.result()
-        wifi, out_5038 = f_wifi.result()
+        wifi_5038, out_5038 = f_wifi38.result()
 
-    # fallback wifi lecture 5037 si 5038 vide
-    if not wifi:
-        for serial, status in _parse_adb_devices(out_5037):
-            if _is_emulator_serial(serial):
-                continue
-            if ":" in serial and status == "device":
-                wifi.add(serial)
+    # ✅ IMPORTANT : lire AUSSI le wifi sur 5037 et fusionner
+    wifi_5037 = set()
+    for serial, status in _parse_adb_devices(out_5037):
+        if _is_emulator_serial(serial):
+            continue
+        if ":" in serial and status == "device":
+            wifi_5037.add(serial)
 
-    return usb, wifi, out_5037, out_5038
+    wifi_union = set(wifi_5038) | set(wifi_5037)
+
+    return usb, wifi_union, out_5037, out_5038
 
 # ============================================================
 # 1) ADB ANDROID STUDIO → PORT 5037
@@ -5584,14 +5745,30 @@ def ensure_appium_running(win=None) -> bool:
     appium_bin = find_appium_cmd() or "appium"
     _log(f"[Appium] resolved appium_bin = {appium_bin!r}")
 
+    # --- log file Appium (indispensable pour diagnostiquer quand stdout ne sort rien)
+    log_dir = r"C:\Temp"
+    os.makedirs(log_dir, exist_ok=True)
+    appium_log = os.path.join(log_dir, "storyfx_appium.log")
+    # 🔥 IMPORTANT : supprimer l'ancien log Appium (évite de lire une vieille erreur)
+    try:
+        if os.path.exists(appium_log):
+            os.remove(appium_log)
+    except Exception:
+        pass
+
     args = [
         "--allow-cors",
         "--relaxed-security",
         "--base-path", "/wd/hub",
         "--address", APPIUM_HOST,
         "--port", str(APPIUM_PORT),
-        "--adb-port", str(ADB_PORT_STORYFX),
+        # "--adb-port", str(ADB_PORT_STORYFX),
+
+        # 🔥 DEBUG LOGS (sinon tu ne vois rien)
+        "--log", appium_log,
+        "--log-level", "debug",
     ]
+    _log(f"[Appium] log file = {appium_log}")
 
     proc = None
     _log(f"[Appium] launching: {appium_bin} {' '.join(args)}")
@@ -5639,6 +5816,19 @@ def ensure_appium_running(win=None) -> bool:
 
     if proc and proc.stdout:
         threading.Thread(target=_pump_appium_logs, args=(proc,), daemon=True).start()
+
+    # 3.2) Lire rapidement le fichier log Appium (même si stdout est vide)
+    time.sleep(0.8)
+    try:
+        if os.path.exists(appium_log):
+            with open(appium_log, "r", encoding="utf-8", errors="replace") as f:
+                tail = f.read()[-2000:]  # derniers caractères
+            if tail.strip():
+                _log("[Appium][LOGTAIL]\n" + tail.strip())
+        else:
+            _log(f"[Appium] log file not found yet: {appium_log}")
+    except Exception as e:
+        _log(f"[Appium] cannot read log file: {e!r}")
 
     # 3bis) si le process meurt direct, on récupère le log tout de suite
     if proc:
@@ -6228,28 +6418,55 @@ def auto_connect_all_devices(profiles: Dict[str, Dict[str, Any]]) -> str:
                 logs.append("   - Réseau d’hôtel isolé (client isolation) → ports bloqués")
                 continue
 
-            # 3.4) Mise à jour du profil + propagation
-            old_id = (cfg.get("device_id") or "").strip()
-            new_id = f"{ip}:{port}"
+            # # 3.4) Mise à jour du profil + propagation
+            # old_id = (cfg.get("device_id") or "").strip()
+            # new_id = f"{ip}:{port}"
+            #
+            # cfg["tcpip_ip"] = ip
+            # cfg["tcpip_port"] = port
+            # cfg["device_id"] = new_id
+            # profiles[pname] = cfg
+            # profiles_changed = True
+            #
+            # if old_id and old_id != new_id:
+            #     for other_name, other_cfg in profiles.items():
+            #         if other_name == pname:
+            #             continue
+            #         if (other_cfg.get("device_id") or "").strip() == old_id:
+            #             other_cfg["tcpip_ip"] = ip
+            #             other_cfg["tcpip_port"] = port
+            #             other_cfg["device_id"] = new_id
+            #             profiles_changed = True
+            #             logs.append(f"  → propagation aussi pour '{other_name}'")
+            #
+            # logs.append(f"✅ OK: {pname} → {new_id}")
 
-            cfg["tcpip_ip"] = ip
-            cfg["tcpip_port"] = port
-            cfg["device_id"] = new_id
-            profiles[pname] = cfg
+            # 3.4) Mise à jour du profil + propagation (✅ PAR adb_serial)
+            new_ip = ip
+            serial_usb = serial  # le serial USB courant (ex: RFCW20VEB4J)
+
+            # Tous les profils liés à CE téléphone (même adb_serial)
+            linked_profiles = adb_index.get(serial_usb) or []
+
+            # On met à jour TOUS les profils liés, pas seulement pname
+            for linked_name in linked_profiles:
+                other_cfg = profiles.get(linked_name, {}) or {}
+                if not other_cfg.get("enabled", True):
+                    logs.append(f"  [SKIP] profil désactivé: {linked_name}")
+                    continue
+
+                other_port = int(other_cfg.get("tcpip_port", port) or port)
+                other_new_id = f"{new_ip}:{other_port}"
+
+                other_cfg["tcpip_ip"] = new_ip
+                other_cfg["tcpip_port"] = other_port
+                other_cfg["device_id"] = other_new_id
+                profiles[linked_name] = other_cfg
+
+                logs.append(f"  ✅ UPDATE: {linked_name} → {other_new_id}")
+
             profiles_changed = True
-
-            if old_id and old_id != new_id:
-                for other_name, other_cfg in profiles.items():
-                    if other_name == pname:
-                        continue
-                    if (other_cfg.get("device_id") or "").strip() == old_id:
-                        other_cfg["tcpip_ip"] = ip
-                        other_cfg["tcpip_port"] = port
-                        other_cfg["device_id"] = new_id
-                        profiles_changed = True
-                        logs.append(f"  → propagation aussi pour '{other_name}'")
-
-            logs.append(f"✅ OK: {pname} → {new_id}")
+            logs.append(f"✅ OK: {pname} (serial={serial_usb}) → propagation sur {len(linked_profiles)} profil(s)")
 
     # ------------------------------------------------------------------
     # 4) Sauvegarde profiles.json
@@ -6390,6 +6607,81 @@ def list_devices_pro(with_ping: bool = True) -> str:
     return "\n".join(logs)
 
 
+# # ==========================================================================
+# # 🔥 4. Connexion PRO : connect_all_devices()
+# # ==========================================================================
+#
+# def connect_all_devices() -> str:
+#     """
+#     Connecte tous les device_id (ip:port) configurés.
+#     - priorité 5038
+#     - si 5038 ne voit aucun ip:port, on "importe" depuis 5037 (lecture) puis connect via 5038
+#     """
+#     profiles = load_profiles_dict()
+#     wifi_map, _, disabled_map, unique_count = build_devices_mapping(profiles)
+#
+#     logs: List[str] = []
+#     logs.append("=== ADB CONNECT ALL (Mode PRO) ===\n")
+#
+#     adb_run("adb disconnect")  # 5038
+#
+#     # ✅ si 5038 ne voit aucun wifi, on tente de "ré-importer" depuis 5037
+#     _, out_5038 = adb_run("adb devices")
+#     wifi_5038 = [s for s, st in _parse_adb_devices(out_5038) if ":" in s and st == "device" and not _is_emulator_serial(s)]
+#
+#     if not wifi_5038:
+#         _, out_5037 = adb_run_sdk("adb devices")
+#         wifi_5037 = [s for s, st in _parse_adb_devices(out_5037) if ":" in s and st == "device" and not _is_emulator_serial(s)]
+#         for dev in wifi_5037:
+#             adb_run(f"adb connect {dev}")  # connect sur 5038
+#         if wifi_5037:
+#             logs.append(f"[Import] {len(wifi_5037)} device(s) importé(s) de 5037 → 5038")
+#
+#     connected_ids: List[str] = []
+#     missing_ids: List[str] = []
+#
+#     for dev_id in wifi_map.keys():
+#         _, outc = adb_run(f"adb connect {dev_id}")  # 5038
+#         txt = (outc or "").strip().lower()
+#         if "connected" in txt or "already connected" in txt:
+#             connected_ids.append(dev_id)
+#         else:
+#             missing_ids.append(dev_id)
+#
+#     logs.append("🟢 CONNECTÉS (Wi-Fi) :")
+#     if connected_ids:
+#         for dev_id in connected_ids:
+#             profils = wifi_map.get(dev_id, [])
+#             logs.append(f"   🟢 {fusion_label(profils)} ({dev_id})")
+#     else:
+#         logs.append("   Aucun device connecté.")
+#
+#     logs.append("\n🔴 ABSENTS (Wi-Fi) :")
+#     if missing_ids:
+#         for dev_id in missing_ids:
+#             profils = wifi_map.get(dev_id, [])
+#             ip = dev_id.split(":")[0]
+#             try:
+#                 p = Popen(["ping", "-n", "1", "-w", "300", ip], stdout=PIPE)
+#                 resp = p.stdout.read().decode(errors="ignore")
+#                 status = "⚡ Ping OK (ADB OFF)" if "TTL=" in resp else "🔴 Hors ligne"
+#             except Exception:
+#                 status = "❓ Indéfini"
+#             logs.append(f"   🔴 {fusion_label(profils)} ({dev_id}) → {status}")
+#     else:
+#         logs.append("   Aucun device absent.")
+#
+#     logs.append("\n⚪ DÉSACTIVÉS :")
+#     if disabled_map:
+#         for dev_id, profils in disabled_map.items():
+#             dev_label = dev_id or "device_id inconnu"
+#             logs.append(f"   ⚪ {fusion_label(profils)} ({dev_label}) → Désactivé")
+#     else:
+#         logs.append("   Aucun device désactivé.")
+#
+#     logs.append(f"\n=== Résultat : {len(connected_ids)} / {unique_count} périphériques Wi-Fi actifs ===")
+#     return "\n".join(logs)
+
 # ==========================================================================
 # 🔥 4. Connexion PRO : connect_all_devices()
 # ==========================================================================
@@ -6397,41 +6689,57 @@ def list_devices_pro(with_ping: bool = True) -> str:
 def connect_all_devices() -> str:
     """
     Connecte tous les device_id (ip:port) configurés.
-    - priorité 5038
-    - si 5038 ne voit aucun ip:port, on "importe" depuis 5037 (lecture) puis connect via 5038
+    Objectifs:
+    - NE PAS casser l'état existant (pas de adb disconnect global)
+    - Connecter sur 5038 (priorité StoryFX/Appium)
+    - (option) Répliquer aussi sur 5037 pour que "adb devices" voie pareil sur les 2 ports
     """
+
     profiles = load_profiles_dict()
     wifi_map, _, disabled_map, unique_count = build_devices_mapping(profiles)
 
     logs: List[str] = []
     logs.append("=== ADB CONNECT ALL (Mode PRO) ===\n")
 
-    adb_run("adb disconnect")  # 5038
-
-    # ✅ si 5038 ne voit aucun wifi, on tente de "ré-importer" depuis 5037
-    _, out_5038 = adb_run("adb devices")
-    wifi_5038 = [s for s, st in _parse_adb_devices(out_5038) if ":" in s and st == "device" and not _is_emulator_serial(s)]
-
-    if not wifi_5038:
-        _, out_5037 = adb_run_sdk("adb devices")
-        wifi_5037 = [s for s, st in _parse_adb_devices(out_5037) if ":" in s and st == "device" and not _is_emulator_serial(s)]
-        for dev in wifi_5037:
-            adb_run(f"adb connect {dev}")  # connect sur 5038
-        if wifi_5037:
-            logs.append(f"[Import] {len(wifi_5037)} device(s) importé(s) de 5037 → 5038")
+    # --- Snapshot avant (debug)
+    _, out_before_38 = adb_run("adb devices")
+    _, out_before_37 = adb_run_sdk("adb devices")
+    logs.append("[DEBUG] BEFORE ADB 5038 raw:")
+    logs.append((out_before_38 or "").strip() or "(vide)")
+    logs.append("\n[DEBUG] BEFORE ADB 5037 raw:")
+    logs.append((out_before_37 or "").strip() or "(vide)")
+    logs.append("")
 
     connected_ids: List[str] = []
     missing_ids: List[str] = []
 
+    # ✅ Connecter chaque device_id sur 5038 (sans reset global)
     for dev_id in wifi_map.keys():
-        _, outc = adb_run(f"adb connect {dev_id}")  # 5038
+        rc, outc = adb_run(f"adb connect {dev_id}")  # 5038
         txt = (outc or "").strip().lower()
-        if "connected" in txt or "already connected" in txt:
+
+        ok = ("connected" in txt) or ("already connected" in txt)
+        if ok:
             connected_ids.append(dev_id)
         else:
             missing_ids.append(dev_id)
 
-    logs.append("🟢 CONNECTÉS (Wi-Fi) :")
+        # ✅ OPTION : répliquer aussi sur 5037 (juste pour synchro visibilité)
+        # (si tu ne veux pas, commente ce bloc)
+        try:
+            adb_run_sdk(f"adb connect {dev_id}")  # 5037
+        except Exception:
+            pass
+
+    # --- Snapshot après (debug)
+    _, out_after_38 = adb_run("adb devices")
+    _, out_after_37 = adb_run_sdk("adb devices")
+    logs.append("\n[DEBUG] AFTER ADB 5038 raw:")
+    logs.append((out_after_38 or "").strip() or "(vide)")
+    logs.append("\n[DEBUG] AFTER ADB 5037 raw:")
+    logs.append((out_after_37 or "").strip() or "(vide)")
+
+    logs.append("\n🟢 CONNECTÉS (Wi-Fi) :")
     if connected_ids:
         for dev_id in connected_ids:
             profils = wifi_map.get(dev_id, [])
@@ -7800,7 +8108,7 @@ SUBDIRS: (none)
 
 FILES:
   🐍 __init__.py (513 bytes)
-  🐍 ui_tabs_admin.py (18084 bytes)
+  🐍 ui_tabs_admin.py (18161 bytes)
   🐍 ui_tabs_launcher.py (9034 bytes)
   🐍 ui_tabs_locators.py (2220 bytes)
   🐍 ui_tabs_sched_devices.py (2665 bytes)
@@ -7962,7 +8270,7 @@ def build_profiles_tab():
 
         sg.Text("device_id"),
         sg.Input(key="-P_DEVICE-", size=(18, 1)),
-
+        sg.Checkbox("Propager device", key="-P_PROP_DEVICE-", default=False),
         sg.Text("adb_serial"),
         sg.Input(key="-P_ADB_SERIAL-", size=(14, 1)),
         sg.Checkbox("Propager serial", key="-P_PROP_SERIAL-", default=False),
@@ -8926,7 +9234,7 @@ FILES:
   🐍 locators_admin.py (2480 bytes)
   🐍 matrix_admin.py (11740 bytes)
   🐍 pages_admin.py (5011 bytes)
-  🐍 profiles_admin.py (16238 bytes)
+  🐍 profiles_admin.py (16665 bytes)
   🐍 systems_admin.py (5763 bytes)
   🐍 ui_admin.py (3313 bytes)
 
@@ -10184,20 +10492,26 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
                     r["device"] = new_name
 
         # ==========================================================
-        # 🔁 PROPAGATION : device_id / tcpip_ip / tcpip_port
+        # 🔁 PROPAGATION : device_id / tcpip_ip / tcpip_port (OPTIONNEL)
         # ==========================================================
-        if old_device_id and device_id and device_id != old_device_id:
-            for other_name, other_cfg in profiles.items():
-                if other_name == new_name:
-                    continue
+        if vals.get("-P_PROP_DEVICE-", False):
+            # On propage seulement si device_id a réellement changé
+            if old_device_id and device_id and device_id != old_device_id:
+                for other_name, other_cfg in profiles.items():
+                    if other_name == new_name:
+                        continue
 
-                if other_cfg.get("device_id") == old_device_id:
-                    other_cfg["device_id"] = device_id
+                    # même "ancien device_id" => on met à jour
+                    if other_cfg.get("device_id") == old_device_id:
+                        other_cfg["device_id"] = device_id
 
-                    if tcpip_ip:
-                        other_cfg["tcpip_ip"] = tcpip_ip
-                    if tcpip_port is not None:
-                        other_cfg["tcpip_port"] = tcpip_port
+                        # si l'IP est vide, on n'écrase pas (on laisse la valeur existante)
+                        if tcpip_ip:
+                            other_cfg["tcpip_ip"] = tcpip_ip
+
+                        # si port est None, on n'écrase pas (on laisse la valeur existante)
+                        if tcpip_port is not None:
+                            other_cfg["tcpip_port"] = tcpip_port
 
         # ==========================================================
         # 🔁 PROPAGATION : adb_serial
@@ -10656,4 +10970,492 @@ def handle_admin_events(ev, vals, win, profiles, systems, matrix_rows, albums_di
     return False
 
 
+
+############################################################################################################################################
+SCAN DIR: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\StoryFx\variable
+RELATIVE: variable
+############################################################################################################################################
+SUBDIRS:
+  📁 collected/
+
+FILES:
+  🐍 collect_variable_bundle.py (16499 bytes)
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+CONTENTS (for selected files):
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+============================================================================================================================================
+FILE: collect_variable_bundle.py
+PATH: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\StoryFx\variable\collect_variable_bundle.py
+============================================================================================================================================
+import sys
+sys.stdout.reconfigure(encoding="utf-8")
+
+import os
+import re
+import shutil
+import time
+from pathlib import Path
+from datetime import datetime
+import tkinter as tk
+from tkinter import ttk, messagebox, filedialog
+
+"""
+collect_variable_bundle.py
+--------------------------
+But:
+- Tu colles une variable/texte à chercher
+- Le script scanne le projet et trouve les fichiers qui contiennent cette variable
+- Si nb_fichiers >= THRESHOLD_TXT (par défaut 7):
+      -> il génère un fichier TXT unique avec le contenu de tous les fichiers trouvés
+- Sinon (< THRESHOLD_TXT):
+      -> il COPIE les fichiers trouvés dans tools\\variable\\collected\\ (structure conservée)
+
+IMPORTANT:
+- À chaque exécution, le dossier tools\\variable est vidé AVANT (sauf les scripts .py présents à la racine du dossier tools\\variable).
+- AUCUN ZIP ici.
+"""
+
+# =========================================================
+# CONFIG
+# =========================================================
+PROJECT_ROOT_DEFAULT = r"C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK Tools\SendFX"
+OUT_ROOT_DEFAULT = r"C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK Tools\SendFX\tools\variable"
+
+OUT_COPY_DIRNAME = "collected"
+OUT_TXT_FILENAME = "EXPORT_VARIABLE_MATCHES_FOR_CHATGPT.txt"
+
+# Seuil: si >= ce nombre de fichiers matchés => export TXT, sinon copie fichiers
+THRESHOLD_TXT = 7
+
+# Limites export TXT
+MAX_BYTES_PER_FILE = 500_000        # limite par fichier (texte tronqué au-delà)
+MAX_TOTAL_OUTPUT_BYTES = 12_000_000 # limite totale (12MB)
+MAX_DEPTH = 80
+
+# Dossiers/fichiers à ignorer au scan
+IGNORE_DIRS = {
+    ".venv", "venv", "env",
+    "__pycache__", ".pytest_cache",
+    ".git", ".idea", ".vscode",
+    "node_modules",
+    "dist", "build",
+    OUT_COPY_DIRNAME,
+    "zip",  # au cas où
+}
+IGNORE_FILES = {"pyvenv.cfg", "CACHEDIR.TAG"}
+
+# Extensions à scanner (tu peux élargir)
+SCAN_EXTS = {
+    ".py", ".txt", ".md", ".json", ".yaml", ".yml",
+    ".toml", ".ini", ".cfg", ".env",
+    ".sql",
+    ".html", ".css", ".js",
+    ".ts", ".tsx", ".jsx",
+    ".dart",
+    ".bat", ".ps1", ".sh",
+}
+
+
+# =========================================================
+# HELPERS
+# =========================================================
+def is_ignored_dir(path: Path) -> bool:
+    parts = {p.lower() for p in path.parts}
+    return any(d.lower() in parts for d in IGNORE_DIRS)
+
+def is_under(path: Path, root: Path) -> bool:
+    try:
+        path.resolve().relative_to(root.resolve())
+        return True
+    except Exception:
+        return False
+
+def safe_read_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return path.read_text(encoding="latin-1", errors="replace")
+    except Exception:
+        return ""
+
+def clear_directory(dir_path: Path, *, keep_paths: set[Path] | None = None) -> None:
+    """
+    Vide un dossier (supprime tout), en gardant éventuellement certains paths absolus.
+    """
+    keep_paths = {p.resolve() for p in (keep_paths or set())}
+
+    if not dir_path.exists():
+        return
+
+    for item in dir_path.iterdir():
+        try:
+            if item.resolve() in keep_paths:
+                continue
+            if item.is_dir():
+                shutil.rmtree(item)
+            else:
+                item.unlink()
+        except Exception:
+            pass
+
+def collect_keep_paths_for_out_root(out_root: Path) -> set[Path]:
+    """
+    Conserve tous les .py à la racine de tools\\variable
+    (donc tes scripts moteurs ne seront jamais supprimés).
+    """
+    keep: set[Path] = set()
+    if not out_root.exists():
+        return keep
+    for p in out_root.iterdir():
+        if p.is_file() and p.suffix.lower() == ".py":
+            keep.add(p.resolve())
+    return keep
+
+def find_files_containing(project_root: Path, needle: str, mode: str, ignore_roots: list[Path] | None = None) -> list[Path]:
+    needle = (needle or "").strip()
+    if not needle:
+        return []
+
+    ignore_roots = [r for r in (ignore_roots or []) if isinstance(r, Path)]
+
+    if mode == "literal":
+        matcher = lambda s: needle in s
+    elif mode == "word":
+        pattern = re.compile(rf"\b{re.escape(needle)}\b")
+        matcher = lambda s: bool(pattern.search(s))
+    else:  # regex
+        try:
+            pattern = re.compile(needle)
+        except re.error:
+            raise ValueError("Regex invalide. Corrige ta regex ou choisis 'Literal'.")
+        matcher = lambda s: bool(pattern.search(s))
+
+    hits: list[Path] = []
+    for root, dirs, files in os.walk(project_root):
+        root_path = Path(root)
+
+        # ignore roots (ex: tools\variable) pour éviter recursion
+        if any(is_under(root_path, ir) for ir in ignore_roots):
+            dirs[:] = []
+            continue
+
+        dirs[:] = [d for d in dirs if not is_ignored_dir(root_path / d)]
+        if is_ignored_dir(root_path):
+            continue
+
+        for fn in files:
+            p = root_path / fn
+            if fn in IGNORE_FILES:
+                continue
+            if p.suffix.lower() not in SCAN_EXTS:
+                continue
+
+            content = safe_read_text(p)
+            if content and matcher(content):
+                hits.append(p)
+
+    # tri stable
+    hits.sort(key=lambda x: str(x).lower())
+    return hits
+
+def copy_hits(project_root: Path, hits: list[Path], out_copy_root: Path) -> int:
+    copied = 0
+    for src in hits:
+        try:
+            rel = src.relative_to(project_root)
+        except Exception:
+            rel = Path("_external") / src.name
+
+        dest = out_copy_root / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest)
+        copied += 1
+    return copied
+
+
+# =========================================================
+# TXT EXPORT (contenu de tous les fichiers matchés)
+# =========================================================
+def export_matches_to_txt(
+    project_root: Path,
+    out_root: Path,
+    hits: list[Path],
+    needle: str,
+    mode: str,
+    output_filename: str = OUT_TXT_FILENAME,
+) -> Path:
+    out_path = (out_root / output_filename).resolve()
+
+    # Exclure le fichier output de lecture (si re-run)
+    hits = [p for p in hits if p.resolve() != out_path]
+
+    written_bytes = 0
+    now_ts = time.time()
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    def write_line(f, s: str):
+        nonlocal written_bytes
+        data = (s + "\n").encode("utf-8", errors="replace")
+        if written_bytes + len(data) > MAX_TOTAL_OUTPUT_BYTES:
+            tail = "\n<<OUTPUT TRUNCATED: MAX_TOTAL_OUTPUT_BYTES reached>>\n"
+            f.write(tail)
+            raise StopIteration
+        f.write(s + "\n")
+        written_bytes += len(data)
+
+    with out_path.open("w", encoding="utf-8", newline="\n") as f:
+        write_line(f, "EXPORT FOR CHATGPT — VARIABLE MATCHES (FILES + CONTENTS)")
+        write_line(f, f"ROOT: {project_root}")
+        write_line(f, f"GENERATED_AT: {ts}")
+        write_line(f, f"NEEDLE: {needle!r}")
+        write_line(f, f"MODE: {mode}")
+        write_line(f, f"HITS: {len(hits)}")
+        write_line(f, f"THRESHOLD_TXT: {THRESHOLD_TXT}")
+        write_line(f, f"MAX_BYTES_PER_FILE: {MAX_BYTES_PER_FILE}")
+        write_line(f, f"MAX_TOTAL_OUTPUT_BYTES: {MAX_TOTAL_OUTPUT_BYTES}")
+        write_line(f, "=" * 140)
+        write_line(f, "")
+
+        try:
+            for p in hits:
+                rel = None
+                try:
+                    rel = p.relative_to(project_root)
+                except Exception:
+                    rel = p
+
+                write_line(f, "\n" + "#" * 140)
+                write_line(f, f"FILE: {p.name}")
+                write_line(f, f"PATH: {p}")
+                write_line(f, f"RELATIVE: {rel}")
+                try:
+                    size = p.stat().st_size
+                except Exception:
+                    size = -1
+                write_line(f, f"SIZE_BYTES: {size}")
+                write_line(f, "#" * 140)
+
+                raw = safe_read_text(p)
+                raw_bytes = raw.encode("utf-8", errors="replace")
+                if len(raw_bytes) > MAX_BYTES_PER_FILE:
+                    truncated = raw_bytes[:MAX_BYTES_PER_FILE].decode("utf-8", errors="replace")
+                    write_line(f, truncated)
+                    write_line(f, "\n<<FILE TRUNCATED: MAX_BYTES_PER_FILE reached>>")
+                else:
+                    write_line(f, raw)
+
+                write_line(f, "")
+
+        except StopIteration:
+            pass
+
+    return out_path
+
+
+# =========================================================
+# PIPELINE
+# =========================================================
+def run_bundle(project_root: Path, out_root: Path, needle: str, mode: str) -> dict:
+    out_root.mkdir(parents=True, exist_ok=True)
+
+    # 1) purge tools\variable en gardant les scripts .py à la racine
+    keep = collect_keep_paths_for_out_root(out_root)
+    clear_directory(out_root, keep_paths=keep)
+
+    # 2) re-créer collected (au cas où)
+    out_copy_root = out_root / OUT_COPY_DIRNAME
+    out_copy_root.mkdir(parents=True, exist_ok=True)
+
+    # 3) scan
+    hits = find_files_containing(project_root, needle, mode, ignore_roots=[out_root])
+
+    result = {
+        "needle": needle,
+        "mode": mode,
+        "hits": len(hits),
+        "action": "",
+        "copy_dir": "",
+        "txt_path": "",
+    }
+
+    # 4) condition: TXT ou copie
+    if len(hits) >= THRESHOLD_TXT:
+        txt_path = export_matches_to_txt(project_root, out_root, hits, needle, mode, OUT_TXT_FILENAME)
+        result["action"] = "txt"
+        result["txt_path"] = str(txt_path)
+    else:
+        copied = copy_hits(project_root, hits, out_copy_root) if hits else 0
+        result["action"] = "copy"
+        result["copy_dir"] = str(out_copy_root)
+        result["copied"] = copied
+
+    return result
+
+
+# =========================================================
+# UI (Tkinter)
+# =========================================================
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("SendFX • Variable Bundle (Copy or TXT)")
+        self.geometry("900x560")
+        self.minsize(860, 520)
+
+        self.project_root = tk.StringVar(value=PROJECT_ROOT_DEFAULT)
+        self.out_root = tk.StringVar(value=OUT_ROOT_DEFAULT)
+        self.needle = tk.StringVar(value="")
+        self.mode = tk.StringVar(value="literal")  # literal | word | regex
+        self.threshold = tk.IntVar(value=THRESHOLD_TXT)
+
+        self._build_ui()
+
+    def _build_ui(self):
+        pad = {"padx": 10, "pady": 8}
+        frm = ttk.Frame(self)
+        frm.pack(fill="both", expand=True, **pad)
+
+        # Project root
+        r1 = ttk.Frame(frm); r1.pack(fill="x")
+        ttk.Label(r1, text="Dossier projet (à scanner) :").pack(side="left")
+        ttk.Entry(r1, textvariable=self.project_root).pack(side="left", fill="x", expand=True, padx=10)
+        ttk.Button(r1, text="Choisir…", command=self._pick_project).pack(side="left")
+
+        # Output root
+        r2 = ttk.Frame(frm); r2.pack(fill="x", pady=(6, 0))
+        ttk.Label(r2, text="Dossier sortie (tools\\variable) :").pack(side="left")
+        ttk.Entry(r2, textvariable=self.out_root).pack(side="left", fill="x", expand=True, padx=10)
+        ttk.Button(r2, text="Choisir…", command=self._pick_out).pack(side="left")
+
+        # Needle
+        r3 = ttk.Frame(frm); r3.pack(fill="x", pady=(14, 0))
+        ttk.Label(r3, text="Variable / texte à chercher :").pack(side="left")
+        ttk.Entry(r3, textvariable=self.needle).pack(side="left", fill="x", expand=True, padx=10)
+
+        # Mode
+        r4 = ttk.Frame(frm); r4.pack(fill="x", pady=(6, 0))
+        ttk.Label(r4, text="Mode :").pack(side="left")
+        ttk.Radiobutton(r4, text="Literal", variable=self.mode, value="literal").pack(side="left", padx=8)
+        ttk.Radiobutton(r4, text="Mot complet", variable=self.mode, value="word").pack(side="left", padx=8)
+        ttk.Radiobutton(r4, text="Regex", variable=self.mode, value="regex").pack(side="left", padx=8)
+
+        # Threshold
+        r5 = ttk.Frame(frm); r5.pack(fill="x", pady=(6, 0))
+        ttk.Label(r5, text="Seuil export TXT (>=) :").pack(side="left")
+        ttk.Spinbox(r5, from_=1, to=999, textvariable=self.threshold, width=6).pack(side="left", padx=8)
+        ttk.Label(r5, text="(si hits >= seuil => TXT, sinon copie fichiers)").pack(side="left")
+
+        # Buttons
+        r6 = ttk.Frame(frm); r6.pack(fill="x", pady=(14, 0))
+        ttk.Button(r6, text="Lancer", command=self._run).pack(side="left")
+        ttk.Button(r6, text="Ouvrir dossier sortie", command=self._open_out).pack(side="left", padx=10)
+
+        # Log
+        ttk.Label(frm, text="Log :").pack(anchor="w", pady=(16, 6))
+        self.log = tk.Text(frm, height=16, wrap="word")
+        self.log.pack(fill="both", expand=True)
+
+        help_txt = (
+            "Règle:\n"
+            f"- Si nombre de fichiers trouvés >= seuil (par défaut {THRESHOLD_TXT}) => export TXT unique.\n"
+            f"- Sinon => copie des fichiers dans '{OUT_COPY_DIRNAME}\\' (structure conservée).\n"
+            "\nImportant:\n"
+            "- À chaque run, tools\\variable est vidé en premier (sauf scripts .py à la racine).\n"
+            "- AUCUN ZIP.\n"
+        )
+        self.log.insert("end", help_txt + "\n\n")
+
+    def _pick_project(self):
+        d = filedialog.askdirectory(title="Choisir le dossier du projet")
+        if d:
+            self.project_root.set(d)
+
+    def _pick_out(self):
+        d = filedialog.askdirectory(title="Choisir le dossier de sortie (tools\\variable)")
+        if d:
+            self.out_root.set(d)
+
+    def _open_out(self):
+        outp = Path(self.out_root.get().strip())
+        if not outp.exists():
+            messagebox.showwarning("Dossier introuvable", f"Ce dossier n'existe pas:\n{outp}")
+            return
+        os.startfile(str(outp))
+
+    def _append(self, s: str):
+        self.log.insert("end", s + "\n")
+        self.log.see("end")
+        self.update_idletasks()
+
+    def _run(self):
+        project_root = Path(self.project_root.get().strip())
+        out_root = Path(self.out_root.get().strip())
+        needle = self.needle.get().strip()
+        mode = self.mode.get().strip()
+
+        global THRESHOLD_TXT
+        try:
+            THRESHOLD_TXT = int(self.threshold.get())
+        except Exception:
+            THRESHOLD_TXT = 7
+
+        if not project_root.exists():
+            messagebox.showerror("Erreur", f"Dossier projet introuvable:\n{project_root}")
+            return
+
+        try:
+            out_root.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            messagebox.showerror("Erreur", f"Impossible de créer le dossier sortie:\n{out_root}")
+            return
+
+        if not needle:
+            messagebox.showwarning("Info", "Colle une variable/texte à chercher.")
+            return
+
+        self._append("-" * 60)
+        self._append(f"Projet : {project_root}")
+        self._append(f"Sortie : {out_root}")
+        self._append(f"Recherche : {needle!r} | mode={mode} | seuil={THRESHOLD_TXT}")
+        self._append("Purge tools\\variable puis scan...")
+
+        try:
+            res = run_bundle(project_root, out_root, needle, mode)
+        except Exception as e:
+            messagebox.showerror("Erreur", str(e))
+            self._append(f"ERREUR: {e}")
+            return
+
+        self._append(f"Fichiers trouvés: {res['hits']}")
+
+        if res["action"] == "txt":
+            self._append("Action: EXPORT TXT ✅")
+            self._append(f"TXT: {res['txt_path']}")
+            messagebox.showinfo("Terminé", f"✅ Export TXT généré:\n{res['txt_path']}")
+        else:
+            self._append("Action: COPIE fichiers ✅")
+            self._append(f"Dossier: {res['copy_dir']}")
+            self._append(f"Copiés: {res.get('copied', 0)}")
+            messagebox.showinfo("Terminé", f"✅ Fichiers copiés dans:\n{res['copy_dir']}")
+
+        self._append("OK ✅")
+
+
+if __name__ == "__main__":
+    App().mainloop()
+
+
+
+############################################################################################################################################
+SCAN DIR: C:\Users\Dropbox\Jerry Kamgang\Softwares\Scripts\Jk_Scripts\JK_Stories\StoryFx\variable\collected
+RELATIVE: variable\collected
+############################################################################################################################################
+SUBDIRS: (none)
+
+FILES:
+  (none)
+
+CONTENTS: (none)
 

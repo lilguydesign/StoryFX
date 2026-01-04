@@ -225,20 +225,26 @@ def handle_profiles_events(ev, vals, win, profiles, matrix_rows):
                     r["device"] = new_name
 
         # ==========================================================
-        # 🔁 PROPAGATION : device_id / tcpip_ip / tcpip_port
+        # 🔁 PROPAGATION : device_id / tcpip_ip / tcpip_port (OPTIONNEL)
         # ==========================================================
-        if old_device_id and device_id and device_id != old_device_id:
-            for other_name, other_cfg in profiles.items():
-                if other_name == new_name:
-                    continue
+        if vals.get("-P_PROP_DEVICE-", False):
+            # On propage seulement si device_id a réellement changé
+            if old_device_id and device_id and device_id != old_device_id:
+                for other_name, other_cfg in profiles.items():
+                    if other_name == new_name:
+                        continue
 
-                if other_cfg.get("device_id") == old_device_id:
-                    other_cfg["device_id"] = device_id
+                    # même "ancien device_id" => on met à jour
+                    if other_cfg.get("device_id") == old_device_id:
+                        other_cfg["device_id"] = device_id
 
-                    if tcpip_ip:
-                        other_cfg["tcpip_ip"] = tcpip_ip
-                    if tcpip_port is not None:
-                        other_cfg["tcpip_port"] = tcpip_port
+                        # si l'IP est vide, on n'écrase pas (on laisse la valeur existante)
+                        if tcpip_ip:
+                            other_cfg["tcpip_ip"] = tcpip_ip
+
+                        # si port est None, on n'écrase pas (on laisse la valeur existante)
+                        if tcpip_port is not None:
+                            other_cfg["tcpip_port"] = tcpip_port
 
         # ==========================================================
         # 🔁 PROPAGATION : adb_serial

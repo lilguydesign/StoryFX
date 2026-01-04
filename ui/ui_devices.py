@@ -52,14 +52,63 @@ LAST_USB_SERIALS: List[str] = []
 # 🔥 Ensure Appium Running (Auto-start si Appium n'est pas lancé)
 # ==========================================================================
 
+# def scan_adb_devices_fast() -> tuple[set, set, str, str]:
+#     """
+#     Scan ultra rapide (preuve 5037 + 5038):
+#     - USB via 5037 (adb_run_sdk)
+#     - Wi-Fi via 5038 (adb_run)
+#     - exécute 5037 et 5038 en parallèle
+#     Retourne:
+#       usb_serials_device, wifi_ids_device, out_5037, out_5038
+#     """
+#
+#     def _usb_5037():
+#         _, out = adb_run_sdk("adb devices")
+#         usb = set()
+#         for serial, status in _parse_adb_devices(out):
+#             if _is_emulator_serial(serial):
+#                 continue
+#             if ":" in serial:
+#                 continue
+#             if status == "device":
+#                 usb.add(serial)
+#         return usb, (out or "")
+#
+#     def _wifi_5038():
+#         _, out = adb_run("adb devices")  # 5038
+#         wifi = set()
+#         for serial, status in _parse_adb_devices(out):
+#             if _is_emulator_serial(serial):
+#                 continue
+#             if ":" in serial and status == "device":
+#                 wifi.add(serial)
+#         return wifi, (out or "")
+#
+#     with ThreadPoolExecutor(max_workers=2) as ex:
+#         f_usb = ex.submit(_usb_5037)
+#         f_wifi = ex.submit(_wifi_5038)
+#         usb, out_5037 = f_usb.result()
+#         wifi, out_5038 = f_wifi.result()
+#
+#     # fallback wifi lecture 5037 si 5038 vide
+#     if not wifi:
+#         for serial, status in _parse_adb_devices(out_5037):
+#             if _is_emulator_serial(serial):
+#                 continue
+#             if ":" in serial and status == "device":
+#                 wifi.add(serial)
+#
+#     return usb, wifi, out_5037, out_5038
+
+
 def scan_adb_devices_fast() -> tuple[set, set, str, str]:
     """
-    Scan ultra rapide (preuve 5037 + 5038):
+    Scan ultra rapide (5037 + 5038):
     - USB via 5037 (adb_run_sdk)
     - Wi-Fi via 5038 (adb_run)
-    - exécute 5037 et 5038 en parallèle
+    - Wi-Fi via 5037 (adb_run_sdk) => TOUJOURS fusionné (pas seulement en fallback)
     Retourne:
-      usb_serials_device, wifi_ids_device, out_5037, out_5038
+      usb_serials_device, wifi_ids_device(UNION 5037+5038), out_5037, out_5038
     """
 
     def _usb_5037():
@@ -84,21 +133,24 @@ def scan_adb_devices_fast() -> tuple[set, set, str, str]:
                 wifi.add(serial)
         return wifi, (out or "")
 
+    # Exécuter en parallèle
     with ThreadPoolExecutor(max_workers=2) as ex:
         f_usb = ex.submit(_usb_5037)
-        f_wifi = ex.submit(_wifi_5038)
+        f_wifi38 = ex.submit(_wifi_5038)
         usb, out_5037 = f_usb.result()
-        wifi, out_5038 = f_wifi.result()
+        wifi_5038, out_5038 = f_wifi38.result()
 
-    # fallback wifi lecture 5037 si 5038 vide
-    if not wifi:
-        for serial, status in _parse_adb_devices(out_5037):
-            if _is_emulator_serial(serial):
-                continue
-            if ":" in serial and status == "device":
-                wifi.add(serial)
+    # ✅ IMPORTANT : lire AUSSI le wifi sur 5037 et fusionner
+    wifi_5037 = set()
+    for serial, status in _parse_adb_devices(out_5037):
+        if _is_emulator_serial(serial):
+            continue
+        if ":" in serial and status == "device":
+            wifi_5037.add(serial)
 
-    return usb, wifi, out_5037, out_5038
+    wifi_union = set(wifi_5038) | set(wifi_5037)
+
+    return usb, wifi_union, out_5037, out_5038
 
 # ============================================================
 # 1) ADB ANDROID STUDIO → PORT 5037
@@ -975,28 +1027,55 @@ def auto_connect_all_devices(profiles: Dict[str, Dict[str, Any]]) -> str:
                 logs.append("   - Réseau d’hôtel isolé (client isolation) → ports bloqués")
                 continue
 
-            # 3.4) Mise à jour du profil + propagation
-            old_id = (cfg.get("device_id") or "").strip()
-            new_id = f"{ip}:{port}"
+            # # 3.4) Mise à jour du profil + propagation
+            # old_id = (cfg.get("device_id") or "").strip()
+            # new_id = f"{ip}:{port}"
+            #
+            # cfg["tcpip_ip"] = ip
+            # cfg["tcpip_port"] = port
+            # cfg["device_id"] = new_id
+            # profiles[pname] = cfg
+            # profiles_changed = True
+            #
+            # if old_id and old_id != new_id:
+            #     for other_name, other_cfg in profiles.items():
+            #         if other_name == pname:
+            #             continue
+            #         if (other_cfg.get("device_id") or "").strip() == old_id:
+            #             other_cfg["tcpip_ip"] = ip
+            #             other_cfg["tcpip_port"] = port
+            #             other_cfg["device_id"] = new_id
+            #             profiles_changed = True
+            #             logs.append(f"  → propagation aussi pour '{other_name}'")
+            #
+            # logs.append(f"✅ OK: {pname} → {new_id}")
 
-            cfg["tcpip_ip"] = ip
-            cfg["tcpip_port"] = port
-            cfg["device_id"] = new_id
-            profiles[pname] = cfg
+            # 3.4) Mise à jour du profil + propagation (✅ PAR adb_serial)
+            new_ip = ip
+            serial_usb = serial  # le serial USB courant (ex: RFCW20VEB4J)
+
+            # Tous les profils liés à CE téléphone (même adb_serial)
+            linked_profiles = adb_index.get(serial_usb) or []
+
+            # On met à jour TOUS les profils liés, pas seulement pname
+            for linked_name in linked_profiles:
+                other_cfg = profiles.get(linked_name, {}) or {}
+                if not other_cfg.get("enabled", True):
+                    logs.append(f"  [SKIP] profil désactivé: {linked_name}")
+                    continue
+
+                other_port = int(other_cfg.get("tcpip_port", port) or port)
+                other_new_id = f"{new_ip}:{other_port}"
+
+                other_cfg["tcpip_ip"] = new_ip
+                other_cfg["tcpip_port"] = other_port
+                other_cfg["device_id"] = other_new_id
+                profiles[linked_name] = other_cfg
+
+                logs.append(f"  ✅ UPDATE: {linked_name} → {other_new_id}")
+
             profiles_changed = True
-
-            if old_id and old_id != new_id:
-                for other_name, other_cfg in profiles.items():
-                    if other_name == pname:
-                        continue
-                    if (other_cfg.get("device_id") or "").strip() == old_id:
-                        other_cfg["tcpip_ip"] = ip
-                        other_cfg["tcpip_port"] = port
-                        other_cfg["device_id"] = new_id
-                        profiles_changed = True
-                        logs.append(f"  → propagation aussi pour '{other_name}'")
-
-            logs.append(f"✅ OK: {pname} → {new_id}")
+            logs.append(f"✅ OK: {pname} (serial={serial_usb}) → propagation sur {len(linked_profiles)} profil(s)")
 
     # ------------------------------------------------------------------
     # 4) Sauvegarde profiles.json
@@ -1137,6 +1216,81 @@ def list_devices_pro(with_ping: bool = True) -> str:
     return "\n".join(logs)
 
 
+# # ==========================================================================
+# # 🔥 4. Connexion PRO : connect_all_devices()
+# # ==========================================================================
+#
+# def connect_all_devices() -> str:
+#     """
+#     Connecte tous les device_id (ip:port) configurés.
+#     - priorité 5038
+#     - si 5038 ne voit aucun ip:port, on "importe" depuis 5037 (lecture) puis connect via 5038
+#     """
+#     profiles = load_profiles_dict()
+#     wifi_map, _, disabled_map, unique_count = build_devices_mapping(profiles)
+#
+#     logs: List[str] = []
+#     logs.append("=== ADB CONNECT ALL (Mode PRO) ===\n")
+#
+#     adb_run("adb disconnect")  # 5038
+#
+#     # ✅ si 5038 ne voit aucun wifi, on tente de "ré-importer" depuis 5037
+#     _, out_5038 = adb_run("adb devices")
+#     wifi_5038 = [s for s, st in _parse_adb_devices(out_5038) if ":" in s and st == "device" and not _is_emulator_serial(s)]
+#
+#     if not wifi_5038:
+#         _, out_5037 = adb_run_sdk("adb devices")
+#         wifi_5037 = [s for s, st in _parse_adb_devices(out_5037) if ":" in s and st == "device" and not _is_emulator_serial(s)]
+#         for dev in wifi_5037:
+#             adb_run(f"adb connect {dev}")  # connect sur 5038
+#         if wifi_5037:
+#             logs.append(f"[Import] {len(wifi_5037)} device(s) importé(s) de 5037 → 5038")
+#
+#     connected_ids: List[str] = []
+#     missing_ids: List[str] = []
+#
+#     for dev_id in wifi_map.keys():
+#         _, outc = adb_run(f"adb connect {dev_id}")  # 5038
+#         txt = (outc or "").strip().lower()
+#         if "connected" in txt or "already connected" in txt:
+#             connected_ids.append(dev_id)
+#         else:
+#             missing_ids.append(dev_id)
+#
+#     logs.append("🟢 CONNECTÉS (Wi-Fi) :")
+#     if connected_ids:
+#         for dev_id in connected_ids:
+#             profils = wifi_map.get(dev_id, [])
+#             logs.append(f"   🟢 {fusion_label(profils)} ({dev_id})")
+#     else:
+#         logs.append("   Aucun device connecté.")
+#
+#     logs.append("\n🔴 ABSENTS (Wi-Fi) :")
+#     if missing_ids:
+#         for dev_id in missing_ids:
+#             profils = wifi_map.get(dev_id, [])
+#             ip = dev_id.split(":")[0]
+#             try:
+#                 p = Popen(["ping", "-n", "1", "-w", "300", ip], stdout=PIPE)
+#                 resp = p.stdout.read().decode(errors="ignore")
+#                 status = "⚡ Ping OK (ADB OFF)" if "TTL=" in resp else "🔴 Hors ligne"
+#             except Exception:
+#                 status = "❓ Indéfini"
+#             logs.append(f"   🔴 {fusion_label(profils)} ({dev_id}) → {status}")
+#     else:
+#         logs.append("   Aucun device absent.")
+#
+#     logs.append("\n⚪ DÉSACTIVÉS :")
+#     if disabled_map:
+#         for dev_id, profils in disabled_map.items():
+#             dev_label = dev_id or "device_id inconnu"
+#             logs.append(f"   ⚪ {fusion_label(profils)} ({dev_label}) → Désactivé")
+#     else:
+#         logs.append("   Aucun device désactivé.")
+#
+#     logs.append(f"\n=== Résultat : {len(connected_ids)} / {unique_count} périphériques Wi-Fi actifs ===")
+#     return "\n".join(logs)
+
 # ==========================================================================
 # 🔥 4. Connexion PRO : connect_all_devices()
 # ==========================================================================
@@ -1144,41 +1298,57 @@ def list_devices_pro(with_ping: bool = True) -> str:
 def connect_all_devices() -> str:
     """
     Connecte tous les device_id (ip:port) configurés.
-    - priorité 5038
-    - si 5038 ne voit aucun ip:port, on "importe" depuis 5037 (lecture) puis connect via 5038
+    Objectifs:
+    - NE PAS casser l'état existant (pas de adb disconnect global)
+    - Connecter sur 5038 (priorité StoryFX/Appium)
+    - (option) Répliquer aussi sur 5037 pour que "adb devices" voie pareil sur les 2 ports
     """
+
     profiles = load_profiles_dict()
     wifi_map, _, disabled_map, unique_count = build_devices_mapping(profiles)
 
     logs: List[str] = []
     logs.append("=== ADB CONNECT ALL (Mode PRO) ===\n")
 
-    adb_run("adb disconnect")  # 5038
-
-    # ✅ si 5038 ne voit aucun wifi, on tente de "ré-importer" depuis 5037
-    _, out_5038 = adb_run("adb devices")
-    wifi_5038 = [s for s, st in _parse_adb_devices(out_5038) if ":" in s and st == "device" and not _is_emulator_serial(s)]
-
-    if not wifi_5038:
-        _, out_5037 = adb_run_sdk("adb devices")
-        wifi_5037 = [s for s, st in _parse_adb_devices(out_5037) if ":" in s and st == "device" and not _is_emulator_serial(s)]
-        for dev in wifi_5037:
-            adb_run(f"adb connect {dev}")  # connect sur 5038
-        if wifi_5037:
-            logs.append(f"[Import] {len(wifi_5037)} device(s) importé(s) de 5037 → 5038")
+    # --- Snapshot avant (debug)
+    _, out_before_38 = adb_run("adb devices")
+    _, out_before_37 = adb_run_sdk("adb devices")
+    logs.append("[DEBUG] BEFORE ADB 5038 raw:")
+    logs.append((out_before_38 or "").strip() or "(vide)")
+    logs.append("\n[DEBUG] BEFORE ADB 5037 raw:")
+    logs.append((out_before_37 or "").strip() or "(vide)")
+    logs.append("")
 
     connected_ids: List[str] = []
     missing_ids: List[str] = []
 
+    # ✅ Connecter chaque device_id sur 5038 (sans reset global)
     for dev_id in wifi_map.keys():
-        _, outc = adb_run(f"adb connect {dev_id}")  # 5038
+        rc, outc = adb_run(f"adb connect {dev_id}")  # 5038
         txt = (outc or "").strip().lower()
-        if "connected" in txt or "already connected" in txt:
+
+        ok = ("connected" in txt) or ("already connected" in txt)
+        if ok:
             connected_ids.append(dev_id)
         else:
             missing_ids.append(dev_id)
 
-    logs.append("🟢 CONNECTÉS (Wi-Fi) :")
+        # ✅ OPTION : répliquer aussi sur 5037 (juste pour synchro visibilité)
+        # (si tu ne veux pas, commente ce bloc)
+        try:
+            adb_run_sdk(f"adb connect {dev_id}")  # 5037
+        except Exception:
+            pass
+
+    # --- Snapshot après (debug)
+    _, out_after_38 = adb_run("adb devices")
+    _, out_after_37 = adb_run_sdk("adb devices")
+    logs.append("\n[DEBUG] AFTER ADB 5038 raw:")
+    logs.append((out_after_38 or "").strip() or "(vide)")
+    logs.append("\n[DEBUG] AFTER ADB 5037 raw:")
+    logs.append((out_after_37 or "").strip() or "(vide)")
+
+    logs.append("\n🟢 CONNECTÉS (Wi-Fi) :")
     if connected_ids:
         for dev_id in connected_ids:
             profils = wifi_map.get(dev_id, [])

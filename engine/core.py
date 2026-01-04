@@ -41,6 +41,33 @@ ADB_ENV = os.environ.copy()
 ADB_ENV["ANDROID_ADB_SERVER_PORT"] = "5038"
 
 
+def alert_adb_connection_issue(reason: str = ""):
+    """
+    Alerte sonore + log quand un device ne se connecte pas (ADB).
+    Throttle anti-spam: max 1 alerte toutes les 20s.
+    """
+    try:
+        now = time.time()
+        last = getattr(alert_adb_connection_issue, "_last_ts", 0.0)
+        if now - last < 20.0:
+            return
+        alert_adb_connection_issue._last_ts = now
+
+        log(f"[ALERTE][ADB] {reason}".strip())
+
+        try:
+            unmute_and_volume_80()
+        except Exception:
+            pass
+
+        try:
+            play_critical_sound()
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+
 def clear_popups_and_go_home(driver):
     """Nettoie les popups (USSD/MMI, rappels…) puis revient à l'accueil."""
 
@@ -290,6 +317,7 @@ def ensure_adb_connected(device_id: str) -> bool:
             return True
 
         log(f"[WARN] ADB device {device_id} non connecté après reset.")
+        alert_adb_connection_issue(f"Device offline: {device_id}")
         return False
 
     # Cas plus rare : device_id est un serial USB (sans ip:port)
