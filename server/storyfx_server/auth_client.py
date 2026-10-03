@@ -16,7 +16,12 @@ class AuthClient:
         try:
             response = httpx.get(cls.base + '/functions/v1/formafx-runtime-config', timeout=15)
             response.raise_for_status()
-            config = response.json()
+            payload = response.json()
+            if not isinstance(payload, dict) or payload.get('ok') is not True:
+                raise ValueError()
+            config = payload.get('config')
+            if not isinstance(config, dict):
+                raise ValueError()
             if config.get('SUPABASE_URL', '').rstrip('/') != cls.base:
                 raise ValueError()
             key = config['SUPABASE_ANON_KEY']
