@@ -60,6 +60,7 @@ def main():
     module = installer()
     owned = ''
     with tempfile.TemporaryDirectory(prefix='storyfx-caddy-ci-') as folder:
+        Path(folder).chmod(0o755)
         config = Path(folder) / 'Caddyfile'
         config.write_text(source('old'), encoding='utf-8')
         try:
