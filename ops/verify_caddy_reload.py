@@ -84,7 +84,8 @@ def main():
                            '--publish', '127.0.0.1::8080',
                            '--mount', f'type=bind,src={folder},dst=/etc/caddy,readonly',
                            '--tmpfs', '/data', '--tmpfs', '/config', '--read-only',
-                           '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges',
+                           '--cap-drop', 'ALL', '--cap-add', 'NET_BIND_SERVICE',
+                           '--security-opt', 'no-new-privileges',
                            IMAGE, *COMMAND).stdout.strip()
             if not re.fullmatch(r'[a-f0-9]{64}', owned):
                 raise RuntimeError('CADDY_TEST_CONTAINER_ID_REFUSED')
