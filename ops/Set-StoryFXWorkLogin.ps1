@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 $taskDirectory = Join-Path (Split-Path -Parent $PSScriptRoot) '.runtime\private'
 $taskSecretPath = Join-Path $taskDirectory 'work-login.dpapi'
 New-Item -ItemType Directory -Path $taskDirectory -Force | Out-Null
-Write-Host 'Compte de validation FormaFX : contact@jerrykamgang.com'
+Write-Host 'Compte de validation FormaFX autorisé pour cette tâche'
 $taskPassword = Read-Host 'Mot de passe (saisie masquée)' -AsSecureString
 if ($taskPassword.Length -eq 0) { throw 'Mot de passe vide : aucune sauvegarde.' }
 $taskCipher = ConvertFrom-SecureString $taskPassword
