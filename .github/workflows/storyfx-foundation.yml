@@ -52,6 +52,8 @@ jobs:
         run: |
           docker compose -p storyfx-ci-mounts -f deploy/compose.yaml run --rm --no-deps storyfx-api true
           docker compose -p storyfx-ci-mounts -f deploy/compose.yaml down
+      - name: Verify native Caddy reload without the admin API
+        run: python ops/verify_caddy_reload.py
   download:
     runs-on: ubuntu-latest
     steps:

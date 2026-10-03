@@ -4,6 +4,9 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import time
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 
 PATH = Path('/opt/formafx/public-api-caddy/Caddyfile')
@@ -22,6 +25,30 @@ DOWNLOAD_BLOCK = '''    # StoryFX immutable Android downloads
 
 def run(*args):
     return subprocess.run(args, text=True, capture_output=True, check=True)
+
+
+
+def reload_gateway(source):
+    if re.search(r'(?m)^\s*admin\s+off\s*$', source):
+        command = json.loads(run('docker', 'inspect', '--format', '{{json .Config.Cmd}}', CONTAINER).stdout)
+        assert command == ['caddy', 'run', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile'], 'SIGNAL_RELOAD_COMMAND_REFUSED'
+        run('docker', 'kill', '--signal=SIGUSR1', CONTAINER)
+    else:
+        run('docker', 'exec', CONTAINER, 'caddy', 'reload', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile')
+
+
+def verify_story_https():
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen('https://story.formafx.com/health', timeout=5) as response:
+                health = json.load(response)
+            if health.get('status') == 'ok' and health.get('account_auth_enabled') is True:
+                return
+        except (urllib.error.URLError, TimeoutError, ValueError):
+            pass
+        time.sleep(1)
+    raise RuntimeError('STORY_HTTPS_NOT_HEALTHY')
 
 
 def main():
@@ -57,13 +84,14 @@ def main():
         assert PATH.read_text() == source, 'CONCURRENT_CADDY_CHANGE_REFUSED'
         PATH.write_text(candidate.read_text())
         applied = True
-        run('docker', 'exec', CONTAINER, 'caddy', 'reload', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile')
+        reload_gateway(updated)
+        verify_story_https()
     except Exception:
         if applied:
             if PATH.read_text() != updated:
                 raise RuntimeError('CONCURRENT_CADDY_CHANGE_MANUAL_ROLLBACK_REQUIRED') from None
             shutil.copy2(backup / 'Caddyfile', PATH)
-            run('docker', 'exec', CONTAINER, 'caddy', 'reload', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile')
+            reload_gateway(source)
             raise RuntimeError('HTTPS_CONFIGURATION_ROLLED_BACK') from None
         raise RuntimeError('HTTPS_CONFIGURATION_NOT_MODIFIED') from None
     finally:
