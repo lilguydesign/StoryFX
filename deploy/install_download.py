@@ -47,6 +47,10 @@ def main(bundle):
     (backup / 'app-version-before.json').write_text(json.dumps(previous))
     target = FUNCTIONS / 'storyfx-agent-download'
     existed = target.exists()
+    sources = list((bundle / 'supabase/functions/storyfx-agent-download').iterdir())
+    changed = any(not (target / source.name).is_file() or source.read_bytes() != (target / source.name).read_bytes()
+                  for source in sources)
+    reload_needed = existed and changed
     if existed:
         shutil.copytree(target, backup / 'storyfx-agent-download')
     assets = Path('/opt/formafx/public-api-caddy/data/downloads/storyfx-android')
@@ -62,13 +66,14 @@ def main(bundle):
     committed = False
     try:
         target.mkdir(exist_ok=True)
-        for source in (bundle / 'supabase/functions/storyfx-agent-download').iterdir():
+        for source in sources:
             assert source.is_file() and source.suffix in {'.ts', '.toml'}
             temporary = target / (source.name + '.storyfx-tmp')
             shutil.copyfile(source, temporary)
             temporary.chmod(0o644)
             temporary.replace(target / source.name)
-        run('docker', 'restart', EDGE)
+        if reload_needed:
+            run('docker', 'restart', EDGE)
         statement = f"""BEGIN;
         INSERT INTO public.storyfx_android_releases(version,version_code,download_url,sha256,byte_size)
         VALUES('0.2.0',2,'{URL}','{SHA}',{SIZE}) ON CONFLICT(version) DO NOTHING;
@@ -105,10 +110,11 @@ def main(bundle):
             for source in target.iterdir():
                 source.unlink()
             target.rmdir()
-        run('docker', 'restart', EDGE)
+        if reload_needed:
+            run('docker', 'restart', EDGE)
         raise RuntimeError('DOWNLOAD_FUNCTION_AND_POINTER_ROLLED_BACK') from None
     print(json.dumps({'download_install': 'success', 'url': URL, 'sha256': SHA,
-                      'bytes': SIZE, 'backup': str(backup)}))
+                      'bytes': SIZE, 'backup': str(backup), 'edge_restart_required': reload_needed}))
 
 
 if __name__ == '__main__':
