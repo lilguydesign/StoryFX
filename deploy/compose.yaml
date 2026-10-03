@@ -1,3 +1,4 @@
+name: storyfx
 services:
   storyfx-api:
     image: ${STORYFX_IMAGE:?versioned image required}
@@ -8,7 +9,7 @@ services:
     security_opt: [no-new-privileges:true]
     pids_limit: 128
     mem_limit: 512m
-    tmpfs: [/tmp:size=32m,mode=1777]
+    tmpfs: ["/tmp:size=32m,mode=1777"]
     volumes:
       - /opt/formafx/storyfx/state:/data
     ports:
