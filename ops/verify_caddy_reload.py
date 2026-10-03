@@ -29,6 +29,22 @@ def started_at():
     return docker('inspect', '--format', '{{.State.StartedAt}}', CONTAINER).stdout.strip()
 
 
+def published_port(owned):
+    for _ in range(30):
+        state = json.loads(docker('inspect', '--format', '{{json .State}}', owned).stdout)
+        if not state['Running']:
+            logs = subprocess.run(['docker', 'logs', owned], text=True, capture_output=True)
+            raise RuntimeError('CADDY_FIXTURE_EXIT_' + str(state['ExitCode']) + '\n' + logs.stderr[-6000:])
+        ports = json.loads(docker('inspect', '--format', '{{json .NetworkSettings.Ports}}', owned).stdout)
+        binding = ports.get('8080/tcp')
+        if binding:
+            if len(binding) != 1 or binding[0]['HostIp'] != '127.0.0.1':
+                raise RuntimeError('CADDY_TEST_LOOPBACK_BINDING_REFUSED')
+            return binding[0]['HostPort']
+        time.sleep(0.1)
+    raise RuntimeError('CADDY_FIXTURE_PORT_NOT_READY')
+
+
 def wait_response(url, expected):
     deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
@@ -73,12 +89,7 @@ def main():
             if not re.fullmatch(r'[a-f0-9]{64}', owned):
                 raise RuntimeError('CADDY_TEST_CONTAINER_ID_REFUSED')
             docker('start', owned)
-            ports = json.loads(docker('inspect', '--format',
-                                    '{{json .NetworkSettings.Ports}}', owned).stdout)
-            binding = ports['8080/tcp']
-            if len(binding) != 1 or binding[0]['HostIp'] != '127.0.0.1':
-                raise RuntimeError('CADDY_TEST_LOOPBACK_BINDING_REFUSED')
-            url = 'http://127.0.0.1:' + binding[0]['HostPort'] + '/'
+            url = 'http://127.0.0.1:' + published_port(owned) + '/'
             wait_response(url, 'old')
             original_start = started_at()
             config.write_text(source('new'), encoding='utf-8')
