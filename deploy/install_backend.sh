@@ -19,6 +19,10 @@ if [[ -L "$ROOT/current" ]]; then
   [[ "$PREVIOUS" == "$ROOT/releases/"* ]] || exit 22
   printf '%s\n' "$PREVIOUS" > "$BACKUP/previous-release.txt"
 fi
+if [[ -z "$PREVIOUS" ]] && docker inspect storyfx-api >/dev/null 2>&1; then
+  echo 'unmanaged_existing_storyfx_container_refused=true'
+  exit 24
+fi
 for file in session.key app-config.json storyfx.db storyfx.db-wal storyfx.db-shm; do
   [[ ! -L "$ROOT/state/$file" ]] || { echo 'private_symlink_refused=true'; exit 23; }
 done
@@ -39,9 +43,6 @@ fi
 docker build --pull -t "formafx/storyfx:$COMMIT" -f "$RELEASE/deploy/Dockerfile" "$RELEASE"
 if [[ -n "$PREVIOUS" ]]; then
   docker stop storyfx-api >/dev/null
-elif docker inspect storyfx-api >/dev/null 2>&1; then
-  echo 'unmanaged_existing_storyfx_container_refused=true'
-  exit 24
 fi
 python3 "$RELEASE/deploy/backup_state.py" "$BACKUP"
 python3 "$RELEASE/deploy/private_state.py"
