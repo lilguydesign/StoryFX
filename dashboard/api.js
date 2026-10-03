@@ -5,11 +5,6 @@ const messages = {
   unavailable: "Le serveur du pilote est indisponible. Réessayez dans quelques instants.",
   invalid: "La demande n’a pas été acceptée. Vérifiez les champs renseignés.",
 };
-let ownerToken = "";
-
-export function setOwnerToken(value) { ownerToken = value; }
-export function clearOwnerToken() { ownerToken = ""; }
-
 export class PilotError extends Error {
   constructor(kind) {
     super(messages[kind] || messages.unavailable);
@@ -18,17 +13,15 @@ export class PilotError extends Error {
 }
 
 export async function request(path, { method = "GET", body } = {}) {
-  if (!ownerToken) throw new PilotError("unauthorized");
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
   try {
     const response = await fetch(path, {
       method,
-      credentials: "omit",
+      credentials: "same-origin",
       cache: "no-store",
       referrerPolicy: "no-referrer",
       headers: {
-        Authorization: `Bearer ${ownerToken}`,
         ...(body === undefined ? {} : { "Content-Type": "application/json" }),
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),

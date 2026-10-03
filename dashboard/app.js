@@ -1,4 +1,4 @@
-import { request, setOwnerToken, clearOwnerToken, PilotError } from "./api.js";
+import { request, PilotError } from "./api.js";
 import { demoData } from "./demo.js";
 import { renderMetrics, renderDevices, renderJobs, renderImport, dateLabel } from "./views.js";
 
@@ -19,15 +19,13 @@ function render() {
   find("#refresh-button").disabled = !operational();
   find("#import-button").disabled = !operational();
   find("#login-button").disabled = state.busy;
-  find("#owner-key").hidden = state.authenticated;
-  find("#owner-key").required = !state.authenticated;
   find("#login-button").hidden = state.authenticated;
   find("#logout-button").hidden = !state.authenticated;
   find("#logout-button").disabled = state.busy;
   find("#demo-button").textContent = state.demo ? "Quitter la démonstration" : "Voir la démonstration ↗";
   const banner = find("#environment-banner");
   banner.classList.toggle("demo", state.demo);
-  banner.querySelector("strong").textContent = state.demo ? "Données de démonstration" : "Prototype diagnostic";
+  banner.querySelector("strong").textContent = state.demo ? "Données de démonstration" : "Pilote privé · Internet";
   banner.querySelector("span:last-child").textContent = state.demo ? "Aperçu fictif en lecture seule. Aucun appareil réel n’est connecté à cette vue." : "La publication est désactivée. Les albums seront synchronisés dans un prochain chantier.";
   find("#connection-label").textContent = state.demo ? "◌ Démonstration" : state.authenticated ? "● Session propriétaire" : "○ Session inactive";
   find("#last-refresh").textContent = state.demo ? "Données fictives · aucun accès au serveur" : state.data?.server_time ? `Dernière lecture · ${dateLabel(state.data.server_time)}` : "Aucune donnée serveur chargée";
@@ -48,8 +46,6 @@ function disconnect() {
   state.authenticated = false;
   state.demo = false;
   state.data = null;
-  clearOwnerToken();
-  find("#owner-key").value = "";
   find("#pair-code").textContent = "";
   find("#pair-dialog").close();
   find("#diagnostic-dialog").close();
@@ -59,7 +55,7 @@ function disconnect() {
   render();
 }
 function failed(error) {
-  if (error instanceof PilotError && error.kind === "unauthorized") disconnect();
+  if (error instanceof PilotError && error.kind === "unauthorized") { disconnect(); location.replace("/login/"); }
   notice(error instanceof PilotError ? error.message : "L’action n’a pas pu être terminée. Réessayez après actualisation.", true);
 }
 async function refresh() {
@@ -79,26 +75,13 @@ async function action(work) {
   finally { state.busy = false; render(); }
 }
 
-find("#session-form").addEventListener("submit", async event => {
-  event.preventDefault();
-  const secret = find("#owner-key").value.trim();
-  find("#owner-key").value = "";
-  if (!secret || state.busy) return;
-  state.session += 1;
-  state.busy = true;
-  state.demo = false;
-  state.data = null;
-  setOwnerToken(secret);
-  notice("");
-  render();
-  try {
-    await refresh();
-    state.authenticated = true;
-    notice("Session de validation ouverte. Les commandes disponibles restent limitées aux diagnostics.");
-  } catch (error) { disconnect(); failed(error); }
-  finally { state.busy = false; render(); }
+find("#session-form").addEventListener("submit", event => {
+  event.preventDefault(); location.assign("/login/");
 });
-find("#logout-button").addEventListener("click", () => { disconnect(); notice("Session fermée. La clé a été retirée de la mémoire du pilote."); });
+find("#logout-button").addEventListener("click", () => action(async () => {
+  await request("/v1/auth/logout", { method: "POST", body: {} });
+  disconnect(); location.replace("/login/");
+}));
 find("#demo-button").addEventListener("click", () => {
   if (state.busy) return;
   const enter = !state.demo;
@@ -123,10 +106,8 @@ find("#import-button").addEventListener("click", () => action(async () => {
   renderImport(preview);
 }));
 document.querySelectorAll('[data-action="pair"]').forEach(button => button.addEventListener("click", () => action(async () => {
-  const result = await request("/v1/pairings", { method: "POST", body: {} });
-  if (typeof result.code !== "string" || result.code.length > 64) throw new PilotError("unavailable");
-  find("#pair-code").textContent = result.code;
-  find("#pair-expiry").textContent = `Expiration · ${dateLabel(result.expires_at)}`;
+  find("#pair-code").textContent = "Compte FormaFX";
+  find("#pair-expiry").textContent = "Dans StoryFX Android, choisissez Connecter mon compte, puis validez ce téléphone.";
   find("#pair-dialog").showModal();
 })));
 document.querySelectorAll('[data-action="diagnostic"]').forEach(button => button.addEventListener("click", () => {
@@ -204,3 +185,11 @@ if (new URLSearchParams(window.location.search).get("demo") === "1") {
   state.data = demoData();
 }
 render();
+
+if (!state.demo) {
+  state.busy = true;
+  request("/v1/auth/session").then(async session => {
+    find("#session-help").textContent = `Connecté avec ${session.user.email}. Accès propriétaire FormaFX actif.`;
+    await refresh(); state.authenticated = true;
+  }).catch(() => location.replace("/login/")).finally(() => { state.busy = false; render(); });
+}

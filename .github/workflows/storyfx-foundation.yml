@@ -6,6 +6,8 @@ on:
       - 'dashboard/**'
       - 'android-agent/**'
       - 'ops/maintenance/**'
+      - 'supabase/**'
+      - 'deploy/**'
       - '.github/workflows/storyfx-foundation.yml'
   push:
     branches: [main, feature/internet-diagnostic-foundation]
@@ -14,6 +16,8 @@ on:
       - 'dashboard/**'
       - 'android-agent/**'
       - 'ops/maintenance/**'
+      - 'supabase/**'
+      - 'deploy/**'
       - '.github/workflows/storyfx-foundation.yml'
 permissions:
   contents: read
@@ -33,9 +37,23 @@ jobs:
       - run: python -B -m pytest server/tests ops/maintenance/test_storyfx_diagnostics_probe.py -q -p no:cacheprovider
       - name: Parse dashboard modules
         run: |
-          for source in dashboard/*.js; do
+          for source in dashboard/*.js dashboard/login/*.js; do
             node --input-type=module --check < "$source"
           done
+      - name: Parse deployment sources
+        run: |
+          python -m compileall -q deploy
+          bash -n deploy/install_backend.sh
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno test supabase/tests/storyfx_download_test.ts
   android:
     runs-on: ubuntu-latest
     steps:

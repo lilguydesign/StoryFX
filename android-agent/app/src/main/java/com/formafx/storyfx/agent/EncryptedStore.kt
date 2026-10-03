@@ -11,7 +11,7 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-class EncryptedStore(context: Context) : QueueStore {
+class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore {
     private val prefs = context.getSharedPreferences("storyfx_private", Context.MODE_PRIVATE)
     private val alias = "storyfx_agent_local_v1"
 
@@ -33,14 +33,37 @@ class EncryptedStore(context: Context) : QueueStore {
     fun saveSession(server: String, deviceId: String, token: String) {
         val encrypted = encrypt(token)
         check(prefs.edit().putString("server", server).putString("device_id", deviceId)
-            .putString("token", encrypted).commit())
+            .putString("token", encrypted).remove("account").remove("auth_pending").commit())
     }
+
+    override fun pendingAuth(): PendingAgentAuth? = readSecret("auth_pending")?.let {
+        PendingAgentAuth.fromJson(it)
+    }
+
+    override fun savePendingAuth(value: PendingAgentAuth) {
+        check(prefs.edit().putString("auth_pending", encrypt(value.toJson())).commit())
+    }
+
+    override fun associationPresent(): Boolean = session() != null
+
+    override fun pendingEventsPresent(): Boolean = org.json.JSONArray(read()).length() > 0
+
+    override fun saveAuthenticatedSession(value: AuthenticatedAgentSession) {
+        val account = org.json.JSONObject().put("id", value.userId).put("email", value.email)
+        check(prefs.edit().putString("server", value.server).putString("device_id", value.deviceId)
+            .putString("token", encrypt(value.token)).putString("account", encrypt(account.toString()))
+            .remove("auth_pending").commit())
+    }
+
+    fun accountEmail(): String = readSecret("account")?.let {
+        org.json.JSONObject(it).getString("email")
+    } ?: ""
 
     fun savedServer(): String = prefs.getString("server", "") ?: ""
 
     fun eraseAssociation() {
         check(prefs.edit().remove("server").remove("device_id").remove("token")
-            .remove("outbox").remove("last_status").commit())
+            .remove("outbox").remove("last_status").remove("account").remove("auth_pending").commit())
     }
 
     fun status(): String = prefs.getString("last_status", "Association requise")!!

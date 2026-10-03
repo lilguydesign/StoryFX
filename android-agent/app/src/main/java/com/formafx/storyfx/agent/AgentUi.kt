@@ -16,6 +16,7 @@ class AgentUi(private val context: Context) {
     val ink = Color.rgb(233, 243, 250)
     val muted = Color.rgb(157, 177, 193)
     val accent = Color.rgb(73, 224, 223)
+    val gold = Color.rgb(242, 187, 89)
 
     fun dp(value: Int): Int = (value * context.resources.displayMetrics.density).toInt()
 

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0a1420"><meta name="robots" content="noindex,nofollow">
+  <title>Connexion · StoryFX</title>
+  <link rel="icon" href="/dashboard/assets/storyfx-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/login/login.css"><script type="module" src="/login/login.js"></script>
+</head>
+<body>
+  <header><a class="brand" href="https://apps.formafx.com/storyfx/"><img src="/dashboard/assets/storyfx-icon.svg" alt="" width="46" height="46"><span>Story<span class="gold">FX</span><small>Une application FormaFX</small></span></a><button id="theme" class="icon-button" aria-label="Activer le thème clair">☼</button></header>
+  <main>
+    <section class="presentation" aria-labelledby="welcome"><span class="eyebrow">PILOTE PRIVÉ · ANDROID</span><h1 id="welcome">Vos téléphones.<br>Un seul espace<br><span>de pilotage.</span></h1><p>Connectez vos appareils à votre compte FormaFX et vérifiez leur liaison Internet depuis un dashboard moderne.</p><img class="hero" src="/dashboard/assets/storyfx-hero.png" alt="Illustration : un dashboard et plusieurs téléphones reliés à un serveur par Internet"><div class="pilot-note"><span class="status-dot"></span><div><strong>Première étape : connexion et diagnostics</strong><small>La publication autonome reste en construction. La synchronisation des albums viendra ensuite.</small></div></div></section>
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="card-top"><img src="/dashboard/assets/storyfx-icon.svg" alt="Logo StoryFX" width="56" height="56"><span class="private-badge">Accès privé</span></div>
+      <h2 id="login-title">Bienvenue dans StoryFX</h2><p class="subtitle" id="login-subtitle">Retrouvez votre compte FormaFX. L’accès est réservé aux propriétaires actifs.</p>
+      <div id="notice" role="status" aria-live="polite" hidden></div>
+      <div id="login-content">
+        <button id="sso" class="sso-button"><span class="sso-mark">FX</span>Continuer avec FormaFX <span>↗</span></button>
+        <div class="divider"><span>ou utilisez votre e-mail</span></div>
+        <div class="modes" role="group" aria-label="Mode de connexion"><button type="button" data-mode="password" class="active" aria-pressed="true">Mot de passe</button><button type="button" data-mode="otp" aria-pressed="false">Code OTP</button></div>
+        <form id="login-form">
+          <label for="email">Adresse e-mail FormaFX</label><input id="email" type="email" autocomplete="username" required maxlength="254" placeholder="vous@exemple.com">
+          <div id="password-fields"><div class="label-row"><label for="password">Mot de passe</label><button type="button" id="reset" class="text-button">Mot de passe oublié ?</button></div><div class="input-wrap"><input id="password" type="password" autocomplete="current-password" maxlength="512" required><button type="button" id="show-password" aria-label="Afficher le mot de passe">◉</button></div></div>
+          <div id="otp-fields" hidden><label for="otp">Code reçu par e-mail</label><input id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" placeholder="000000"><button id="resend" type="button" class="text-button">Envoyer un code</button><p class="field-help">Utilisez le dernier code reçu sur votre adresse FormaFX.</p></div>
+          <button id="submit" class="primary" type="submit">Se connecter <span>→</span></button>
+          <button id="back" type="button" class="text-button back" hidden>← Retour à la connexion</button>
+        </form>
+      </div>
+      <form id="new-password-form" hidden><label for="new-password">Nouveau mot de passe</label><input id="new-password" type="password" autocomplete="new-password" minlength="12" maxlength="512" required><p class="field-help">Au moins 12 caractères. Ce mot de passe sera celui de votre compte FormaFX.</p><label for="confirmation">Confirmer le mot de passe</label><input id="confirmation" type="password" autocomplete="new-password" minlength="12" maxlength="512" required><button class="primary" type="submit">Enregistrer le mot de passe →</button></form>
+      <div id="agent-consent" hidden><div class="phone-symbol">▯</div><h3>Associer ce téléphone</h3><p id="device-description"></p><p class="field-help">Il pourra récupérer et confirmer les diagnostics de ce compte. Vous pourrez révoquer son accès depuis le dashboard.</p><button id="authorize" class="primary">Connecter le téléphone →</button><button id="cancel-connect" class="text-button back">Annuler l’association</button></div>
+      <div class="security-note"><span>◇</span><span>Compte FormaFX unique · Session protégée<br><small>Aucun compte StoryFX séparé à créer.</small></span></div>
+      <a class="download" href="https://api.formafx.com/functions/v1/storyfx-agent-download?platform=storyfx_agent_android&amp;channel=stable&amp;version=latest&amp;asset_type=apk">Télécharger l’agent Android ↓</a>
+    </section>
+  </main>
+  <footer><span>StoryFX · FormaFX</span><a href="https://apps.formafx.com/storyfx/">Présentation de l’application</a><a href="https://apps.formafx.com/privacy/">Confidentialité</a></footer>
+</body>
+</html>

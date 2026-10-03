@@ -4,13 +4,13 @@ from uuid import uuid4
 from .store import DomainError, digest, fingerprint, timestamp
 
 
-def enqueue(store, request):
+def enqueue(store, request, owner_id='validation_owner'):
     due, expires = request.scheduled_at.timestamp(), request.expires_at.timestamp()
     if expires <= due or expires <= store.clock() or expires - due > 86400:
         raise DomainError('INVALID_TIME_WINDOW', 400)
     key = f'diagnostic|{request.device_id}|{due:.6f}'
     with store.transaction() as db:
-        store.active_device(db, str(request.device_id))
+        store.active_device(db, str(request.device_id), owner_id)
         old = db.execute('SELECT * FROM jobs WHERE occurrence_key=?', (key,)).fetchone()
         if old:
             if old['expires_at'] != expires:
@@ -59,9 +59,10 @@ def renew(store, identity, job_id, lease):
     return {'lease_expires_at': timestamp(expires)}
 
 
-def cancel(store, job_id):
+def cancel(store, job_id, owner_id='validation_owner'):
     with store.transaction() as db:
-        row = db.execute('SELECT status FROM jobs WHERE id=?', (job_id,)).fetchone()
+        row = db.execute('SELECT jobs.status FROM jobs JOIN devices ON jobs.device_id=devices.id '
+                         'WHERE jobs.id=? AND devices.owner_id=?', (job_id, owner_id)).fetchone()
         if row is None:
             raise DomainError('JOB_NOT_FOUND', 404)
         if row['status'] == 'DIAGNOSTIC_CONFIRMED':

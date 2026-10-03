@@ -31,6 +31,8 @@ class DomainError(Exception):
 class DeviceIdentity:
     id: str
     credential_hash: str
+    owner_id: str = 'validation_owner'
+    auth_session_hash: str | None = None
 
 
 class Store:
@@ -40,6 +42,8 @@ class Store:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.transaction() as db:
             db.executescript(Path(__file__).with_name('schema.sql').read_text())
+            from .schema_upgrade import upgrade
+            upgrade(db)
 
     @contextmanager
     def transaction(self):
@@ -61,11 +65,11 @@ class Store:
     def device(self, credential: str) -> DeviceIdentity:
         credential_hash = digest(credential)
         with self.transaction() as db:
-            row = db.execute('SELECT id FROM devices WHERE credential_hash=? AND revoked=0',
+            row = db.execute('SELECT id,owner_id,auth_session_hash FROM devices WHERE credential_hash=? AND revoked=0',
                              (credential_hash,)).fetchone()
         if row is None:
             raise DomainError('UNAUTHORIZED', 401)
-        return DeviceIdentity(row['id'], credential_hash)
+        return DeviceIdentity(row['id'], credential_hash, row['owner_id'], row['auth_session_hash'])
 
     def authenticate_in_transaction(self, db, identity: DeviceIdentity) -> str:
         row = db.execute('SELECT id FROM devices WHERE id=? AND credential_hash=? AND revoked=0',
@@ -75,8 +79,8 @@ class Store:
         return identity.id
 
     @staticmethod
-    def active_device(db, device_id):
-        if db.execute('SELECT id FROM devices WHERE id=? AND revoked=0', (device_id,)).fetchone() is None:
+    def active_device(db, device_id, owner_id='validation_owner'):
+        if db.execute('SELECT id FROM devices WHERE id=? AND owner_id=? AND revoked=0', (device_id, owner_id)).fetchone() is None:
             raise DomainError('DEVICE_NOT_FOUND_OR_REVOKED', 404)
 
     def recover(self, db):
@@ -96,18 +100,20 @@ class Store:
             else:
                 db.execute('INSERT OR REPLACE INTO throttles VALUES (?,?,1)', (bucket, now))
 
-    def dashboard(self):
+    def dashboard(self, owner_id='validation_owner'):
         with self.transaction() as db:
             self.recover(db)
             devices = [dict(row) for row in db.execute(
                 'SELECT id,name,last_seen,battery_percent,screen_locked,revoked,executor,app_version '
-                'FROM devices ORDER BY created_at DESC LIMIT 200')]
+                'FROM devices WHERE owner_id=? ORDER BY created_at DESC LIMIT 200', (owner_id,))]
             for item in devices:
                 item['last_seen'] = timestamp(item['last_seen'])
                 item['screen_locked'], item['revoked'] = bool(item['screen_locked']), bool(item['revoked'])
             jobs = [self.job_view(row) for row in db.execute(
-                'SELECT * FROM jobs ORDER BY created_at DESC LIMIT 200')]
-            counts = dict(db.execute('SELECT status,COUNT(*) FROM jobs GROUP BY status').fetchall())
+                'SELECT jobs.* FROM jobs JOIN devices ON jobs.device_id=devices.id WHERE devices.owner_id=? '
+                'ORDER BY jobs.created_at DESC LIMIT 200', (owner_id,))]
+            counts = dict(db.execute('SELECT jobs.status,COUNT(*) FROM jobs JOIN devices ON jobs.device_id=devices.id '
+                                     'WHERE devices.owner_id=? GROUP BY jobs.status', (owner_id,)).fetchall())
         return {'devices': devices, 'jobs': jobs, 'mode': 'diagnostic_only',
                 'server_time': timestamp(self.clock()), 'metrics': {
                     'devices': sum(not item['revoked'] for item in devices),

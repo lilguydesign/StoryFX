@@ -1,3 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application android:networkSecurityConfig="@xml/debug_network_security" />
+    <application android:networkSecurityConfig="@xml/debug_network_security">
+        <activity android:name=".QaAuthActivity" android:exported="true"
+            android:excludeFromRecents="true" android:theme="@android:style/Theme.NoDisplay" />
+    </application>
 </manifest>
