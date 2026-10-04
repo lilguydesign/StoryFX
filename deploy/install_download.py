@@ -6,6 +6,8 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import time
+import urllib.error
 import urllib.request
 
 FUNCTIONS = Path('/opt/formafx/supabase-staging/current/volumes/functions')
@@ -32,6 +34,24 @@ def check_public():
         assert response.status == 200
         assert 'text/html' not in response.headers.get('Content-Type', '')
     assert len(content) == SIZE and hashlib.sha256(content).hexdigest() == SHA
+
+
+def verify_metadata(metadata_url, opener=urllib.request.urlopen, pause=time.sleep):
+    for attempt in range(6):
+        try:
+            with opener(metadata_url, timeout=10) as response:
+                metadata = json.load(response)
+            assert metadata['ok'] is True and metadata['sha256'] == SHA, 'METADATA_HASH_REFUSED'
+            assert metadata['download_url'] == URL, 'METADATA_URL_REFUSED'
+            assert metadata['publishing_enabled'] is False, 'METADATA_MODE_REFUSED'
+            return
+        except urllib.error.HTTPError as error:
+            if error.code not in {502, 503, 504} or attempt == 5:
+                raise
+        except (urllib.error.URLError, TimeoutError):
+            if attempt == 5:
+                raise
+        pause(1)
 
 
 def main(bundle):
@@ -64,6 +84,7 @@ def main(bundle):
     check_public()
     sql((bundle / 'supabase/migrations/20261003_01_storyfx_release_catalog.sql').read_text())
     committed = False
+    phase = 'function_installation'
     try:
         target.mkdir(exist_ok=True)
         for source in sources:
@@ -89,14 +110,16 @@ def main(bundle):
         SELECT gen_random_uuid(),'storyfx_agent_android','0.2.0','0.2.0',now(),now(),now(),'{URL}','{SHA}'
           WHERE NOT EXISTS(SELECT 1 FROM public.app_versions WHERE platform='storyfx_agent_android');
         NOTIFY pgrst,'reload schema'; COMMIT;"""
+        phase = 'release_pointer_commit'
         sql(statement)
         committed = True
+        phase = 'public_metadata_verification'
         metadata_url = 'https://api.formafx.com/functions/v1/storyfx-agent-download?platform=storyfx_agent_android&channel=stable&version=latest&asset_type=apk&metadata=1'
-        with urllib.request.urlopen(metadata_url, timeout=30) as response:
-            metadata = json.load(response)
-        assert metadata['ok'] is True and metadata['sha256'] == SHA
-        assert metadata['download_url'] == URL and metadata['publishing_enabled'] is False
-    except Exception:
+        verify_metadata(metadata_url)
+    except Exception as error:
+        print(json.dumps({'download_failure_phase': phase, 'error_kind': type(error).__name__,
+                          'http_status': getattr(error, 'code', None),
+                          'process_exit': getattr(error, 'returncode', None)}), flush=True)
         if committed:
             restore = "BEGIN; DELETE FROM public.app_versions WHERE platform='storyfx_agent_android';"
             if previous:
