@@ -26,7 +26,7 @@ object AgentController {
             check(store.session() == null)
             val response = AgentApi(server).post("/v1/devices/enroll", JSONObject()
                 .put("code", code.trim()).put("installation_id", store.installationId())
-                .put("name", name.trim().take(120)).put("android_version", Build.VERSION.RELEASE))
+                .put("name", name.trim().take(80)).put("android_version", Build.VERSION.RELEASE))
             val id = response.getString("device_id")
             UUID.fromString(id)
             val token = response.getString("token")
