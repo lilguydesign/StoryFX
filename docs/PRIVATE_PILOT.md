@@ -58,8 +58,9 @@ ne sont pas assimilés à la validation sur émulateur.
 ## Livraison et rollback
 
 Le bundle serveur est créé avec git archive depuis le commit vérifié. Le déploiement
-est limité à /opt/formafx/storyfx, au site Caddy story.formafx.com et à la fonction
-storyfx-agent-download. Les sauvegardes sont conservées dans les sous-dossiers
+est limité à /opt/formafx/storyfx, au site Caddy story.formafx.com, à son seul chemin
+de téléchargement /downloads/storyfx-android et à la fonction storyfx-agent-download.
+Les sauvegardes sont conservées dans les sous-dossiers
 backups de StoryFX. L'ancien conteneur reste disponible par son image de commit.
 
 Le catalogue APK est immuable et la publication de latest intervient seulement

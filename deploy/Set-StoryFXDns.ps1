@@ -17,7 +17,7 @@ try {
   if (-not $before.success) { throw 'DNS_READ_FAILED' }
   $records = @($before.result)
   $backup = Join-Path $backupDir ('story-dns-before-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.json')
-  $records | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $backup -Encoding UTF8
+  ConvertTo-Json -InputObject $records -Depth 8 | Set-Content -LiteralPath $backup -Encoding UTF8
   if ($records.Count -gt 1) { throw 'MULTIPLE_STORY_RECORDS_REFUSED' }
   if ($records.Count -eq 1 -and ($records[0].type -ne 'A' -or $records[0].content -ne $address)) {
     throw 'EXISTING_STORY_RECORD_DIFFERS'
