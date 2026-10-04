@@ -26,7 +26,10 @@ class QaAuthActivity : Activity() {
                     .put("connect_url", url).put("request_id", requestId).toString())
             } catch (failure: Exception) {
                 AgentController.recordFailure(app, failure)
-                resultFile.writeText(JSONObject().put("status", "failed").toString())
+                resultFile.writeText(JSONObject().put("status", "failed")
+                    .put("error_class", failure.javaClass.simpleName)
+                    .put("http_status", (failure as? AgentRequestException)?.status
+                        ?.takeIf { it in 100..599 } ?: JSONObject.NULL).toString())
             }
         }
         executor.shutdown()
