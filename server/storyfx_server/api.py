@@ -7,7 +7,7 @@ import time
 from uuid import UUID
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.staticfiles import StaticFiles
 from . import devices, jobs
@@ -16,10 +16,15 @@ from .models import AgentEvent, Diagnostic, Empty, Enrollment, Heartbeat, Renewa
 from .store import DomainError, Store
 
 
-def create_app(db_path: Path, owner_token: str, *, legacy_config: Path | None = None, clock=time.time):
-    if len(owner_token) < 32:
+def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | None = None,
+               clock=time.time, auth_client=None, encryption_key=None, origin='https://story.formafx.com'):
+    if auth_client is None and (owner_token is None or len(owner_token) < 32):
         raise ValueError('OWNER_CREDENTIAL_REQUIRED')
     store = Store(db_path, clock)
+    sessions = None
+    if auth_client is not None:
+        from .auth_sessions import AuthSessions
+        sessions = AuthSessions(store, auth_client, encryption_key)
     heartbeat_state = {'last_tick': None, 'healthy': False}
 
     async def recover_loop():
@@ -43,7 +48,7 @@ def create_app(db_path: Path, owner_token: str, *, legacy_config: Path | None = 
             with suppress(asyncio.CancelledError):
                 await task
 
-    app = FastAPI(title='StoryFX — socle de diagnostic', version='0.1.0',
+    app = FastAPI(title='StoryFX — pilote privé', version='0.2.0',
                   docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.state.store = store
     bearer = HTTPBearer(auto_error=False)
@@ -53,13 +58,31 @@ def create_app(db_path: Path, owner_token: str, *, legacy_config: Path | None = 
             raise DomainError('UNAUTHORIZED', 401)
         return value.credentials
 
-    def owner(token: str = Depends(credential)):
+    def owner(request: Request, value: HTTPAuthorizationCredentials | None = Depends(bearer)):
+        if sessions is not None:
+            from .auth_routes import COOKIE
+            if request.method not in ('GET', 'HEAD') and request.headers.get('origin') != origin:
+                raise DomainError('ORIGIN_REFUSED', 403)
+            return sessions.require(request.cookies.get(COOKIE, ''))
+        token = value.credentials if value and value.scheme.lower() == 'bearer' else ''
         if not hmac.compare_digest(token.encode('utf-8'), owner_token.encode('utf-8')):
             raise DomainError('UNAUTHORIZED', 401)
-        return 'validation_owner'
+        return {'id': 'validation_owner', 'session_id': None}
 
     def agent(token: str = Depends(credential)):
-        return store.device(token)
+        identity = store.device(token)
+        if sessions is not None:
+            if not identity.auth_session_hash:
+                raise DomainError('UNAUTHORIZED', 401)
+            user = sessions.require_hash(identity.auth_session_hash)
+            if user['id'] != identity.owner_id:
+                raise DomainError('UNAUTHORIZED', 401)
+        return identity
+
+    if sessions is not None:
+        from .auth_routes import build_auth_router
+        app.include_router(build_auth_router(sessions, origin))
+        app.state.auth_sessions = sessions
 
     @app.exception_handler(DomainError)
     async def domain_error(_request, error):
@@ -103,17 +126,18 @@ def create_app(db_path: Path, owner_token: str, *, legacy_config: Path | None = 
         healthy = database_ok and recent_tick and heartbeat_state['healthy']
         return JSONResponse({'status': 'ok' if healthy else 'degraded', 'mode': 'diagnostic_only',
                              'publishing_enabled': False, 'database_ok': database_ok,
-                             'recovery_worker_ok': bool(recent_tick and heartbeat_state['healthy'])},
+                             'recovery_worker_ok': bool(recent_tick and heartbeat_state['healthy']),
+                             'account_auth_enabled': sessions is not None, 'version': '0.2.0'},
                             status_code=200 if healthy else 503)
 
-    @app.get('/v1/dashboard', dependencies=[Depends(owner)])
-    def dashboard():
-        return store.dashboard()
+    @app.get('/v1/dashboard')
+    def dashboard(user=Depends(owner)):
+        return store.dashboard(user['id'])
 
-    @app.post('/v1/pairings', dependencies=[Depends(owner)])
-    def pairing(_body: Empty):
+    @app.post('/v1/pairings')
+    def pairing(_body: Empty, user=Depends(owner)):
         store.throttle('pairings_created', maximum=20, period=60)
-        return devices.create_pairing(store)
+        return devices.create_pairing(store, user['id'], user['session_id'])
 
     @app.post('/v1/devices/enroll')
     def enrollment(body: Enrollment):
@@ -124,17 +148,17 @@ def create_app(db_path: Path, owner_token: str, *, legacy_config: Path | None = 
     def contact(body: Heartbeat, device_id=Depends(agent)):
         return devices.heartbeat(store, device_id, body)
 
-    @app.post('/v1/devices/{device_id}/revoke', dependencies=[Depends(owner)])
-    def revoke(device_id: UUID, _body: Empty):
-        return devices.revoke(store, str(device_id))
+    @app.post('/v1/devices/{device_id}/revoke')
+    def revoke(device_id: UUID, _body: Empty, user=Depends(owner)):
+        return devices.revoke(store, str(device_id), user['id'])
 
-    @app.post('/v1/diagnostics', dependencies=[Depends(owner)])
-    def diagnostic(body: Diagnostic):
-        return jobs.enqueue(store, body)
+    @app.post('/v1/diagnostics')
+    def diagnostic(body: Diagnostic, user=Depends(owner)):
+        return jobs.enqueue(store, body, user['id'])
 
-    @app.post('/v1/jobs/{job_id}/cancel', dependencies=[Depends(owner)])
-    def cancel_job(job_id: UUID, _body: Empty):
-        return jobs.cancel(store, str(job_id))
+    @app.post('/v1/jobs/{job_id}/cancel')
+    def cancel_job(job_id: UUID, _body: Empty, user=Depends(owner)):
+        return jobs.cancel(store, str(job_id), user['id'])
 
     @app.post('/v1/agent/claim')
     def next_job(_body: Empty, device_id=Depends(agent)):
@@ -163,5 +187,10 @@ def create_app(db_path: Path, owner_token: str, *, legacy_config: Path | None = 
 
     dashboard_root = Path(__file__).resolve().parents[2] / 'dashboard'
     if dashboard_root.is_dir():
+        @app.get('/agent/connect')
+        def agent_connect():
+            return FileResponse(dashboard_root / 'login' / 'index.html')
+
+        app.mount('/login', StaticFiles(directory=dashboard_root / 'login', html=True), name='login')
         app.mount('/dashboard', StaticFiles(directory=dashboard_root, html=True), name='dashboard')
     return app

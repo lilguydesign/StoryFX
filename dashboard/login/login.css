@@ -1,0 +1,5 @@
+@import url("./login-layout.css");
+@import url("./login-controls.css");
+@import url("./login-details.css");
+@media(max-width:900px){main{gap:30px;padding:0 24px;grid-template-columns:1fr 1fr}.login-card{padding:26px 22px}.presentation h1{font-size:38px}header,footer{padding-left:24px;padding-right:24px}}
+@media(max-width:680px){header{padding:20px}.brand{font-size:23px}main{display:flex;flex-direction:column;gap:28px;padding:0 20px;margin-top:5px}.presentation{width:100%}.presentation h1{font-size:33px;margin:15px 0}.presentation h1 br:nth-of-type(2){display:none}.presentation>p{font-size:12px;max-width:100%}.hero{display:none}.pilot-note{margin:18px 0}.login-card{width:100%;padding:24px;border-radius:22px}h2{font-size:24px}footer{flex-wrap:wrap;gap:10px;padding:5px 20px 20px}footer>a:first-of-type{margin-left:0}.presentation .eyebrow{font-size:9px}.subtitle{margin-bottom:18px}}
