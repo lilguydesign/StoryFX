@@ -46,6 +46,12 @@ jobs:
           bash -n deploy/install_backend.sh
           python deploy/prepare_bundle.py "$GITHUB_SHA"
           python deploy/verify_bundle.py ".runtime/deploy/$GITHUB_SHA/storyfx-release.tar"
+      - name: Validate container mounts with Docker
+        env:
+          STORYFX_IMAGE: busybox:1.37
+        run: |
+          docker compose -p storyfx-ci-mounts -f deploy/compose.yaml run --rm --no-deps storyfx-api true
+          docker compose -p storyfx-ci-mounts -f deploy/compose.yaml down
   download:
     runs-on: ubuntu-latest
     steps:
