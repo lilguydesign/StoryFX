@@ -7,7 +7,7 @@
   "deployed": false,
   "trigger": "Manual offline evaluation of fresh health and owner dashboard JSON",
   "timezone": "Africa/Douala",
-  "schedule": "Manual only; permanent timer and hourly collection NOT VERIFIED",
+  "schedule": "Manual probe; service recovery tick 10s; Android WorkManager minimum 15min with system delays; permanent collection NOT VERIFIED",
   "scheduled_controller_connected": false,
   "local_endpoint": "http://127.0.0.1:18743/health",
   "public_endpoint": null,
@@ -17,6 +17,9 @@
   "recovery_worker_tick_seconds": 10,
   "recovery_worker_health_tolerance_seconds": 30,
   "lease_timeout_seconds": 120,
+  "android_sync_minimum_interval_seconds": 900,
+  "android_sync_exact_timing_guaranteed": false,
+  "android_physical_endurance_verified": false,
   "expected": "mode=diagnostic_only, publishing_enabled=false, database_ok=true, recovery_worker_ok=true; expired leases transition to NEEDS_REVIEW without replay",
   "normal_exclusions": [
     "An empty job queue or zero phones is normal during initial setup",
@@ -33,7 +36,7 @@
   "illustrated_template_instruction": "Use the verified StoryFX logo and failure type once available; do not fabricate a generic logo or include private media",
   "proof": {
     "fixture_tests": "test_storyfx_diagnostics_probe.py",
-    "local_health_execution": "Pending a separate fresh local receipt",
+    "local_health_execution": "Passed live loopback smoke and maintenance_local.py on 2026-10-04; delivery/FINAL_REPORT.txt",
     "permanent_timer": "not_verified",
     "public_service": "not_deployed",
     "android_agent": "not_verified",

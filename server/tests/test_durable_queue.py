@@ -18,7 +18,7 @@ def test_scheduled_window_and_unique_occurrence(lab):
     assert client.post('/v1/agent/claim', json={}, headers=auth(credential)).json()['job']['id'] == first['job']['id']
 
 
-def test_concurrent_claims_serialize_on_one_physical_device(lab):
+def test_concurrent_claims_serialize_on_one_installation(lab):
     client, now, app = lab
     device, credential = enroll(client)
     schedule(client, device, now[0])

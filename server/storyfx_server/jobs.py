@@ -1,4 +1,4 @@
-"""Diagnostic queue: atomic claims, physical-device exclusion and safe late acknowledgement."""
+"""Diagnostic queue: atomic claims, installation exclusion and safe late acknowledgement."""
 import secrets
 from uuid import uuid4
 from .store import DomainError, digest, fingerprint, timestamp

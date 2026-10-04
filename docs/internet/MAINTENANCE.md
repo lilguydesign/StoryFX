@@ -15,6 +15,9 @@ Worker de récupération des baux : toutes les dix secondes pendant la vie du
 serveur. Horodatage UTC ; affichage en heure du navigateur et planning ancien
 Africa/Douala. Bail : 120 secondes ; retard du worker toléré : 30 secondes.
 Heartbeat Android et disponibilité en arrière-plan restent distincts.
+WorkManager prévoit une récupération réseau au minimum toutes les quinze
+minutes, avec backoff réseau et délais système ; aucune cadence exacte promise.
+La veille prolongée et l'endurance sur téléphone physique restent non vérifiées.
 
 Signal attendu : `/health` confirme stockage, worker et périmètre diagnostic ;
 la file expose ses échéances. Un bail expiré devient `NEEDS_REVIEW`, sans replay.
