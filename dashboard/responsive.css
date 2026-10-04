@@ -1,0 +1,134 @@
+@media(min-width:1600px){main{padding-top:37px}
+.hero{min-height:340px}
+.hero h1{font-size:49px}
+.hero-copy p{font-size:13px}
+.hero-visual{margin-right:70px}
+.metrics{gap:20px}
+.metric{padding:22px}
+.panel-heading{padding-top:24px}
+.device-row{padding:18px 0}
+.journey{gap:11px}}
+@media(max-width:1200px){.sidebar{width:218px;padding-inline:15px}
+.workspace{margin-left:218px}
+main{padding-inline:28px}
+.topbar{padding-inline:28px}
+.hero-visual{width:240px;flex-basis:240px;margin-right:0;transform:scale(.9)}
+.hero-copy{max-width:440px}
+.hero h1{font-size:38px}
+.metric{padding:16px}
+.metric-top{font-size:8px}
+.dashboard-grid{gap:16px;grid-template-columns:1fr 1fr}
+.control-panel .small-badge{font-size:6px;letter-spacing:.5px}
+.panel-heading{padding-inline:19px}
+.device-list{padding-inline:19px}
+.device-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+.session-panel{align-items:flex-start}
+.session-panel p{max-width:330px}
+.session-panel input{width:130px}}
+@media(max-width:1000px){.sidebar{width:192px;padding-inline:11px}
+.workspace{margin-left:192px}
+.brand{font-size:23px;gap:8px;margin-inline:5px}
+.brand-mark{width:37px;height:43px}
+.nav-item{gap:9px;font-size:11px;padding:11px 9px}
+.nav-label{font-size:8px}
+.soon{display:none}
+.sidebar-note{padding:17px 14px}
+main{padding-inline:23px}
+.topbar{padding-inline:23px}
+.hero-visual{display:none}
+.hero{min-height:295px}
+.hero-copy{max-width:100%}
+.hero-copy p{max-width:500px}
+.hero h1 br{display:none}
+.hero h1{font-size:35px}
+.dashboard-grid{grid-template-columns:1fr}
+.device-row{padding:12px 0}
+.journey{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding-top:9px}
+.journey>div{padding-left:0;padding-top:33px}
+.journey strong{font-size:11px}
+.journey p{font-size:10px}
+.control-panel>.button{width:calc(100% - 38px);margin-inline:19px}
+.metrics{gap:10px}
+.metric{padding:14px 12px}
+.metric-icon{display:none}
+.metric-value{font-size:26px}
+.metric-bottom{font-size:7px}
+.session-panel{flex-direction:column;gap:14px}
+.session-panel p{max-width:none}
+.session-panel form{width:100%}
+.session-panel input{width:auto;flex:1}
+.environment-banner{align-items:flex-start;flex-wrap:wrap}
+.environment-banner>span:last-child{width:100%;padding-left:13px}}
+@media(max-width:700px){.sidebar{position:relative;width:100%;padding:18px 18px 10px;border-right:0;border-bottom:1px solid var(--border)}
+.brand{font-size:22px;margin:0 0 16px}
+.brand-mark{width:35px;height:39px}
+.brand small{font-size:7px;letter-spacing:2px}
+.nav-label,.sidebar-note,.sidebar-footer{display:none}
+.nav-list{display:flex;overflow-x:auto;gap:8px;padding:0 0 4px}
+.nav-item{white-space:nowrap;min-height:35px;padding:7px 9px;font-size:10px;border-radius:6px;flex-shrink:0}
+.nav-item>span:first-child{width:14px;font-size:16px}
+.nav-count{display:none}
+.nav-item.active{box-shadow:inset 0 -2px var(--cyan)}
+.workspace{margin-left:0}
+.topbar{height:57px;padding-inline:19px}
+.breadcrumb{font-size:8px}
+.breadcrumb span{padding:0 7px}
+.topbar-actions{gap:8px}
+.connection-label{font-size:8px}
+.icon-button{height:29px;width:29px;font-size:18px}
+main{padding:20px 19px 0}
+.environment-banner{font-size:8px;padding:9px 11px}
+.hero{padding-top:30px;min-height:274px}
+.hero h1{font-size:35px;line-height:1.15;letter-spacing:-1.5px;max-width:400px}
+.hero h1 br{display:block}
+.hero-copy p{font-size:10px;max-width:360px}
+.eyebrow{font-size:7px;letter-spacing:1.5px}
+.hero-actions{flex-wrap:wrap;gap:8px}
+.button{font-size:9px;padding:9px 12px;min-height:35px}
+.metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-bottom:21px}
+.metric{padding:15px}
+.metric-top{font-size:9px}
+.metric-icon{display:grid;width:22px;height:22px;font-size:13px}
+.metric-bottom{font-size:8px}
+.panel-heading{padding:17px}
+.panel-heading h2{font-size:14px}
+.panel-heading .eyebrow{font-size:6px}
+.device-list{padding:0 17px 5px}
+.dashboard-grid{gap:18px;margin-bottom:19px}
+.journey{padding:6px 17px 12px;gap:14px}
+.journey strong{font-size:9px}
+.journey p{font-size:8px}
+.journey span{font-size:7px;width:22px;height:22px}
+.control-panel .small-badge{font-size:5px}
+.control-panel>.button{width:calc(100% - 34px);margin:0 17px 17px}
+.device-name{font-size:10px}
+.device-sub{font-size:7px}
+.device-meta{font-size:7px}
+.phone-icon{width:32px;height:39px}
+.device-row{gap:10px}
+.page-heading{padding-top:30px;flex-direction:column;align-items:flex-start;gap:18px}
+.page-heading h1{font-size:29px}
+.page-heading p{font-size:10px}
+.device-cards{grid-template-columns:1fr}
+.device-card{padding:20px}
+.filter-label{font-size:8px}
+.filter-label select{padding:7px;max-width:135px;font-size:9px}
+th{padding:10px 17px}
+td{padding:13px 17px}
+.session-panel{margin-top:20px;padding:15px}
+.session-panel form{flex-wrap:wrap}
+.session-panel input{min-width:130px}
+.session-panel h2{font-size:10px}
+.session-panel p{font-size:8px}
+.page-footer{font-size:7px;gap:12px}
+.migration-panel,.library-panel{padding:25px}
+.migration-panel h2,.library-panel h2{font-size:21px}
+.migration-panel p,.library-panel p{font-size:10px}
+.future-steps{gap:9px;font-size:8px}
+.import-stats{gap:7px}
+.import-stat{padding:10px}
+.import-stat strong{font-size:20px}
+.import-stat span{font-size:8px}
+dialog{padding:25px}
+dialog h2{font-size:21px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

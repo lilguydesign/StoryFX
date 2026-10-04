@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <title>StoryFX — Espace de contrôle</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./responsive.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Aller au contenu</a>
+  <aside class="sidebar" aria-label="Navigation principale">
+    <a class="brand" href="./" aria-label="StoryFX, accueil">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="m8 8 17-3-9 10 10 2-18 10 6-11-9-2Z"/></svg></span>
+      <span>Story<span class="brand-fx">FX</span><small>CONTROL CENTER</small></span>
+    </a>
+    <div class="nav-label">VOTRE ESPACE</div>
+    <nav class="nav-list">
+      <button class="nav-item active" data-section="overview" aria-current="page"><span aria-hidden="true">◈</span> Vue d’ensemble</button>
+      <button class="nav-item" data-section="devices"><span aria-hidden="true">▯</span> Appareils <span class="nav-count" id="nav-devices">—</span></button>
+      <button class="nav-item" data-section="activity"><span aria-hidden="true">≋</span> Activité</button>
+      <button class="nav-item" data-section="migration"><span aria-hidden="true">⇄</span> Migration</button>
+      <button class="nav-item" data-section="library"><span aria-hidden="true">▧</span> Bibliothèque <span class="soon">PLUS TARD</span></button>
+    </nav>
+    <div class="sidebar-note"><span class="orbit" aria-hidden="true"></span><strong>Le prochain chapitre.</strong><p>Un serveur, vos appareils.<br>Le même contrôle, partout.</p><span class="small-badge">PILOTE DIAGNOSTIC</span></div>
+    <div class="sidebar-footer"><span class="status-dot"></span> FormaFX ecosystem <small>StoryFX · prototype local</small></div>
+  </aside>
+
+  <div class="workspace">
+    <header class="topbar">
+      <div class="breadcrumb">Espace de contrôle <span>/</span> <strong id="section-title">Vue d’ensemble</strong></div>
+      <div class="topbar-actions"><span id="connection-label" class="connection-label"><span class="status-dot muted"></span> Session inactive</span><button class="icon-button" id="theme-toggle" aria-label="Activer le thème clair" title="Changer le thème">☼</button></div>
+    </header>
+    <main id="main" tabindex="-1">
+      <div class="environment-banner" id="environment-banner"><span class="status-dot gold"></span><strong>Prototype diagnostic</strong><span>La publication est désactivée. Les albums seront synchronisés dans un prochain chantier.</span></div>
+      <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
+
+      <section class="section-pane" id="pane-overview" aria-labelledby="overview-title">
+        <div class="hero">
+          <div class="hero-copy"><div class="eyebrow">ORCHESTRATION · STORYFX</div><h1 id="overview-title">Le contrôle<br><span>commence ici.</span></h1><p>Connectez vos appareils au pilote et vérifiez le trajet des tâches, de la programmation au résultat.</p><div class="hero-actions"><button class="button primary" data-action="pair" disabled><span aria-hidden="true">＋</span> Connecter un appareil</button><button class="button secondary" id="demo-button">Voir la démonstration <span aria-hidden="true">↗</span></button></div></div>
+          <div class="hero-visual" aria-hidden="true"><div class="orbit-ring ring-one"></div><div class="orbit-ring ring-two"></div><div class="visual-core"><svg viewBox="0 0 32 32"><path d="m8 8 17-3-9 10 10 2-18 10 6-11-9-2Z"/></svg></div><div class="visual-node node-phone">▯<small>APPAREIL</small></div><div class="visual-node node-server">◇<small>SERVEUR</small></div><span class="visual-caption">UN LIEN. AUCUN WI-FI COMMUN.</span></div>
+        </div>
+        <div class="metrics" id="metrics" aria-label="Indicateurs de l’espace"></div>
+        <div class="dashboard-grid">
+          <section class="panel"><div class="panel-heading"><div><span class="eyebrow">VOTRE FLOTTE</span><h2>Appareils associés</h2></div><button class="text-button" data-go="devices">Tout voir <span aria-hidden="true">→</span></button></div><div id="device-preview" class="device-list"></div></section>
+          <section class="panel control-panel"><div class="panel-heading"><div><span class="eyebrow">PREMIER JALON</span><h2>Vérifier la liaison</h2></div><span class="small-badge">SANS PUBLICATION</span></div><div class="journey"><div><span>01</span><strong>Enrôler</strong><p>Un code à usage limité associe l’appareil à votre espace.</p></div><div><span>02</span><strong>Transmettre</strong><p>Une tâche de diagnostic est récupérée par l’agent.</p></div><div><span>03</span><strong>Confirmer</strong><p>Le résultat remonte au serveur et reste dans l’historique.</p></div></div><button class="button secondary full" data-action="diagnostic" disabled>Préparer un diagnostic <span aria-hidden="true">→</span></button></section>
+        </div>
+        <section class="panel activity-panel"><div class="panel-heading"><div><span class="eyebrow">HISTORIQUE</span><h2>Dernières tâches</h2></div><button class="text-button" id="refresh-button" disabled>↻ Actualiser</button></div><div class="table-scroll" id="recent-jobs"></div></section>
+      </section>
+
+      <section class="section-pane" id="pane-devices" aria-labelledby="devices-title" hidden><div class="page-heading"><div><span class="eyebrow">VOTRE FLOTTE</span><h1 id="devices-title">Vos appareils.</h1><p>Leur identité reste stable, même quand leur réseau change.</p></div><button class="button primary" data-action="pair" disabled>＋ Connecter un appareil</button></div><div class="device-cards" id="device-cards"></div></section>
+      <section class="section-pane" id="pane-activity" aria-labelledby="activity-title" hidden><div class="page-heading"><div><span class="eyebrow">TRAÇABILITÉ</span><h1 id="activity-title">Chaque étape compte.</h1><p>Un diagnostic confirmé décrit uniquement la liaison avec l’agent.</p></div><button class="button primary" data-action="diagnostic" disabled>＋ Nouveau diagnostic</button></div><section class="panel"><div class="panel-heading"><h2>Toutes les tâches</h2><label class="filter-label">État <select id="status-filter"><option value="all">Tous les états</option><option value="QUEUED">En attente</option><option value="CLAIMED">Réservée</option><option value="STARTED">En cours</option><option value="DIAGNOSTIC_CONFIRMED">Diagnostic confirmé</option><option value="NEEDS_REVIEW">À vérifier</option><option value="EXPIRED">Expirée</option><option value="CANCELLED">Annulée</option></select></label></div><div class="table-scroll" id="all-jobs"></div></section></section>
+      <section class="section-pane" id="pane-migration" aria-labelledby="migration-title" hidden><div class="page-heading"><div><span class="eyebrow">PRÉSERVER L’EXISTANT</span><h1 id="migration-title">Votre histoire continue.</h1><p>Lire la configuration historique avant de préparer sa migration.</p></div></div><section class="panel migration-panel"><span class="feature-icon" aria-hidden="true">⇄</span><h2>Aperçu de l’archive StoryFX</h2><p>Ce contrôle lit les profils et la programmation de l’application historique. Il ne lance aucune tâche et n’active aucun planning.</p><button class="button primary" id="import-button" disabled>Analyser la configuration</button><div id="import-result" class="import-result" role="status"></div></section></section>
+      <section class="section-pane" id="pane-library" aria-labelledby="library-title" hidden><div class="page-heading"><div><span class="eyebrow">LE CHANTIER SUIVANT</span><h1 id="library-title">Un album. Tous vos appareils.</h1><p>La synchronisation des galeries viendra après la validation du moteur.</p></div></div><section class="panel library-panel"><span class="feature-icon" aria-hidden="true">▧</span><span class="small-badge">PRÉVU POUR PLUS TARD</span><h2>Une bibliothèque centralisée</h2><p>Ajouter vos images une seule fois, puis retrouver les albums à jour sur les téléphones associés. Cette fonctionnalité n’est pas encore disponible.</p><div class="future-steps"><span>Bibliothèque serveur</span><span aria-hidden="true">→</span><span>Versions d’albums</span><span aria-hidden="true">→</span><span>Synchronisation Android</span></div></section></section>
+
+      <section class="session-panel" aria-labelledby="session-title"><div><h2 id="session-title">Accès de validation</h2><p id="session-help">La clé propriétaire reste en mémoire jusqu’à la déconnexion. Aucune sauvegarde dans le navigateur. La connexion par compte n’est pas encore disponible.</p></div><form id="session-form" autocomplete="off"><label class="visually-hidden" for="owner-key">Clé propriétaire du pilote</label><input id="owner-key" type="password" autocomplete="off" spellcheck="false" placeholder="Clé propriétaire" required aria-describedby="session-help"><button class="button secondary" type="submit" id="login-button">Se connecter</button><button class="button secondary" type="button" id="logout-button" hidden>Déconnexion</button></form></section>
+      <footer class="page-footer"><span>StoryFX <span class="footer-dot">·</span> FormaFX</span><span id="last-refresh">Aucune donnée serveur chargée</span></footer>
+    </main>
+  </div>
+
+  <dialog id="pair-dialog" aria-labelledby="pair-title"><form method="dialog" class="dialog-close"><button class="icon-button" aria-label="Fermer">×</button></form><span class="eyebrow">CONNEXION D’UN APPAREIL</span><h2 id="pair-title">Votre code de connexion</h2><p>Saisissez ce code dans l’agent Android StoryFX. Il expire automatiquement.</p><div class="pair-code" id="pair-code"></div><p class="helper" id="pair-expiry"></p><p class="helper">L’agent Android doit être installé et ses permissions activées sur l’appareil.</p></dialog>
+  <dialog id="diagnostic-dialog" aria-labelledby="diagnostic-title"><form method="dialog" class="dialog-close"><button class="icon-button" aria-label="Fermer">×</button></form><span class="eyebrow">TEST DE LIAISON</span><h2 id="diagnostic-title">Préparer un diagnostic</h2><p>Cette tâche vérifie l’agent. Elle ne manipule aucune application et ne publie aucun contenu.</p><form id="diagnostic-form"><label for="diagnostic-device">Appareil <select id="diagnostic-device" required></select></label><label for="diagnostic-time">Démarrage souhaité <input id="diagnostic-time" type="datetime-local" required></label><p class="helper">Heure locale de votre navigateur. La tâche expire 30 minutes après le démarrage.</p><button class="button primary full" type="submit">Créer la tâche de diagnostic</button></form></dialog>
+  <dialog id="revoke-dialog" aria-labelledby="revoke-title"><form method="dialog" class="dialog-close"><button class="icon-button" aria-label="Fermer">×</button></form><span class="eyebrow">GESTION DES ACCÈS</span><h2 id="revoke-title">Révoquer cet appareil ?</h2><p id="revoke-name"></p><p>L’appareil devra être enrôlé à nouveau pour se reconnecter au pilote.</p><button class="button primary full" id="confirm-revoke">Révoquer l’accès</button></dialog>
+  <dialog id="cancel-dialog" aria-labelledby="cancel-title"><form method="dialog" class="dialog-close"><button class="icon-button" aria-label="Fermer">×</button></form><span class="eyebrow">GESTION DES TÂCHES</span><h2 id="cancel-title">Annuler ce diagnostic ?</h2><p id="cancel-name"></p><p>L’historique est conservé. Cette annulation ne déclenche aucune nouvelle tâche.</p><button class="button primary full" id="confirm-cancel">Annuler la tâche de diagnostic</button></dialog>
+</body>
+</html>

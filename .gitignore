@@ -55,3 +55,16 @@ htmlcov/
 Thumbs.db
 .idea/
 .vscode/
+
+# Transmission source, private historical state and local credentials
+transmission/
+.runtime/
+delivery/
+*.db
+*.db-wal
+*.db-shm
+*.apk
+*.zip
+android-agent/.gradle/
+android-agent/local.properties
+android-agent/.kotlin/
