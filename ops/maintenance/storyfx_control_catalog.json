@@ -34,7 +34,7 @@
     "usb_update_two_phones": "0.3.1_package_and_on_device_hash_verified_20261005",
     "native_update_physical_install": "not_verified_by_usb_install",
     "autonomous_android_publication": "not_available",
-    "windows_secure_unlock": "CurrentUser DPAPI, trusted hardware only, bounded numeric keyguard attempt; six synthetic tests passed; physical PIN entry not verified"
+    "windows_secure_unlock": "CurrentUser DPAPI, trusted hardware only, bounded numeric keyguard attempt; six synthetic tests passed; JK657_S23+ physically locked then unlocked successfully on 2026-10-05; second phone not verified"
   },
   "notifications_sent_by_validation": false,
   "maintenance_timers_modified": false,
