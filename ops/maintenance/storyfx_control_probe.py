@@ -19,6 +19,8 @@ def evaluate(value):
                              for key, expected in required.items())
     healthy = valid and value.get('status') == 'ok' and value.get('database_ok') is True
     return {'id': 'storyfx_control_plane', 'application': 'StoryFX',
+            'label': 'StoryFX — commandes web',
+            'detail': 'Contrat HTTPS ; disponibilité privée du moteur et publication non observées.',
             'status': 'ok' if healthy else 'incident' if complete else 'unknown',
             'reason_code': 'CONTROL_CONTRACT_OK' if healthy else 'CONTROL_CONTRACT_INVALID' if complete else 'CONTROL_PROOF_MISSING',
             'metrics': {'public_contract_verified': healthy, 'windows_executor_observed': False,

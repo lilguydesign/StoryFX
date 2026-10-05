@@ -15,7 +15,7 @@
   "rollback": "Previous backend release and latest APK pointer; retain confirmed/uncertain publication reservations and Android encrypted association",
   "illustration": "https://apps.formafx.com/assets/images/app-icons/storyfx.svg",
   "illustrated_template": "Existing StoryFX maintenance alert; approval and delivery not revalidated by this milestone",
-  "coverage": {"existing_hourly_server_and_latest_checks": "existing_storyfx_public_probe", "new_control_contract_probe": "manual_execution_pending", "private_windows_executor_endurance": "not_verified", "native_update_physical_install": "pending", "autonomous_android_publication": "not_available"},
+  "coverage": {"existing_hourly_server_and_latest_checks": "existing_storyfx_public_probe", "new_control_contract_probe": "manual_passed_20261005T0711Z", "scheduled_control_integration": "installer_prepared_runtime_receipt_required", "private_windows_executor_endurance": "not_verified", "native_update_physical_install": "pending", "autonomous_android_publication": "not_available"},
   "notifications_sent_by_validation": false,
   "maintenance_timers_modified": false,
   "existing_two_hour_quota_and_silent_resolution_preserved": true
