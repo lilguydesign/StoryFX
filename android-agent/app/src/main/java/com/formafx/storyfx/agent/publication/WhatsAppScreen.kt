@@ -33,7 +33,14 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
         error("NO_CLICK_TARGET")
     }
     fun updates() = click(unique { text(it) in setOf("Updates", "Actus", "Mises à jour") })
+    fun hasUpdates() = correctPackage && nodes.count {
+        it.isVisibleToUser && text(it) in setOf("Updates", "Actus", "Mises à jour")
+    } == 1
+    fun isOwnStatusList() = correctPackage && !hasUpdates() && nodes.count { it.isVisibleToUser && own(it) } == 1 &&
+        nodes.none { it.isVisibleToUser && it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" } &&
+        nodes.any { it.isVisibleToUser && Regex("\\d+ (views?|vues?)", RegexOption.IGNORE_CASE).matches(text(it)) }
     fun ownStatus() = click(unique { own(it) })
+    fun openOwnStatus() { if (!isOwnStatusList()) ownStatus() }
     fun selectOwnStatus() = click(unique {
         it.viewIdResourceName == "${PublicationPolicy.provider}:id/contactpicker_row_name" && own(it)
     })

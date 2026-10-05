@@ -8,6 +8,7 @@ class NativePublisher(
     private val context: Context,
     private val ui: (() -> Unit) -> Unit,
     private val screen: () -> WhatsAppScreen,
+    private val backToUpdates: () -> Unit,
     private val authorize: () -> Unit,
     private val journal: PublicationJournal
 ) {
@@ -28,11 +29,19 @@ class NativePublisher(
                 context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             }
             Thread.sleep(2500)
+            authorize()
+            ui {
+                if (!screen().hasUpdates()) {
+                    check(screen().isOwnStatusList())
+                    backToUpdates()
+                }
+            }
+            Thread.sleep(1000)
             action { it.updates() }
-            action { it.ownStatus() }
+            action { it.openOwnStatus() }
             // A fresh own-status baseline must have no recent statuses to confuse with this job.
             var baselineReady = false
-            for (attempt in 0 until 15) {
+            for (attempt in 0 until 45) {
                 authorize()
                 var recent = -1
                 ui { recent = screen().recentCount() }
@@ -52,7 +61,7 @@ class NativePublisher(
             uncertain = true
             action { check(it.contactsPreview()); it.send() }
             Thread.sleep(7000)
-            action { it.ownStatus() }
+            action { it.openOwnStatus() }
             val rows = mutableSetOf<Int>()
             var countVerified = false
             for (page in 0 until 8) {
