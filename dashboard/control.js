@@ -3,6 +3,7 @@ import { escape, dateLabel } from './views.js';
 import { controlTitles, definitions, descriptions, fields, readFields } from './control-fields.js';
 import { mountLauncher, renderLauncher } from './launch-panel.js';
 import { profilesTable, changeProfileSort } from './profile-editor.js';
+import { showAssociationLink } from './association-link.js';
 
 let data = null, enabled = false, busy = false, editing = null, editRevision = null, selected = null;
 let profileFilter = '', platformFilter = '';
@@ -19,7 +20,7 @@ export function mountControl(notice) {
   document.body.insertAdjacentHTML('beforeend', `
     <dialog id="setting-dialog"><form method="dialog" class="dialog-close"><button class="icon-button" aria-label="Fermer">×</button></form><h2 id="setting-title"></h2><form id="setting-form"><div id="setting-fields" class="control-fields"></div><p class="helper">Les changements sont enregistrés pour votre compte. Ils ne lancent aucune publication.</p><button class="button primary full" type="submit">Enregistrer</button><button class="button secondary full" type="button" id="setting-remove">Supprimer cette référence</button></form></dialog>
     <dialog id="launch-dialog"><form method="dialog" class="dialog-close"><button class="icon-button" aria-label="Fermer">×</button></form><h2>Lancer cette publication</h2><p id="launch-preview"></p><p class="helper">Une seule tentative. Le statut ou la page configurée sera publié réellement. Le téléphone doit rester disponible pour le moteur Windows.</p><button class="button primary full" id="launch-confirm">Lancer la publication réelle</button></dialog>
-    <dialog id="windows-dialog"><form method="dialog" class="dialog-close"><button class="icon-button" aria-label="Fermer">×</button></form><h2>Connecter le moteur Windows</h2><p>Démarrez le connecteur StoryFX sur Windows, puis collez son identifiant de demande. Seul ce programme recevra son accès ; aucun mot de passe à copier.</p><form id="windows-form"><label>Identifiant de demande<input name="request_id" required pattern="[a-fA-F0-9-]{36}" autocomplete="off"></label><button class="button primary full">Autoriser ce connecteur</button></form></dialog>`);
+    <dialog id="windows-dialog"><form method="dialog" class="dialog-close"><button class="icon-button" aria-label="Fermer">×</button></form><h2>Connecter le moteur Windows</h2><p>Cet identifiant temporaire associe uniquement le moteur de ce PC à votre compte. Démarrez le connecteur StoryFX puis collez sa demande. Son accès reste chiffré sur Windows. Brancher les téléphones ou connecter l’agent Android ne remplace pas cette association. Aucun code de déverrouillage à saisir ici.</p><form id="windows-form"><label>Identifiant de demande<input name="request_id" required pattern="[a-fA-F0-9-]{36}" autocomplete="off"></label><button class="button primary full">Autoriser ce connecteur</button></form></dialog>`);
   const action = async work => {
     if (!enabled || busy) return;
     busy = true; render();
@@ -131,4 +132,5 @@ function render() {
     escape(states[value.state] || value.state), value.publication.web_triggered ? 'Web → Windows' : 'Moteur local', escape(evidenceLabels[value.evidence] || 'En attente'),
   ]));
   renderLauncher(data,active);
+  showAssociationLink(active);
 }
