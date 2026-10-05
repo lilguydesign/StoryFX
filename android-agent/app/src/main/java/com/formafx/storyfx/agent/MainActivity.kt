@@ -87,12 +87,14 @@ class MainActivity : Activity() {
                         try {
                             val browser = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                                 .addCategory(Intent.CATEGORY_BROWSABLE)
-                            val samsung = Intent(browser).setPackage("com.sec.android.app.sbrowser")
-                            if (samsung.resolveActivity(packageManager) != null) browser.setPackage("com.sec.android.app.sbrowser")
-                            startActivity(Intent.createChooser(browser, "Ouvrir la connexion FormaFX"))
+                            val available = LoginBrowserTargets.packages.filter {
+                                Intent(browser).setPackage(it).resolveActivity(packageManager) != null
+                            }
+                            val target = requireNotNull(LoginBrowserTargets.select(available))
+                            startActivity(browser.setPackage(target))
                         } catch (_: Exception) {
                             EncryptedStore(this@MainActivity).saveStatus(
-                                "Aucun navigateur disponible. Installez votre navigateur habituel.")
+                                "Ce pilote utilise Samsung Internet, Microsoft Edge ou Firefox. Installez l’un de ces navigateurs.")
                             refresh()
                         }
                     }

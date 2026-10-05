@@ -1,7 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <queries><package android:name="com.sec.android.app.sbrowser" /></queries>
+    <queries>
+        <package android:name="com.sec.android.app.sbrowser" />
+        <package android:name="com.microsoft.emmx" />
+        <package android:name="org.mozilla.firefox" />
+    </queries>
     <application android:allowBackup="false" android:fullBackupContent="false"
         android:usesCleartextTraffic="false" android:label="StoryFX"
         android:icon="@drawable/ic_storyfx" android:theme="@style/StoryFXTheme"
