@@ -59,6 +59,13 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore {
         org.json.JSONObject(it).getString("email")
     } ?: ""
 
+    fun phoneName(): String = readSecret("phone_name") ?: AgentController.phoneName()
+
+    fun savePhoneName(value: String) {
+        require(value.trim().isNotEmpty())
+        check(prefs.edit().putString("phone_name", encrypt(value.trim().take(80))).commit())
+    }
+
     fun savedServer(): String = prefs.getString("server", "") ?: ""
 
     fun eraseAssociation() {

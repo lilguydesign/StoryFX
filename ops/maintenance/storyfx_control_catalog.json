@@ -1,0 +1,22 @@
+{
+  "application": "StoryFX",
+  "function": "Private web control center, manual Windows bridge and Android updates",
+  "maturity": "private_windows_pilot_android_diagnostic",
+  "probe": "storyfx_control_probe.py",
+  "public_endpoint": "https://story.formafx.com/health",
+  "trigger": "Manual authenticated web launch; Windows connector polls every 10 seconds while started; Android update requested from the native application",
+  "timezone": "Africa/Douala schedules; UTC storage",
+  "expected": "control_center_mode=windows_bridge; windows_publication_enabled=true; android_publication_enabled=false; healthy database; latest APK coherent and signed",
+  "tolerance_seconds": {"windows_presence": 45, "publication_review": 900, "https_timeout": 8},
+  "normal_exclusions": ["Zero publications or disconnected Windows without a manual launch", "Android periodic diagnostics can be delayed", "Albums media synchronization deferred", "Other social adapters refused before publication until validated"],
+  "symptom": "Invalid control contract, unavailable official latest APK, claimed publication without a result after 15 minutes",
+  "diagnostic": "Public health contract and official release metadata; inspect private reports only with the active owner; never replay ambiguous publications",
+  "repair": "Restore HTTPS or the isolated control release; reconnect the known Windows executor; inspect own provider status and preserve one-attempt journals",
+  "rollback": "Previous backend release and latest APK pointer; retain confirmed/uncertain publication reservations and Android encrypted association",
+  "illustration": "https://apps.formafx.com/assets/images/app-icons/storyfx.svg",
+  "illustrated_template": "Existing StoryFX maintenance alert; approval and delivery not revalidated by this milestone",
+  "coverage": {"existing_hourly_server_and_latest_checks": "existing_storyfx_public_probe", "new_control_contract_probe": "manual_execution_pending", "private_windows_executor_endurance": "not_verified", "native_update_physical_install": "pending", "autonomous_android_publication": "not_available"},
+  "notifications_sent_by_validation": false,
+  "maintenance_timers_modified": false,
+  "existing_two_hour_quota_and_silent_resolution_preserved": true
+}
