@@ -4,11 +4,14 @@ import secrets
 from uuid import uuid4
 from .control_plan import plan, occurrence
 from .store import DomainError, digest, timestamp
+from .control_terminal import Terminal
+from .control_publications import reserve
 
 
 class Broker:
     def __init__(self, store, catalog, sessions):
         self.store, self.catalog, self.sessions = store, catalog, sessions
+        self.terminal, self.scheduler = Terminal(store), None
         with store.transaction() as db:
             db.executescript('''
               CREATE TABLE IF NOT EXISTS control_nodes (
@@ -74,20 +77,22 @@ class Broker:
         catalog = self.catalog.read(user)
         self.seed_report(user, catalog)
         with self.store.transaction() as db:
-            db.execute("UPDATE control_jobs SET state='NEEDS_REVIEW' WHERE owner_id=? AND state='CLAIMED' AND claimed<?",
+            db.execute("UPDATE control_jobs SET state='NEEDS_REVIEW' WHERE owner_id=? AND state IN ('CLAIMED','CANCEL_REQUESTED') AND claimed<?",
                        (user['id'], self.store.clock() - 900))
             nodes = [dict(row) for row in db.execute('SELECT id,name,last_seen,profiles,revoked FROM control_nodes WHERE owner_id=?', (user['id'],))]
             reports = [self.report(row) for row in db.execute('SELECT * FROM control_jobs WHERE owner_id=? ORDER BY created DESC LIMIT 200', (user['id'],))]
+            states = {row['occurrence']:row['state'] for row in db.execute('SELECT occurrence,state FROM control_jobs WHERE owner_id=?',(user['id'],))}
         for node in nodes:
             node['connected'] = not node['revoked'] and node['last_seen'] is not None and self.store.clock() - node['last_seen'] < 45
             node['profiles'] = json.loads(node['profiles'])
             node['last_seen'] = timestamp(node['last_seen'])
         schedules = plan(catalog, self.store.clock())
-        states = {value['occurrence_id']: value['state'] for value in reports}
         for value in schedules:
             value['state'] = states.get(value['id'], 'PLANNED')
         return {**catalog, 'nodes': nodes, 'schedule': schedules, 'reports': reports,
-                'execution_mode': 'windows_bridge', 'autonomous_android_publication': False}
+                'execution_mode': 'windows_bridge', 'autonomous_android_publication': False,
+                'scheduler':self.scheduler.status(user) if self.scheduler else {'enabled':False},
+                'terminal':self.terminal.read(user)}
 
     @staticmethod
     def report(row):
@@ -126,21 +131,7 @@ class Broker:
         matches = [value for value in snapshot['schedule'] if value['id'] == body.occurrence_id]
         if len(matches) != 1:
             raise DomainError('OCCURRENCE_NOT_FOUND', 404)
-        selected = matches[0]
-        nodes = [value for value in snapshot['nodes'] if value['connected'] and selected['device'] in value['profiles']]
-        if len(nodes) != 1:
-            raise DomainError('WINDOWS_EXECUTOR_UNAVAILABLE', 409)
-        row = next(value for value in snapshot['collections']['matrix'] if value['id'] == selected['row_id'])
-        payload = {**row, 'due_at': selected['due_at'], 'catalog_revision': body.revision, 'execution_origin': 'web_windows_bridge', 'web_triggered': True}
-        with self.store.transaction() as db:
-            self.catalog.revision(db, user['id'], body.revision)
-            if db.execute('SELECT 1 FROM control_jobs WHERE owner_id=? AND occurrence=?', (user['id'], body.occurrence_id)).fetchone():
-                raise DomainError('OCCURRENCE_ALREADY_REQUESTED', 409)
-            identity = str(uuid4())
-            db.execute('INSERT INTO control_jobs VALUES (?,?,?,?,?,?,?,?,?,?)',
-                       (identity, user['id'], nodes[0]['id'], body.occurrence_id, json.dumps(payload), 'QUEUED',
-                        self.store.clock(), None, None, None))
-        return {'job_id': identity, 'state': 'QUEUED'}
+        return reserve(self,user,snapshot,matches)[0]
 
     def heartbeat(self, node, profiles):
         with self.store.transaction() as db:
@@ -150,7 +141,7 @@ class Broker:
 
     def claim(self, node):
         with self.store.transaction() as db:
-            if db.execute("SELECT 1 FROM control_jobs WHERE node_id=? AND state='CLAIMED'", (node['id'],)).fetchone():
+            if db.execute("SELECT 1 FROM control_jobs WHERE node_id=? AND state IN ('CLAIMED','CANCEL_REQUESTED')", (node['id'],)).fetchone():
                 return {'job': None}
             row = db.execute("SELECT * FROM control_jobs WHERE node_id=? AND owner_id=? AND state='QUEUED' ORDER BY created LIMIT 1",
                              (node['id'], node['owner_id'])).fetchone()
@@ -161,23 +152,28 @@ class Broker:
             if datetime.fromisoformat(due.replace('Z', '+00:00')).timestamp() > self.store.clock():
                 return {'job': None}
             db.execute("UPDATE control_jobs SET state='CLAIMED',claimed=? WHERE id=? AND state='QUEUED'", (self.store.clock(), row['id']))
+            payload = json.loads(row['payload'])
+            self.terminal.emit(db,node['owner_id'],'CLAIMED',payload['device'],payload['system'])
         return {'job': {'id': row['id'], 'occurrence_id': row['occurrence'], 'payload': json.loads(row['payload'])}}
 
     def complete(self, node, identity, state, evidence):
         with self.store.transaction() as db:
             row = db.execute('SELECT * FROM control_jobs WHERE id=? AND node_id=? AND owner_id=?',
                              (identity, node['id'], node['owner_id'])).fetchone()
-            if not row or row['state'] not in {'CLAIMED', 'NEEDS_REVIEW', state}:
+            if not row or row['state'] not in {'CLAIMED', 'CANCEL_REQUESTED', 'NEEDS_REVIEW', state}:
                 raise DomainError('JOB_STATE_INVALID', 409)
-            if row['state'] in {'CLAIMED', 'NEEDS_REVIEW'}:
+            if row['state'] in {'CLAIMED', 'CANCEL_REQUESTED', 'NEEDS_REVIEW'}:
                 db.execute('UPDATE control_jobs SET state=?,completed=?,evidence=? WHERE id=?',
                            (state, self.store.clock(), evidence, identity))
+                payload = json.loads(row['payload'])
+                self.terminal.emit(db,node['owner_id'],state,payload['device'],payload['system'])
         return {'recorded': True}
 
     def ready(self, node, identity):
         with self.store.transaction() as db:
-            row = db.execute("SELECT claimed FROM control_jobs WHERE id=? AND node_id=? AND owner_id=? AND state='CLAIMED'",
+            row = db.execute("SELECT claimed,payload FROM control_jobs WHERE id=? AND node_id=? AND owner_id=? AND state='CLAIMED'",
                              (identity, node['id'], node['owner_id'])).fetchone()
             if not row or self.store.clock() - row['claimed'] > 900:
                 raise DomainError('JOB_AUTHORIZATION_EXPIRED', 409)
+            self.catalog.revision(db,node['owner_id'],json.loads(row['payload'])['catalog_revision'])
         return {'authorized': True}

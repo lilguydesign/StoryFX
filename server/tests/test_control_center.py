@@ -42,9 +42,9 @@ def test_owner_isolation_closed_settings_and_revision(private):
     assert len(snapshot['schedule']) == 2
     assert {value['local_time'] for value in snapshot['schedule']} == {'06:40', '12:40'}
     revision = snapshot['revision']
-    invalid = {'name': 'Validation technique 2', 'adb_serial': 'synthetic-private-identity'}
+    invalid = {'name': 'Validation technique 2', 'arbitrary_command': 'synthetic-private-identity'}
     response = browser.post('/v1/control/settings/profiles', headers=HEADERS, json={'revision': revision, 'value': invalid})
-    assert response.status_code == 422 and invalid['adb_serial'] not in response.text
+    assert response.status_code == 422 and invalid['arbitrary_command'] not in response.text
     assert browser.post('/v1/control/settings/profiles', json={'revision': revision, 'value': {'name': 'Validation technique 2'}}).status_code == 403
     assert browser.post('/v1/control/settings/profiles', headers=HEADERS, json={'revision': revision-1, 'value': {'name': 'Validation technique 2'}}).status_code == 409
     item = snapshot['collections']['profiles'][0]

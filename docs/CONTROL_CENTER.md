@@ -1,16 +1,21 @@
 # StoryFX — centre de contrôle et mise à jour Android
 
 Le moteur Python historique est conservé sur Windows. Le serveur conserve les
-réglages métier et les demandes manuelles de publication, puis le connecteur
-Windows les récupère par HTTPS. Les identités ADB et les réglages réseau restent
-dans les fichiers locaux. Le connecteur ne redémarre ni ADB ni l’Appium historique.
+réglages et les demandes de publication, puis le connecteur Windows les récupère
+par HTTPS. Les métadonnées techniques du profil sont privées au compte propriétaire ;
+leur modification ne donne aucun accès à un téléphone absent du fichier local
+de confiance. Le connecteur ne redémarre ni ADB ni l’Appium historique.
 Il utilise un serveur pilote séparé, uniquement en boucle locale sur le port 4743.
 Un contrôleur Appium historique occupé provoque un refus avant publication.
 
 ## Configuration depuis le web
 
 Ouvrir https://story.formafx.com/dashboard/ avec le même compte propriétaire.
-Profils : noms et décalages ; Systèmes : heures de base ; Albums : références aux
+Profils : nom, libellé, activation, connexion ADB, série USB, IP/port, version Android,
+décalage, options Appium validées et package/activité galerie. Chaque champ est expliqué.
+Le numéro de ligne et le nombre de matrices sont calculés. Tri, actualisation,
+duplication et propagation aux profils du même téléphone sont disponibles.
+Systèmes : heures de base ; Albums : références aux
 galeries existantes ; Pages : pays et nom Facebook ; Matrices : liens entre ces
 réglages. Programmation affiche les occurrences du jour en Africa/Douala.
 Les modifications sont isolées par compte et contrôlées par numéro de révision.
@@ -33,7 +38,21 @@ Le pilote sécurisé prend en charge WhatsApp Business, statut personnel et mote
 multi. Les configurations Facebook, Instagram, TikTok et intro restent visibles
 et modifiables ; leur exécution par ce nouveau connecteur n’est pas encore validée
 et est refusée avant toute publication. Le lanceur historique conserve ces moteurs.
-Le nouveau connecteur ne lance aucun rattrapage ni planning automatiquement.
+Dans Lancement, le mode Auto suit les échéances à partir de la minute actuelle.
+Le mode Manuel reprend les échéances depuis l’heure choisie aujourd’hui puis suit
+les prochaines échéances. Une fin facultative borne un rattrapage ponctuel, pas
+le scheduler continu. La prévisualisation distingue les occurrences déjà demandées,
+les moteurs non validés et les téléphones indisponibles. Le serveur vérifie toutes
+les dix secondes le compte propriétaire, la révision et la présence du moteur.
+Un changement de configuration ou la perte du droit propriétaire suspend le scheduler.
+Le lendemain, seules les occurrences du nouveau jour sont considérées ; les anciennes
+occurrences d’un jour précédent ne sont pas rejouées automatiquement.
+
+Arrêter scheduler annule ses publications encore en attente. Stopper les tâches
+annule aussi les demandes manuelles et refuse la dernière action sociale si elle
+n’est pas déjà partie. Une action déjà transmise peut se terminer. Aucun arrêt
+d’Appium ou d’ADB. Le terminal affiche les commandes et résultats structurés ;
+Copier copie ce texte, Effacer masque l’affichage sans supprimer l’audit ni les rapports.
 
 Une réservation durable précède les actions sur le téléphone. Une occurrence
 acceptée ne peut pas être demandée à nouveau. Les confirmations réseau peuvent
@@ -56,7 +75,7 @@ l’écran de l’application. Une installation silencieuse n’est pas promise.
 
 ## Vérification et maintenance
 
-Tests ciblés : séparation propriétaires, Origin, champs fermés sans ADB distant,
+Tests ciblés : séparation propriétaires, Origin, champs fermés sans commandes ADB distantes,
 révisions, références, fuseau, preuve d’association, absence de double demande,
 réservation unique, résultat ambigu et reprise des seuls accusés de réception.
 Les sondes publiques ne publient pas et n’observent pas les galeries privées.

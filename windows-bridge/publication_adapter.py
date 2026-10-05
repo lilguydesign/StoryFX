@@ -48,7 +48,7 @@ def ensure_pilot_server():
     raise RuntimeError('PILOT_APPIUM_START_TIMEOUT')
 
 
-def driver_for(serial):
+def driver_for(serial, profile=None):
     from appium import webdriver
     from appium.options.android import UiAutomator2Options
     # Refuse a competing controller on the historical endpoint. Never kill it.
@@ -59,22 +59,37 @@ def driver_for(serial):
         pass
     ensure_pilot_server()
     current = sessions(ENDPOINT)
-    if current:
-        if len(current) != 1 or current[0]['capabilities'].get('udid', current[0]['capabilities'].get('appium:udid')) != serial:
-            raise RuntimeError('PILOT_APPIUM_SESSION_REFUSED')
+    matching=[row for row in current if row['capabilities'].get('udid',row['capabilities'].get('appium:udid')) == serial]
+    if len(current)>2 or len(matching)>1:
+        raise RuntimeError('PILOT_APPIUM_SESSION_REFUSED')
+    if matching:
+        selected=matching[0]
         # Borrow only the dedicated pilot endpoint; do not issue DELETE /session.
         options = UiAutomator2Options().load_capabilities({'platformName': 'Android', 'appium:automationName': 'UiAutomator2'})
         class BorrowedRemote(webdriver.Remote):
             def start_session(self, _capabilities):
-                self.session_id = current[0]['id']; self.caps = current[0]['capabilities']
+                self.session_id = selected['id']; self.caps = selected['capabilities']
         return BorrowedRemote(ENDPOINT, options=options)
-    options = UiAutomator2Options().load_capabilities({
+    if len(current)>=2:
+        raise RuntimeError('PILOT_APPIUM_SESSION_REFUSED')
+    used_ports={row['capabilities'].get('systemPort',row['capabilities'].get('appium:systemPort')) for row in current}
+    system_port=next(port for port in (8201,8202,8203) if port not in used_ports)
+    capabilities = {
         'platformName': 'Android', 'appium:automationName': 'UiAutomator2', 'appium:udid': serial,
         'appium:noReset': True, 'appium:autoGrantPermissions': False, 'appium:adbPort': 5037,
         'appium:newCommandTimeout': 900, 'appium:ignoreHiddenApiPolicyError': True,
+        'appium:systemPort': system_port,
         'appium:appPackage': 'com.sec.android.gallery3d',
         'appium:appActivity': 'com.sec.android.gallery3d.app.GalleryActivity',
-    })
+    }
+    if profile:
+        if profile.get('platform_version'):
+            capabilities['appium:platformVersion']=profile['platform_version']
+        for key,value in profile.get('appium_overrides',{}).items():
+            capabilities['appium:'+key.removeprefix('appium:')]=value
+    if capabilities['appium:systemPort'] in used_ports:
+        raise RuntimeError('PILOT_APPIUM_PORT_COLLISION')
+    options = UiAutomator2Options().load_capabilities(capabilities)
     return webdriver.Remote(ENDPOINT, options=options)
 
 
@@ -85,11 +100,16 @@ def execute(root, adb, payload, original, authorize=None):
         return refused()
     if authorize is None or any(character in (payload['album2'] or payload['album']) for character in ('"', "'", '\n', '\r')):
         return refused()
-    result = subprocess.run([str(adb), '-d', 'get-serialno'], capture_output=True, text=True, check=True, timeout=15)
-    serial = result.stdout.strip()
-    if serial not in {original.get('adb_serial'), original.get('device_id')}:
+    serial = original.get('device_id')
+    if not serial:
         return refused()
-    driver = driver_for(serial)
+    identity = subprocess.run([str(adb), '-s', serial, 'get-state'], capture_output=True, text=True, timeout=15)
+    if identity.returncode or identity.stdout.strip() != 'device':
+        return refused()
+    gallery=original.get('gallery',{})
+    if gallery.get('appPackage') not in ('',None,'com.sec.android.gallery3d') or gallery.get('appActivity') not in ('',None,'com.sec.android.gallery3d.app.GalleryActivity','.app.GalleryActivity'):
+        return refused()
+    driver = driver_for(serial,original)
     if driver.is_locked():
         return refused()
     sys.path.insert(0, str(root))
@@ -114,8 +134,12 @@ def execute(root, adb, payload, original, authorize=None):
         unique("//*[@text='Updates' or @text='Actus' or @text='Mises à jour']").click()
         unique("//*[@text='My status' or @text='Mon statut']").click()
         time.sleep(1)
-        if driver.find_elements(AppiumBy.XPATH, recent_xpath):
-            return refused()
+        deadline=time.monotonic()+90
+        while driver.find_elements(AppiumBy.XPATH, recent_xpath):
+            if time.monotonic()>=deadline:
+                return refused()
+            authorize()
+            time.sleep(5)
         driver.activate_app('com.sec.android.gallery3d')
     except Exception:
         return refused()

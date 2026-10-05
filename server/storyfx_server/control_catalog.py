@@ -69,13 +69,17 @@ class Catalog:
 
     def write(self, user, collection, change, item_id=None):
         self.ensure(user)
-        clean = self.validate(collection, change.value)
         with self.store.transaction() as db:
             self.revision(db, user['id'], change.revision)
             existing = db.execute('SELECT * FROM control_items WHERE owner_id=? AND collection=? AND id=?',
                                   (user['id'], collection, item_id)).fetchone() if item_id else None
             if item_id and not existing:
                 raise DomainError('SETTING_NOT_FOUND', 404)
+            previous = json.loads(existing['value']) if existing else {}
+            supplied = {**previous,**change.value} if collection == 'profiles' and existing else change.value
+            clean = self.validate(collection,supplied)
+            if (change.propagate_device or change.propagate_serial) and (collection != 'profiles' or not existing):
+                raise DomainError('PROFILE_PROPAGATION_INVALID',422)
             duplicate = db.execute('SELECT id FROM control_items WHERE owner_id=? AND collection=? AND json_name=?',
                                    (user['id'], collection, clean['name'])).fetchone()
             if duplicate and duplicate[0] != item_id:
@@ -97,6 +101,16 @@ class Catalog:
                 db.execute('UPDATE control_items SET value=?,json_name=? WHERE id=?', (json.dumps(clean), clean['name'], selected))
             else:
                 db.execute('INSERT INTO control_items VALUES (?,?,?,?,?)', (selected, user['id'], collection, json.dumps(clean), clean['name']))
+            if collection == 'profiles' and existing and (change.propagate_device or change.propagate_serial):
+                related = db.execute("SELECT id,value FROM control_items WHERE owner_id=? AND collection='profiles' AND id<>?",(user['id'],selected)).fetchall()
+                for row in related:
+                    value = json.loads(row['value'])
+                    same = (previous.get('adb_serial') and value.get('adb_serial') == previous['adb_serial']) or (previous.get('device_id') and value.get('device_id') == previous['device_id'])
+                    if not same:
+                        continue
+                    keys = (['device_id','tcpip_ip','tcpip_port'] if change.propagate_device else []) + (['adb_serial'] if change.propagate_serial else [])
+                    updated = self.validate('profiles',{**value,**{key:clean[key] for key in keys}})
+                    db.execute('UPDATE control_items SET value=? WHERE id=?',(json.dumps(updated),row['id']))
             db.execute('UPDATE control_owners SET revision=revision+1 WHERE owner_id=?', (user['id'],))
         return self.read(user)
 

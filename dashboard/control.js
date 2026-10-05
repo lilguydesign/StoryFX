@@ -1,11 +1,13 @@
 import { request } from './api.js';
 import { escape, dateLabel } from './views.js';
 import { controlTitles, definitions, descriptions, fields, readFields } from './control-fields.js';
+import { mountLauncher, renderLauncher } from './launch-panel.js';
+import { profilesTable, changeProfileSort } from './profile-editor.js';
 
 let data = null, enabled = false, busy = false, editing = null, editRevision = null, selected = null;
 let profileFilter = '', platformFilter = '';
 const find = selector => document.querySelector(selector);
-const states = { PLANNED: 'Programmée', QUEUED: 'En attente', CLAIMED: 'En cours', CONFIRMED: 'Publication confirmée', NEEDS_REVIEW: 'À vérifier', FAILED_BEFORE_PUBLICATION: 'Refusée avant publication' };
+const states = { PLANNED: 'Programmée', QUEUED: 'En attente', CLAIMED: 'En cours', CONFIRMED: 'Publication confirmée', NEEDS_REVIEW: 'À vérifier', FAILED_BEFORE_PUBLICATION: 'Refusée avant publication', CANCELLED:'Annulée', CANCEL_REQUESTED:'Arrêt demandé' };
 const evidenceLabels = { own_status_three_just_now: '3 images confirmées dans Mon statut', own_status_verified: 'Mon statut vérifié', provider_ui_verified: 'Publication vérifiée', result_uncertain: 'Résultat à vérifier', preflight_refused: 'Vérification préalable refusée' };
 
 export function mountControl(notice) {
@@ -30,7 +32,20 @@ export function mountControl(notice) {
     const edit = event.target.closest('[data-setting]');
     const launch = event.target.closest('[data-publication]');
     const windows = event.target.closest('[data-windows]');
+    const duplicate = event.target.closest('[data-profile-duplicate]');
     if (!enabled || busy) return;
+    if (event.target.closest('[data-control-refresh]')) action(async()=>{});
+    if (event.target.closest('[data-paste-serial]')) {
+      navigator.clipboard.readText().then(value=>{find('#setting-form').elements.adb_serial.value=value.trim();}).catch(()=>notice('Collez le numéro de série dans le champ avec Ctrl+V.',true));
+    }
+    if (duplicate) {
+      const original=data.collections.profiles.find(value=>value.id === duplicate.dataset.profileDuplicate);
+      const value={...original,name:original.name+' copie'}; delete value.id;
+      editing={collection:'profiles',value}; editRevision=data.revision;
+      find('#setting-title').textContent='Dupliquer · Profils';
+      find('#setting-fields').innerHTML=fields('profiles',value,data.collections);
+      find('#setting-remove').hidden=true; find('#setting-dialog').showModal();
+    }
     if (create || edit) {
       const collection = create?.dataset.create || edit.dataset.collection;
       const value = edit ? data.collections[collection].find(item => item.id === edit.dataset.setting) : {};
@@ -52,7 +67,8 @@ export function mountControl(notice) {
     event.preventDefault(); action(async () => {
       const { collection, value } = editing;
       await request(`/v1/control/settings/${collection}${value.id ? `/${value.id}` : ''}`, {
-        method: value.id ? 'PUT' : 'POST', body: { revision: editRevision, value: readFields(collection, event.target) },
+        method: value.id ? 'PUT' : 'POST', body: { revision: editRevision, value: readFields(collection, event.target),
+          ...(collection === 'profiles' ? {propagate_device:!!event.target.elements.propagate_device?.checked,propagate_serial:!!event.target.elements.propagate_serial?.checked} : {}) },
       }); find('#setting-dialog').close();
     });
   });
@@ -71,8 +87,10 @@ export function mountControl(notice) {
       find('#windows-dialog').close();
     });
   });
+  mountLauncher({getSnapshot:()=>data,perform:action,notice,redraw:render});
   render();
   document.addEventListener('change', event => {
+    if (changeProfileSort(event)) {render();return;}
     if (event.target.matches('[data-profile-filter]')) profileFilter = event.target.value;
     else if (event.target.matches('[data-platform-filter]')) platformFilter = event.target.value;
     else return;
@@ -90,6 +108,7 @@ function render() {
   const active = enabled && !busy && data;
   document.querySelectorAll('[data-create]').forEach(button => { button.disabled = !active; });
   for (const name of Object.keys(definitions)) {
+    if (name === 'profiles') {find('#control-profiles').innerHTML=profilesTable(data,active);continue;}
     const columns = definitions[name].filter(([key]) => !['xpath', 'label', 'album_size', 'kind', 'page'].includes(key));
     find(`#control-${name}`).innerHTML = table([...columns.map(([, label]) => label), ''], (data?.collections[name] || []).map(value => [
       ...columns.map(([key]) => escape(Array.isArray(value[key]) ? value[key].join(', ') : typeof value[key] === 'boolean' ? (value[key] ? 'Oui' : 'Non') : value[key])),
@@ -111,4 +130,5 @@ function render() {
     escape(dateLabel(value.completed_at || value.created_at)), escape(value.publication.device), escape(value.publication.platform), escape(value.publication.system),
     escape(states[value.state] || value.state), value.publication.web_triggered ? 'Web → Windows' : 'Moteur local', escape(evidenceLabels[value.evidence] || 'En attente'),
   ]));
+  renderLauncher(data,active);
 }

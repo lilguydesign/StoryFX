@@ -13,7 +13,8 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 def evaluate(value):
     required = {'control_center_mode': 'windows_bridge', 'windows_publication_enabled': True,
-                'android_publication_enabled': False}
+                'android_publication_enabled': False, 'scheduler_available': True,
+                'scheduler_worker_ok': True, 'scheduler_tick_seconds': 10}
     complete = isinstance(value, dict) and all(key in value for key in required)
     valid = complete and all(type(value[key]) is type(expected) and value[key] == expected
                              for key, expected in required.items())
