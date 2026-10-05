@@ -11,7 +11,8 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore {
+class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
+    com.formafx.storyfx.agent.publication.PublicationStateStore {
     private val prefs = context.getSharedPreferences("storyfx_private", Context.MODE_PRIVATE)
     private val alias = "storyfx_agent_local_v1"
 
@@ -69,14 +70,27 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore {
     fun savedServer(): String = prefs.getString("server", "") ?: ""
 
     fun eraseAssociation() {
+        check(!org.json.JSONObject(publicationState()).has("pending"))
         check(prefs.edit().remove("server").remove("device_id").remove("token")
-            .remove("outbox").remove("last_status").remove("account").remove("auth_pending").commit())
+            .remove("outbox").remove("last_status").remove("account").remove("auth_pending")
+            .remove("publication_profile").putBoolean("publication_enabled", false).commit())
     }
 
     fun status(): String = prefs.getString("last_status", "Association requise")!!
 
     fun saveStatus(message: String) {
         check(prefs.edit().putString("last_status", message).commit())
+    }
+
+    override fun publicationState(): String = readSecret("publications") ?: "{}"
+    override fun savePublicationState(value: String) {
+        check(prefs.edit().putString("publications", encrypt(value)).commit())
+    }
+    fun publicationProfile(): String = readSecret("publication_profile") ?: ""
+    fun publicationEnabled(): Boolean = prefs.getBoolean("publication_enabled", false)
+    fun savePublicationBinding(profile: String, enabled: Boolean) {
+        check(prefs.edit().putString("publication_profile", encrypt(profile))
+            .putBoolean("publication_enabled", enabled).commit())
     }
 
     override fun read(): String = readSecret("outbox") ?: "[]"

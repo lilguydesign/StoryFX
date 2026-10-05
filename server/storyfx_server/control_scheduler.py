@@ -5,6 +5,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 from .control_publications import reserve, supported
 from .store import DomainError, timestamp
+from .control_android import executors
 
 ZONE = ZoneInfo('Africa/Douala')
 
@@ -52,7 +53,7 @@ class Scheduler:
                     datetime.fromisoformat(value['due_at'].replace('Z','+00:00')).timestamp() <= end.timestamp()]
         rows = []
         for value in selected:
-            connected = sum(node['connected'] and value['device'] in node['profiles'] for node in snapshot['nodes']) == 1
+            connected = len(executors(snapshot, value)) == 1
             reason = 'ALREADY_REQUESTED' if value['state'] != 'PLANNED' else 'ADAPTER_NOT_VALIDATED' if not supported(value) else 'WINDOWS_DISCONNECTED' if not connected else 'READY'
             rows.append({**value,'eligible':reason == 'READY','reason':reason})
         return snapshot, {'from_at':timestamp(start.timestamp()),'until':timestamp(end.timestamp()),
@@ -132,7 +133,7 @@ class Scheduler:
                             and datetime.fromisoformat(value['due_at'].replace('Z','+00:00')).timestamp() >= row['from_at']
                             and supported(value)]
                 reserve(self.broker,user,snapshot,selected,strict=False,scheduler_id=row['generation'])
-                waiting = any(sum(node['connected'] and value['device'] in node['profiles'] for node in snapshot['nodes']) != 1 for value in selected)
+                waiting = any(len(executors(snapshot, value)) != 1 for value in selected)
                 with self.store.transaction() as db:
                     db.execute('UPDATE control_schedulers SET mode=\'auto\',wait_reason=? WHERE owner_id=? AND generation=? AND enabled=1',
                                ('WINDOWS_DISCONNECTED' if waiting else '',user['id'],row['generation']))

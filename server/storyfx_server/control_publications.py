@@ -2,6 +2,7 @@
 import json
 from uuid import uuid4
 from .store import DomainError
+from .control_android import executors
 
 
 def supported(value):
@@ -22,7 +23,7 @@ def reserve(broker, user, snapshot, selected, *, strict=True, scheduler_id=None)
                 if strict:
                     raise DomainError('OCCURRENCE_ALREADY_REQUESTED',409)
                 continue
-            nodes = [node for node in snapshot['nodes'] if node['connected'] and value['device'] in node['profiles']]
+            nodes = executors(snapshot, value)
             if len(nodes) != 1:
                 if strict:
                     raise DomainError('WINDOWS_EXECUTOR_UNAVAILABLE',409)
@@ -34,7 +35,7 @@ def reserve(broker, user, snapshot, selected, *, strict=True, scheduler_id=None)
                 continue
             row = next(row for row in snapshot['collections']['matrix'] if row['id'] == value['row_id'])
             payload = {**row, 'due_at':value['due_at'], 'catalog_revision':snapshot['revision'],
-                       'execution_origin':'web_windows_bridge', 'web_triggered':True}
+                       'execution_origin':'web_android_agent' if nodes[0].get('executor') == 'android_whatsapp_images_v1' else 'web_windows_bridge', 'web_triggered':True}
             if scheduler_id is not None:
                 payload['scheduler_generation'] = scheduler_id
             identity = str(uuid4())

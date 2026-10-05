@@ -28,7 +28,7 @@ function render() {
   const banner = find("#environment-banner");
   banner.classList.toggle("demo", state.demo);
   banner.querySelector("strong").textContent = state.demo ? "Données de démonstration" : "Pilote privé · Internet";
-  banner.querySelector("span:last-child").textContent = state.demo ? "Aperçu fictif en lecture seule. Aucun appareil réel n’est connecté à cette vue." : "Commandes de publication via le moteur Windows. Android : connexion et diagnostics. Synchronisation des albums en dernier.";
+  banner.querySelector("span:last-child").textContent = state.demo ? "Aperçu fictif en lecture seule. Aucun appareil réel n’est connecté à cette vue." : "Commandes via Windows ou le pilote Android WhatsApp images activé sur le téléphone. Synchronisation des albums en dernier.";
   find("#connection-label").textContent = state.demo ? "◌ Démonstration" : state.authenticated ? "● Session propriétaire" : "○ Session inactive";
   find("#last-refresh").textContent = state.demo ? "Données fictives · aucun accès au serveur" : state.data?.server_time ? `Dernière lecture · ${dateLabel(state.data.server_time)}` : "Aucune donnée serveur chargée";
 }

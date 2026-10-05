@@ -8,7 +8,7 @@ const find = selector => document.querySelector(selector);
 const labels = {QUEUED:'Publication mise en attente',CLAIMED:'Publication en cours',CONFIRMED:'Publication confirmée',NEEDS_REVIEW:'Résultat à vérifier',
   FAILED_BEFORE_PUBLICATION:'Refusée avant publication',SCHEDULER_STARTED:'Scheduler démarré',SCHEDULER_STOPPED:'Scheduler arrêté',
   SCHEDULER_PAUSED:'Scheduler suspendu : compte ou configuration à vérifier',STOP_REQUESTED:'Arrêt demandé ; tâches en attente annulées'};
-const reasons = {READY:'Prête',ALREADY_REQUESTED:'Déjà demandée / confirmée : ignorée',ADAPTER_NOT_VALIDATED:'Moteur non validé : exclue',WINDOWS_DISCONNECTED:'Téléphone ou moteur Windows indisponible'};
+const reasons = {READY:'Prête',ALREADY_REQUESTED:'Déjà demandée / confirmée : ignorée',ADAPTER_NOT_VALIDATED:'Moteur non validé : exclue',WINDOWS_DISCONNECTED:'Téléphone ou agent compatible indisponible'};
 const clock = value => new Intl.DateTimeFormat('fr-FR',{timeZone:'Africa/Douala',hour:'2-digit',minute:'2-digit',hour12:false}).format(value ? new Date(value) : new Date());
 
 function body(snapshot) {
@@ -24,7 +24,7 @@ function previewTable(value) {
 export function mountLauncher({getSnapshot,perform,notice,redraw}) {
   find('#pane-launch .panel').insertAdjacentHTML('beforebegin','<section class="panel launch-controls" id="launch-controls"></section>');
   find('#pane-launch').insertAdjacentHTML('beforeend','<section class="panel terminal-panel"><div class="terminal-heading"><div><h2>Terminal d’activité</h2><p class="helper">Journal privé des commandes et résultats. Effacer masque l’affichage et conserve les rapports.</p></div><div class="terminal-actions"><button class="button secondary" data-terminal-copy>⧉ Copier le terminal</button><button class="button secondary" data-terminal-clear>⌫ Effacer</button></div></div><pre id="control-terminal" tabindex="0" aria-label="Terminal d’activité StoryFX"></pre></section>');
-  document.body.insertAdjacentHTML('beforeend','<dialog id="scheduler-dialog"><form method="dialog" class="dialog-close"><button class="icon-button" aria-label="Fermer">×</button></form><h2 id="scheduler-dialog-title"></h2><div id="scheduler-review"></div><p class="helper">Publications réelles sur les profils choisis. Aucune occurrence déjà demandée ne sera rejouée. Le moteur Windows doit être associé et les téléphones joignables. Le déverrouillage exige un code configuré localement ; un échec bloque les tentatives suivantes jusqu’au déverrouillage manuel.</p><button class="button primary full" id="scheduler-confirm">Démarrer les publications</button></dialog>');
+  document.body.insertAdjacentHTML('beforeend','<dialog id="scheduler-dialog"><form method="dialog" class="dialog-close"><button class="icon-button" aria-label="Fermer">×</button></form><h2 id="scheduler-dialog-title"></h2><div id="scheduler-review"></div><p class="helper">Publications réelles sur les profils choisis. Aucune occurrence déjà demandée ne sera rejouée. Associez le moteur Windows ou activez le pilote Android pour les images WhatsApp. Android attend un écran allumé et déverrouillé, les photos autorisées et le service Accessibilité actif.</p><button class="button primary full" id="scheduler-confirm">Démarrer les publications</button></dialog>');
   document.addEventListener('change',event=> {
     if (!event.target.closest('#launch-controls')) return;
     const input=event.target;
@@ -85,7 +85,7 @@ export function renderLauncher(snapshot, active) {
   const disabled=active ? '' : 'disabled';
   const choices=(name,values,selected)=>values.map(value=>`<label class="choice"><input type="checkbox" name="${name}" value="${escape(value)}" ${selected.includes(value) ? 'checked' : ''} ${disabled}>${escape(value)}</label>`).join('');
   find('#launch-controls').innerHTML=`<div class="terminal-heading"><h2>Pilotage de la programmation</h2><span class="badge ${status.enabled ? 'success' : ''}">${status.enabled ? 'Scheduler actif' : 'Scheduler arrêté'}</span></div>
-    <p class="helper">Heure PC : ${clock()} · Heure serveur : ${clock(snapshot?.server_time)} · Africa/Douala. Le serveur horodate les commandes ; le moteur Windows exécute les publications.</p>
+    <p class="helper">Heure PC : ${clock()} · Heure serveur : ${clock(snapshot?.server_time)} · Africa/Douala. Le serveur horodate les commandes ; un agent Windows ou Android compatible exécute les publications.</p>
     <fieldset><legend>Profils à piloter</legend><div class="profile-choices">${choices('scheduler-profile',profiles.map(x=>x.name),draft.profiles)}</div></fieldset>
     <fieldset><legend>Plateformes</legend><div class="profile-choices">${choices('scheduler-platform',['WhatsApp','Facebook','Instagram','TikTok'],draft.platforms)}</div></fieldset>
     <div class="control-filters"><label>Temps scheduler<select name="mode" ${disabled}><option value="auto" ${draft.mode === 'auto' ? 'selected' : ''}>Auto · heure actuelle</option><option value="manual" ${draft.mode === 'manual' ? 'selected' : ''}>Manuel · rattrapage puis automatique</option></select><small class="field-help">Le mode manuel reprend les heures passées à partir de l’heure choisie, puis suit les prochaines échéances.</small></label>
