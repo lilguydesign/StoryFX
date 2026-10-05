@@ -82,3 +82,10 @@ def test_tcp_transport_uses_trusted_hardware_scope(monkeypatch, tmp_path):
     assert module.unlock(tmp_path, 'adb', '192.0.2.1:5555', 'Validation technique', driver,
                          lambda: None, pause=lambda _n: None, hardware='SYNTHETIC001')
     assert scopes == ['SYNTHETIC001']
+
+
+def test_partial_or_ambiguous_pin_field_is_refused():
+    assert module.pin_keyguard(XML)
+    assert not module.pin_keyguard(XML.replace('id/pinEntry" />', 'id/pinEntry" text="••" />'))
+    extra = '<node package="com.android.systemui" resource-id="com.android.systemui:id/pinEntry" />'
+    assert not module.pin_keyguard(XML.replace('</hierarchy>', extra + '</hierarchy>'))

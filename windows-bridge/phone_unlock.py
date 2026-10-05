@@ -26,8 +26,9 @@ def load_pin(root, profile, serial):
 def pin_keyguard(source):
     # Only the numeric System UI lock screen. Never type into an app/password form.
     nodes = list(ET.fromstring(source).iter('node'))
-    entry = any(n.get('resource-id') == 'com.android.systemui:id/pinEntry'
-                and n.get('package') == 'com.android.systemui' for n in nodes)
+    entries = [n for n in nodes if n.get('resource-id') == 'com.android.systemui:id/pinEntry'
+               and n.get('package') == 'com.android.systemui']
+    entry = len(entries) == 1 and not entries[0].get('text', '')
     keypad = {n.get('text') for n in nodes if n.get('package') == 'com.android.systemui'
               and n.get('resource-id', '').startswith('com.android.systemui:id/key')}
     return entry and set('0123456789') <= keypad
