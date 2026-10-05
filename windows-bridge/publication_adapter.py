@@ -78,6 +78,7 @@ def driver_for(serial, profile=None):
         'platformName': 'Android', 'appium:automationName': 'UiAutomator2', 'appium:udid': serial,
         'appium:noReset': True, 'appium:autoGrantPermissions': False, 'appium:adbPort': 5037,
         'appium:newCommandTimeout': 900, 'appium:ignoreHiddenApiPolicyError': True,
+        'appium:skipUnlock': True,
         'appium:systemPort': system_port,
         'appium:appPackage': 'com.sec.android.gallery3d',
         'appium:appActivity': 'com.sec.android.gallery3d.app.GalleryActivity',
@@ -110,7 +111,14 @@ def execute(root, adb, payload, original, authorize=None):
     if gallery.get('appPackage') not in ('',None,'com.sec.android.gallery3d') or gallery.get('appActivity') not in ('',None,'com.sec.android.gallery3d.app.GalleryActivity','.app.GalleryActivity'):
         return refused()
     driver = driver_for(serial,original)
-    if driver.is_locked():
+    from phone_unlock import unlock
+    # Bind PIN access to the local hardware serial, even with an existing TCP transport.
+    def guard_unlock(_driver):
+        if not unlock(root, adb, serial, payload['device'], _driver, authorize,
+                      hardware=original.get('adb_serial', serial)):
+            raise RuntimeError('PHONE_UNLOCK_REFUSED')
+    if driver.is_locked() and not unlock(root, adb, serial, payload['device'], driver, authorize,
+                                        hardware=original.get('adb_serial', serial)):
         return refused()
     sys.path.insert(0, str(root))
     from engine import core, engine_multi, platforms
@@ -177,6 +185,8 @@ def execute(root, adb, payload, original, authorize=None):
     profile = {**original, 'device_id': serial, 'profile_name': payload['device']}
     changes = [(module, 'log', lambda _value: None) for module in (core, engine_multi, platforms)]
     changes += [(core, 'debug_dump_thumbnails', lambda _driver: None),
+                (core, 'unlock_screen_if_needed', guard_unlock),
+                (engine_multi, 'unlock_screen_if_needed', guard_unlock),
                 (engine_multi, 'debug_dump_thumbnails', lambda _driver: None),
                 (engine_multi, 'make_driver', lambda *args, **kwargs: Borrowed()),
                 (engine_multi, 'ensure_adb_connected', lambda value: value == serial),

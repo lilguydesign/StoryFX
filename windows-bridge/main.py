@@ -39,8 +39,8 @@ def pair():
         print('Connecteur déjà associé. Aucun accès remplacé.'); return
     proof = secrets.token_urlsafe(32)
     response = Api().post('/v1/control/windows/start', {'name': 'Moteur StoryFX Windows', 'proof': proof})
-    print('Dans StoryFX web, Lancement > Connecter Windows, autorisez cette demande :', flush=True)
-    print(response['request_id'], flush=True)
+    print('Ouvrez ce lien puis cliquez sur Autoriser ce connecteur (valable 10 minutes) :', flush=True)
+    print('https://story.formafx.com/dashboard/?windows_request=' + response['request_id'], flush=True)
     deadline = time.monotonic() + response['expires_in']
     while time.monotonic() < deadline:
         result = Api().post('/v1/control/windows/poll', {'request_id': response['request_id'], 'proof': proof})
