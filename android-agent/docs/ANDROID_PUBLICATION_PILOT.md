@@ -1,4 +1,4 @@
-# Agent Android autonome — pilote 0.4.0
+# Agent Android autonome — pilote 0.4.1
 
 Le serveur conserve la programmation. L'agent Android associé au compte
 propriétaire récupère les tâches avec sa propre identité d'installation.
@@ -33,6 +33,10 @@ La confirmation exige une liste Mon statut sans statut « À l'instant » avant
 l'envoi, une sélection unique Mon statut, l'audience Contacts avant le bouton
 final, puis exactement le nombre attendu de nouveaux statuts dans la liste
 du propriétaire. Une évolution d'interface WhatsApp peut refuser le parcours.
+Entre deux tâches, un retour arrière n'est autorisé que depuis une liste
+Mon statut reconnue ; aucun écran de discussion ou éditeur n'est quitté
+aveuglément. Le pilote attend la fin du libellé « À l'instant » précédent
+avant un nouvel envoi pour ne pas confondre les preuves de deux publications.
 Une acceptation de tâche ou un scheduler actif ne prouve pas une publication.
 
 Les tests synthétiques ne prouvent pas le fonctionnement sur un téléphone

@@ -1,4 +1,4 @@
-# StoryFX — agent Android 0.4.0
+# StoryFX — agent Android 0.4.1
 
 Application native Kotlin Android 8+, connexion FormaFX sécurisée, association
 chiffrée et mise à jour signée depuis la dernière version officielle.

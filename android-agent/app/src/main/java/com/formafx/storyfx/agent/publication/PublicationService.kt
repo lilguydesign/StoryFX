@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 class PublicationService : AccessibilityService() {
     private val worker = Executors.newSingleThreadScheduledExecutor()
     private val main = Handler(Looper.getMainLooper())
-    private var closed = false
+    @Volatile private var closed = false
     private var scheduled = false
 
     override fun onServiceConnected() {
@@ -79,10 +79,12 @@ class PublicationService : AccessibilityService() {
             val power = getSystemService(PowerManager::class.java)
             @Suppress("DEPRECATION")
             val awake = power.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "StoryFX:publication")
-            awake.acquire(150000)
+            awake.acquire(240000)
             try {
-                val deadline = android.os.SystemClock.elapsedRealtime() + 120000
+                val deadline = android.os.SystemClock.elapsedRealtime() + 210000
                 NativePublisher(this, ::onUi, { WhatsAppScreen(rootInActiveWindow) }, {
+                    check(performGlobalAction(GLOBAL_ACTION_BACK))
+                }, {
                     check(!closed && active && store.publicationEnabled() && !locked())
                     check(android.os.SystemClock.elapsedRealtime() < deadline)
                     check(contact(api).getBoolean("ready"))
