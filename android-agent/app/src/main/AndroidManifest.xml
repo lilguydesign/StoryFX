@@ -1,9 +1,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <queries>
+        <package android:name="com.sec.android.app.sbrowser" />
+        <package android:name="com.microsoft.emmx" />
+        <package android:name="org.mozilla.firefox" />
+    </queries>
     <application android:allowBackup="false" android:fullBackupContent="false"
         android:usesCleartextTraffic="false" android:label="StoryFX"
         android:icon="@drawable/ic_storyfx" android:theme="@style/StoryFXTheme"
         android:supportsRtl="true">
+        <provider android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.updates" android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_file_paths" />
+        </provider>
+        <receiver android:name=".update.UpdateReplacedReceiver" android:exported="false">
+            <intent-filter><action android:name="android.intent.action.MY_PACKAGE_REPLACED" /></intent-filter>
+        </receiver>
         <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

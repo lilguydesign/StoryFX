@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 import hashlib
 import json
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -17,6 +18,23 @@ NAME = 'StoryFX-Android-0.2.0-v2.apk'
 SHA = 'f3f7b41ae165344bd405b0698a35e63fe08d6d73325b454cae54812df3db80e5'
 SIZE = 1729354
 URL = 'https://api.formafx.com/downloads/storyfx-android/' + NAME
+VERSION, CODE = '0.2.0', 2
+
+
+def configure(manifest):
+    global NAME, SHA, SIZE, URL, VERSION, CODE
+    value = json.loads(Path(manifest).read_text(encoding='utf-8-sig'))
+    version, code = value['version'], value['version_code']
+    assert isinstance(version, str) and re.fullmatch(r'\d+\.\d+\.\d+', version)
+    assert type(code) is int and 0 < code < 2147483647
+    assert re.fullmatch(r'[a-f0-9]{64}', value['sha256'])
+    assert type(value['bytes']) is int and 0 < value['bytes'] <= 134217728
+    assert value['package'] == 'com.formafx.storyfx.agent'
+    assert value['certificate_sha256'] == 'e3795a1bca6acab02ce61b724ef827c35c19a2c4ffbbb7d9c4c3af3fa7009a12'
+    assert value['apk_signature_verified'] is True and value['release_identity_verified'] is True
+    VERSION, CODE, SHA, SIZE = version, code, value['sha256'], value['bytes']
+    NAME = f'StoryFX-Android-{VERSION}-v{CODE}.apk'
+    URL = 'https://api.formafx.com/downloads/storyfx-android/' + NAME
 
 
 def run(*args, **kwargs):
@@ -97,17 +115,17 @@ def main(bundle):
             run('docker', 'restart', EDGE)
         statement = f"""BEGIN;
         INSERT INTO public.storyfx_android_releases(version,version_code,download_url,sha256,byte_size)
-        VALUES('0.2.0',2,'{URL}','{SHA}',{SIZE}) ON CONFLICT(version) DO NOTHING;
+        VALUES('{VERSION}',{CODE},'{URL}','{SHA}',{SIZE}) ON CONFLICT(version) DO NOTHING;
         DO $verify$ BEGIN
-          IF NOT EXISTS(SELECT 1 FROM public.storyfx_android_releases WHERE version='0.2.0'
-            AND version_code=2 AND sha256='{SHA}' AND byte_size={SIZE} AND download_url='{URL}')
+          IF NOT EXISTS(SELECT 1 FROM public.storyfx_android_releases WHERE version='{VERSION}'
+            AND version_code={CODE} AND sha256='{SHA}' AND byte_size={SIZE} AND download_url='{URL}')
           THEN RAISE EXCEPTION 'IMMUTABLE_CATALOG_DIFFERS'; END IF;
         END $verify$;
-        UPDATE public.app_versions SET latest_version='0.2.0',min_version='0.2.0',
+        UPDATE public.app_versions SET latest_version='{VERSION}',
           download_url='{URL}',sha256='{SHA}',publish_date=now(),updated_at=now()
           WHERE platform='storyfx_agent_android';
         INSERT INTO public.app_versions(id,platform,latest_version,min_version,publish_date,created_at,updated_at,download_url,sha256)
-        SELECT gen_random_uuid(),'storyfx_agent_android','0.2.0','0.2.0',now(),now(),now(),'{URL}','{SHA}'
+        SELECT gen_random_uuid(),'storyfx_agent_android','{VERSION}','0.2.0',now(),now(),now(),'{URL}','{SHA}'
           WHERE NOT EXISTS(SELECT 1 FROM public.app_versions WHERE platform='storyfx_agent_android');
         NOTIFY pgrst,'reload schema'; COMMIT;"""
         phase = 'release_pointer_commit'
@@ -141,4 +159,6 @@ def main(bundle):
 
 
 if __name__ == '__main__':
+    if len(sys.argv) == 3:
+        configure(sys.argv[2])
     main(sys.argv[1])

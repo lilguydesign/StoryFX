@@ -19,6 +19,8 @@ def main():
     allowed = ('server/', 'dashboard/', 'android-agent/', 'deploy/', 'supabase/', 'docs/PRIVATE_PILOT.md',
                '.github/workflows/storyfx-foundation.yml', 'ops/Set-StoryFXWorkLogin.ps1',
                'ops/format_login_css.py', 'ops/upgrade_dashboard_accounts.py', 'ops/verify_private_candidate.py')
+    allowed += ('windows-bridge/', 'ops/prepare_control_seed.py', 'Lancer_StoryFX_Local.cmd',
+                'Connecter_StoryFX_Web.cmd', 'docs/CONTROL_CENTER.md', 'ops/maintenance/')
     counts = {}
     for name in paths:
         path = ROOT / name

@@ -41,6 +41,7 @@ object AgentController {
         val server = ServerAddress.validate(address, BuildConfig.DEBUG)
         val url = AgentAuthProtocol(AgentApi(server), store, BuildConfig.DEBUG).start(
             server, store.installationId(), name, Build.VERSION.RELEASE, BuildConfig.VERSION_NAME)
+        store.savePhoneName(name)
         store.saveStatus("Connexion FormaFX ouverte dans votre navigateur")
         url
     }

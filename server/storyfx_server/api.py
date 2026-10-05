@@ -84,6 +84,9 @@ def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | 
         app.include_router(build_auth_router(sessions, origin))
         app.state.auth_sessions = sessions
 
+    from .control_routes import build_control_router
+    app.include_router(build_control_router(store, sessions, owner, credential))
+
     @app.exception_handler(DomainError)
     async def domain_error(_request, error):
         return JSONResponse({'error': error.code}, status_code=error.status)
@@ -127,7 +130,9 @@ def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | 
         return JSONResponse({'status': 'ok' if healthy else 'degraded', 'mode': 'diagnostic_only',
                              'publishing_enabled': False, 'database_ok': database_ok,
                              'recovery_worker_ok': bool(recent_tick and heartbeat_state['healthy']),
-                             'account_auth_enabled': sessions is not None, 'version': '0.2.0'},
+                             'account_auth_enabled': sessions is not None, 'version': '0.3.0',
+                             'control_center_mode': 'windows_bridge', 'windows_publication_enabled': True,
+                             'android_publication_enabled': False},
                             status_code=200 if healthy else 503)
 
     @app.get('/v1/dashboard')

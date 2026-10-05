@@ -1,10 +1,12 @@
 import { request, PilotError } from "./api.js";
 import { demoData } from "./demo.js";
 import { renderMetrics, renderDevices, renderJobs, renderImport, dateLabel } from "./views.js";
+import { mountControl, loadControl, enableControl } from './control.js';
+import { controlTitles } from './control-fields.js';
 
 const state = { data: null, demo: false, authenticated: false, busy: false, session: 0 };
 const find = selector => document.querySelector(selector);
-const titles = { overview: "Vue d’ensemble", devices: "Appareils", activity: "Activité", migration: "Migration", library: "Bibliothèque" };
+const titles = { overview: "Vue d’ensemble", devices: "Appareils", activity: "Activité", migration: "Migration", library: "Bibliothèque", ...controlTitles };
 function notice(message, error = false) {
   find("#notice").textContent = message;
   find("#notice").classList.toggle("error", error);
@@ -26,7 +28,7 @@ function render() {
   const banner = find("#environment-banner");
   banner.classList.toggle("demo", state.demo);
   banner.querySelector("strong").textContent = state.demo ? "Données de démonstration" : "Pilote privé · Internet";
-  banner.querySelector("span:last-child").textContent = state.demo ? "Aperçu fictif en lecture seule. Aucun appareil réel n’est connecté à cette vue." : "La publication est désactivée. Les albums seront synchronisés dans un prochain chantier.";
+  banner.querySelector("span:last-child").textContent = state.demo ? "Aperçu fictif en lecture seule. Aucun appareil réel n’est connecté à cette vue." : "Commandes de publication via le moteur Windows. Android : connexion et diagnostics. Synchronisation des albums en dernier.";
   find("#connection-label").textContent = state.demo ? "◌ Démonstration" : state.authenticated ? "● Session propriétaire" : "○ Session inactive";
   find("#last-refresh").textContent = state.demo ? "Données fictives · aucun accès au serveur" : state.data?.server_time ? `Dernière lecture · ${dateLabel(state.data.server_time)}` : "Aucune donnée serveur chargée";
 }
@@ -46,6 +48,7 @@ function disconnect() {
   state.authenticated = false;
   state.demo = false;
   state.data = null;
+  enableControl(false);
   find("#pair-code").textContent = "";
   find("#pair-dialog").close();
   find("#diagnostic-dialog").close();
@@ -64,6 +67,7 @@ async function refresh() {
   if (session !== state.session) return;
   if (data?.mode !== "diagnostic_only" || !Array.isArray(data.devices) || !Array.isArray(data.jobs)) throw new PilotError("forbidden");
   state.data = data;
+  await loadControl();
 }
 async function action(work) {
   if (!operational()) return;
@@ -75,6 +79,7 @@ async function action(work) {
   finally { state.busy = false; render(); }
 }
 
+mountControl(notice);
 find("#session-form").addEventListener("submit", event => {
   event.preventDefault(); location.assign("/login/");
 });
@@ -190,6 +195,6 @@ if (!state.demo) {
   state.busy = true;
   request("/v1/auth/session").then(async session => {
     find("#session-help").textContent = `Connecté avec ${session.user.email}. Accès propriétaire FormaFX actif.`;
-    await refresh(); state.authenticated = true;
+    await refresh(); state.authenticated = true; enableControl(true);
   }).catch(() => location.replace("/login/")).finally(() => { state.busy = false; render(); });
 }

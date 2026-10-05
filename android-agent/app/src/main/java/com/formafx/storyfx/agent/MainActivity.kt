@@ -29,6 +29,7 @@ class MainActivity : Activity() {
     private lateinit var erase: Button
     private lateinit var status: TextView
     private var busy = false
+    private var updates: com.formafx.storyfx.agent.update.UpdateCard? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,18 +78,23 @@ class MainActivity : Activity() {
             }
             addView(ui.label("Nom du téléphone"))
             phone = ui.field("Nom du téléphone", InputType.TYPE_CLASS_TEXT or
-                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS).apply { setText(AgentController.phoneName()) }
+                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS).apply { setText(EncryptedStore(this@MainActivity).phoneName()) }
             addView(phone)
             login = ui.button("Se connecter avec FormaFX", primary = true).apply {
                 setOnClickListener {
                     val address = server.text.toString(); val name = phone.text.toString()
                     perform({ AgentController.startLogin(applicationContext, address, name) }) { url ->
                         try {
-                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                .addCategory(Intent.CATEGORY_BROWSABLE))
+                            val browser = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                .addCategory(Intent.CATEGORY_BROWSABLE)
+                            val available = LoginBrowserTargets.packages.filter {
+                                Intent(browser).setPackage(it).resolveActivity(packageManager) != null
+                            }
+                            val target = requireNotNull(LoginBrowserTargets.select(available))
+                            startActivity(browser.setPackage(target))
                         } catch (_: Exception) {
                             EncryptedStore(this@MainActivity).saveStatus(
-                                "Aucun navigateur disponible. Installez votre navigateur habituel.")
+                                "Ce pilote utilise Samsung Internet, Microsoft Edge ou Firefox. Installez l’un de ces navigateurs.")
                             refresh()
                         }
                     }
@@ -139,6 +145,7 @@ class MainActivity : Activity() {
             addView(erase)
             addView(ui.label("Pour révoquer l’accès côté serveur, utilisez le tableau de bord."))
         })
+        updates = com.formafx.storyfx.agent.update.UpdateCard(this, ui).also { root.addView(it.view) }
         root.addView(ui.text("Cette première étape vérifie la connexion et la reprise après une coupure. " +
             "Elle ne publie aucun statut et ne lit ni votre écran ni vos albums.", 12f).apply {
             setPadding(ui.dp(2), ui.dp(18), ui.dp(2), 0)
@@ -147,7 +154,7 @@ class MainActivity : Activity() {
         receiveCallback(intent)
     }
 
-    override fun onResume() { super.onResume(); if (::status.isInitialized) refresh() }
+    override fun onResume() { super.onResume(); if (::status.isInitialized) refresh(); updates?.onResume() }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -196,5 +203,5 @@ class MainActivity : Activity() {
         if (!busy) status.text = store.status()
     }
 
-    override fun onDestroy() { executor.shutdown(); super.onDestroy() }
+    override fun onDestroy() { updates?.close(); executor.shutdown(); super.onDestroy() }
 }

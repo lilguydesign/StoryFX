@@ -6,8 +6,16 @@ const messages = {
   invalid: "La demande n’a pas été acceptée. Vérifiez les champs renseignés.",
 };
 export class PilotError extends Error {
-  constructor(kind) {
-    super(messages[kind] || messages.unavailable);
+  constructor(kind, code) {
+    const controlMessages = {
+      WINDOWS_EXECUTOR_UNAVAILABLE: 'Le moteur Windows est déconnecté ou ce profil n’est pas disponible. Connectez le moteur et le téléphone.',
+      OCCURRENCE_ALREADY_REQUESTED: 'Cette occurrence a déjà été lancée ou publiée. Consultez son rapport ; elle ne sera pas rejouée.',
+      SETTING_IN_USE: 'Cette référence est utilisée par une matrice. Modifiez la matrice avant de supprimer ou renommer la référence.',
+      NAME_ALREADY_EXISTS: 'Ce nom existe déjà dans cette rubrique.',
+      CONFIGURATION_CHANGED: 'La configuration a changé. Fermez le formulaire, actualisez et reprenez la modification.',
+      SETTING_REFERENCE_MISSING: 'Sélectionnez un profil, un système et des albums enregistrés.',
+    };
+    super(controlMessages[code] || messages[kind] || messages.unavailable);
     this.kind = kind;
   }
 }
@@ -29,7 +37,8 @@ export async function request(path, { method = "GET", body } = {}) {
     });
     if (!response.ok) {
       const kind = { 401: "unauthorized", 403: "forbidden", 409: "conflict", 400: "invalid", 422: "invalid" }[response.status];
-      throw new PilotError(kind || "unavailable");
+      const safe = await response.json().catch(() => ({}));
+      throw new PilotError(kind || "unavailable", safe.error);
     }
     if (response.status === 204) return {};
     try { return await response.json(); }
