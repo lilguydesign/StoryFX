@@ -4,6 +4,9 @@ import org.json.JSONObject
 import java.net.URI
 
 data class UpdateRelease(val version: String, val code: Long, val url: String, val sha256: String) {
+    fun serialize(): String = JSONObject().put("platform", "storyfx_agent_android")
+        .put("version", version).put("version_code", code).put("download_url", url)
+        .put("sha256", sha256).toString()
     companion object {
         const val catalog = "https://api.formafx.com/functions/v1/storyfx-agent-download?" +
             "platform=storyfx_agent_android&channel=stable&version=latest&asset_type=apk&metadata=1"

@@ -1,6 +1,7 @@
 package com.formafx.storyfx.agent.update
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -14,6 +15,7 @@ import java.util.concurrent.Executors
 class UpdateCard(private val activity: Activity, ui: AgentUi) {
     private val executor = Executors.newSingleThreadExecutor()
     private val folder = File(activity.cacheDir, "verified_updates")
+    private val state = activity.getSharedPreferences("verified_update", Context.MODE_PRIVATE)
     private val message = ui.text("Version installée : ${BuildConfig.VERSION_NAME}", 13f)
     private val button = ui.button("Rechercher une mise à jour", primary = true)
     private var release: UpdateRelease? = null
@@ -26,7 +28,22 @@ class UpdateCard(private val activity: Activity, ui: AgentUi) {
         addView(ui.label("Téléchargement officiel, contrôle SHA-256, version et signature. " +
             "Android vous demande de confirmer l’installation. Vos réglages sont conservés."))
     }
-    init { button.setOnClickListener { if (release == null) check() else download() } }
+    init {
+        restore()
+        button.setOnClickListener { if (release == null) check() else download() }
+    }
+    private fun restore() {
+        try {
+            val saved = state.getString("release", null) ?: return
+            val candidate = UpdateRelease.parse(saved)
+            require(candidate.code > BuildConfig.VERSION_CODE)
+            UpdateVerifier(activity).verify(File(folder, "candidate.apk"), candidate)
+            release = candidate
+            pending = state.getBoolean("permission_pending", false)
+            message.text = "Version ${candidate.version} vérifiée, installation à confirmer."
+            button.text = "Télécharger et installer"
+        } catch (_: Exception) { state.edit().clear().apply() }
+    }
     private fun check() = background {
         val latest = UpdateDownload.latest()
         activity.runOnUiThread {
@@ -44,17 +61,20 @@ class UpdateCard(private val activity: Activity, ui: AgentUi) {
             activity.runOnUiThread { message.text = "Téléchargement : $progress %" }
         }
         UpdateVerifier(activity).verify(file, selected)
+        check(state.edit().putString("release", selected.serialize()).commit())
         activity.runOnUiThread { if (!activity.isDestroyed) launchInstaller() }
     }
     private fun launchInstaller() {
         if (!activity.packageManager.canRequestPackageInstalls()) {
             pending = true
+            state.edit().putBoolean("permission_pending", true).apply()
             message.text = "Autorisez StoryFX à installer cette mise à jour, puis revenez ici."
             activity.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
                 Uri.parse("package:${activity.packageName}")))
             return
         }
         pending = false
+        state.edit().putBoolean("permission_pending", false).apply()
         val file = File(folder, "candidate.apk")
         try {
             UpdateVerifier(activity).verify(file, requireNotNull(release))

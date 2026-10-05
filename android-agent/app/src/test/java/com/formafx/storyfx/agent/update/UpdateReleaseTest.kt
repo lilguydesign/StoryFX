@@ -10,6 +10,10 @@ class UpdateReleaseTest {
         .put("download_url", "https://api.formafx.com/downloads/storyfx-android/StoryFX-Android-0.3.0-v3.apk")
         .put("sha256", "a".repeat(64))
     @Test fun acceptsOfficialRelease() { assertEquals(3L, UpdateRelease.parse(payload().toString()).code) }
+    @Test fun pendingReleaseSurvivesRecreation() {
+        val selected = UpdateRelease.parse(payload().toString())
+        assertEquals(selected, UpdateRelease.parse(selected.serialize()))
+    }
     @Test(expected = IllegalArgumentException::class) fun refusesOtherHost() {
         UpdateRelease.parse(payload().put("download_url", "https://example.com/update.apk").toString())
     }
