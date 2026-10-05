@@ -30,6 +30,7 @@ class MainActivity : Activity() {
     private lateinit var status: TextView
     private var busy = false
     private var updates: com.formafx.storyfx.agent.update.UpdateCard? = null
+    private var publication: com.formafx.storyfx.agent.publication.PublicationCard? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,8 +147,9 @@ class MainActivity : Activity() {
             addView(ui.label("Pour révoquer l’accès côté serveur, utilisez le tableau de bord."))
         })
         updates = com.formafx.storyfx.agent.update.UpdateCard(this, ui).also { root.addView(it.view) }
-        root.addView(ui.text("Cette première étape vérifie la connexion et la reprise après une coupure. " +
-            "Elle ne publie aucun statut et ne lit ni votre écran ni vos albums.", 12f).apply {
+        publication = com.formafx.storyfx.agent.publication.PublicationCard(this, ui).also { root.addView(it.view) }
+        root.addView(ui.text("Les diagnostics restent disponibles. Le pilotage Android est un pilote privé " +
+            "pour les images WhatsApp Business, activé avec vos autorisations visibles.", 12f).apply {
             setPadding(ui.dp(2), ui.dp(18), ui.dp(2), 0)
         })
         refresh()
@@ -201,7 +203,8 @@ class MainActivity : Activity() {
         val email = runCatching { store.accountEmail() }.getOrDefault("")
         account.text = email.ifBlank { if (connected) "Association de validation active" else "Compte propriétaire FormaFX" }
         if (!busy) status.text = store.status()
+        if (!busy && connected) publication?.refresh()
     }
 
-    override fun onDestroy() { updates?.close(); executor.shutdown(); super.onDestroy() }
+    override fun onDestroy() { updates?.close(); publication?.close(); executor.shutdown(); super.onDestroy() }
 }

@@ -16,7 +16,7 @@ export const definitions = {
   locators: [['name', 'Nom du repère'], ['platform', 'Plateforme', ['WhatsApp', 'Facebook', 'Instagram', 'TikTok']], ['xpath', 'Sélecteur XPath']],
 };
 export const descriptions = {
-  launch: 'Choisissez une occurrence de votre programmation. Le moteur Python Windows doit être connecté ; chaque occurrence ne peut partir qu’une fois.',
+  launch: 'Choisissez une occurrence de votre programmation. Un moteur Windows ou un agent Android compatible doit être prêt ; chaque occurrence ne peut partir qu’une fois.',
   programming: 'Horaires de la journée, calculés avec les décalages des profils. Fuseau : Africa/Douala. Le planning affiché ne démarre pas automatiquement.',
   pages: 'Vos pages par pays, sélectionnées dans les matrices Facebook.',
   profiles: 'Les noms historiques sont conservés. L’identité USB et les réglages réseau restent sur Windows.',
@@ -24,7 +24,7 @@ export const descriptions = {
   matrix: 'Une matrice relie un profil, une plateforme, un système, les albums et, pour Facebook, une page.',
   albums: 'Créez les références des albums présents sur les téléphones. Le transfert des images vers les galeries viendra dans le dernier chantier.',
   locators: 'Repères utilisés pour retrouver des éléments de l’interface Android. Leur modification demande une nouvelle validation du moteur.',
-  reports: 'Résultats des publications et état du connecteur Windows. Un résultat incertain demande une vérification ; il ne repart pas automatiquement.',
+  reports: 'Résultats des publications et état des agents Windows et Android. Un résultat incertain demande une vérification ; il ne repart pas automatiquement.',
 };
 
 export function fields(collection, value, catalog) {

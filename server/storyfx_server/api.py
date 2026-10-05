@@ -86,7 +86,7 @@ def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | 
         app.state.auth_sessions = sessions
 
     from .control_routes import build_control_router
-    control_router, scheduler = build_control_router(store, sessions, owner, credential)
+    control_router, scheduler = build_control_router(store, sessions, owner, credential, agent)
     app.state.control_scheduler = scheduler
     app.include_router(control_router)
 
@@ -135,7 +135,7 @@ def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | 
                              'recovery_worker_ok': bool(recent_tick and heartbeat_state['healthy']),
                              'account_auth_enabled': sessions is not None, 'version': '0.3.0',
                              'control_center_mode': 'windows_bridge', 'windows_publication_enabled': True,
-                             'android_publication_enabled': False, 'scheduler_available':True,
+                             'android_publication_enabled': True, 'android_executor':'whatsapp_images_pilot', 'scheduler_available':True,
                              'scheduler_worker_ok':bool(recent_tick and heartbeat_state['healthy']),
                              'scheduler_tick_seconds':10},
                             status_code=200 if healthy else 503)

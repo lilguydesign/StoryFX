@@ -1,16 +1,17 @@
 {
   "application": "StoryFX",
-  "function": "Private web scheduler, bounded catch-up, complete owner profiles, Windows bridge and Android updates",
-  "maturity": "private_windows_pilot_android_diagnostic",
+  "function": "Private web scheduler, Windows bridge and opt-in native Android WhatsApp image pilot",
+  "maturity": "private_android_publication_pilot_physical_validation_pending",
   "probe": "storyfx_control_probe.py",
   "public_endpoint": "https://story.formafx.com/health",
-  "trigger": "Explicit authenticated scheduler start: automatic current minute or manual catch-up followed by automatic scheduling; server and Windows connector poll every 10 seconds; native Android update remains user requested",
+  "trigger": "Explicit owner scheduler start; server tick 10 s, Android enabled Accessibility service poll 20 s; Android system rebind after reboot and first unlock; APK update remains user requested",
   "timezone": "Africa/Douala schedules; UTC storage",
-  "expected": "control_center_mode=windows_bridge; windows_publication_enabled=true; android_publication_enabled=false; scheduler_available=true; scheduler_worker_ok=true; scheduler_tick_seconds=10; healthy database; latest APK coherent and signed",
+  "expected": "Healthy HTTPS/database/scheduler; coherent legacy or native health contract; native capability whatsapp_images_pilot does not prove phone readiness or a publication",
   "tolerance_seconds": {
     "windows_presence": 45,
     "publication_review": 900,
-    "https_timeout": 8
+    "https_timeout": 8,
+    "android_presence": 45
   },
   "normal_exclusions": [
     "Stopped scheduler, zero due publications, or disconnected Windows without a launch",
@@ -18,23 +19,27 @@
     "Android periodic diagnostics can be delayed",
     "Albums media synchronization deferred",
     "intro+multi and other social adapters excluded until validated",
-    "Failed or interrupted PIN attempt blocks further automatic unlock until manual unlock; never send PIN to the server"
+    "Failed or interrupted PIN attempt blocks further automatic unlock until manual unlock; never send PIN to the server",
+    "Android service disabled or photo permission missing",
+    "Screen off/locked, first unlock after reboot pending, no Internet, or Android force-stop",
+    "Native pilot excludes videos, intro engines, Facebook pages and non-WhatsApp providers"
   ],
   "symptom": "Invalid control or scheduler health contract, unavailable official latest APK, claimed publication without a result after 15 minutes",
   "diagnostic": "Public health contract and official release metadata; inspect private reports only with the active owner; never replay ambiguous publications",
-  "repair": "Restore HTTPS or the isolated control release; reconnect the known Windows executor; a configuration or owner-access change pauses scheduling; inspect private own-status evidence and preserve one-attempt journals; scheduler stop cancels its queued jobs, Stop cancels all queued jobs and denies the final provider action when still pending",
+  "repair": "Restore HTTPS or the isolated control release; reconnect the known Windows executor; a configuration or owner-access change pauses scheduling; inspect private own-status evidence and preserve one-attempt journals; scheduler stop cancels its queued jobs, Stop cancels all queued jobs and denies the final provider action when still pending; Android: verify existing account/profile binding, photo permission, visible Accessibility opt-in, first unlock and Samsung background restrictions; inspect own-status evidence without automatic replay",
   "rollback": "Previous backend release and latest APK pointer; retain confirmed/uncertain publication reservations and Android encrypted association",
   "illustration": "https://apps.formafx.com/assets/images/app-icons/storyfx.svg",
   "illustrated_template": "Existing StoryFX maintenance alert; approval and delivery not revalidated by this milestone",
   "coverage": {
     "existing_hourly_server_and_latest_checks": "existing_storyfx_public_probe",
-    "new_control_contract_probe": "scheduler_contract_tests_passed_runtime_receipt_required",
+    "new_control_contract_probe": "legacy_and_native_contracts_tested_no_physical_phone_claim",
     "scheduled_control_integration": "versioned_installer_runtime_receipt_required",
     "private_windows_executor_endurance": "not_verified",
     "usb_update_two_phones": "0.3.1_package_and_on_device_hash_verified_20261005",
     "native_update_physical_install": "not_verified_by_usb_install",
-    "autonomous_android_publication": "not_available",
-    "windows_secure_unlock": "CurrentUser DPAPI, trusted hardware only, bounded numeric keyguard attempt; six synthetic tests passed; JK657_S23+ physically locked then unlocked successfully on 2026-10-05; second phone not verified"
+    "autonomous_android_publication": "native_whatsapp_images_implemented_physical_publication_not_verified",
+    "windows_secure_unlock": "CurrentUser DPAPI, trusted hardware only, bounded numeric keyguard attempt; six synthetic tests passed; JK657_S23+ physically locked then unlocked successfully on 2026-10-05; second phone not verified",
+    "android_reboot": "implemented_system_rebind_and_boot_receiver_physical_reboot_not_verified"
   },
   "notifications_sent_by_validation": false,
   "maintenance_timers_modified": false,

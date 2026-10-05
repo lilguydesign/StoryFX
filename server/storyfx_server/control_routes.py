@@ -34,7 +34,7 @@ class Completion(Strict):
     evidence: Literal['own_status_verified', 'provider_ui_verified', 'result_uncertain', 'preflight_refused']
 
 
-def build_control_router(store, sessions, owner, credential):
+def build_control_router(store, sessions, owner, credential, agent):
     router = APIRouter(prefix='/v1/control')
     catalog = Catalog(store)
     broker = Broker(store, catalog, sessions)
@@ -122,4 +122,6 @@ def build_control_router(store, sessions, owner, credential):
     def ready(job_id: UUID, _body: Empty, executor=Depends(node)):
         return broker.ready(executor, str(job_id))
 
+    from .control_android_routes import mount_android
+    mount_android(router, broker, agent, Completion)
     return router, scheduler

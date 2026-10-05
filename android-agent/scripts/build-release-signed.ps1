@@ -58,8 +58,25 @@ try {
         $badging -notmatch "versionCode='$versionCode'" -or $badging -notmatch "versionName='$version'") {
         throw "ANDROID_RELEASE_IDENTITY_MISMATCH"
     }
-    if ($badging -match 'BIND_ACCESSIBILITY_SERVICE|READ_MEDIA|READ_EXTERNAL_STORAGE|MANAGE_EXTERNAL_STORAGE|RECORD_AUDIO|CAMERA|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|SYSTEM_ALERT_WINDOW|QUERY_ALL_PACKAGES') {
+    if ($badging -match 'READ_MEDIA_VIDEO|READ_MEDIA_AUDIO|MANAGE_EXTERNAL_STORAGE|RECORD_AUDIO|CAMERA|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|SYSTEM_ALERT_WINDOW|QUERY_ALL_PACKAGES') {
         throw "ANDROID_UNEXPECTED_SENSITIVE_PERMISSION"
+    }
+    $allowed = @('android.permission.INTERNET', 'android.permission.REQUEST_INSTALL_PACKAGES',
+        'android.permission.RECEIVE_BOOT_COMPLETED', 'android.permission.WAKE_LOCK',
+        'android.permission.READ_MEDIA_IMAGES', 'android.permission.READ_EXTERNAL_STORAGE',
+        'com.formafx.storyfx.agent.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION',
+        'android.permission.ACCESS_NETWORK_STATE', 'android.permission.FOREGROUND_SERVICE')
+    $permissions = [regex]::Matches($badging, "uses-permission[^:]*: name='([^']+)'")
+    foreach ($permission in $permissions) {
+        if ($permission.Groups[1].Value -notin $allowed) { throw "ANDROID_PERMISSION_OUTSIDE_ALLOWLIST" }
+    }
+    [xml]$manifest = Get-Content -LiteralPath (Join-Path $root 'app\src\main\AndroidManifest.xml') -Raw
+    $androidNamespace = 'http://schemas.android.com/apk/res/android'
+    $publicationService = @($manifest.manifest.application.service | Where-Object {
+        $_.GetAttribute('name', $androidNamespace) -eq '.publication.PublicationService' })
+    if ($publicationService.Count -ne 1 -or
+        $publicationService[0].GetAttribute('permission', $androidNamespace) -ne 'android.permission.BIND_ACCESSIBILITY_SERVICE') {
+        throw 'ANDROID_ACCESSIBILITY_BINDING_UNPROTECTED'
     }
     $result = [ordered]@{ version = $version; version_code = [int]$versionCode;
         package = "com.formafx.storyfx.agent"; signed_apk = $Output;

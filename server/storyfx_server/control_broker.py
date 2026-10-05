@@ -28,6 +28,8 @@ class Broker:
                 UNIQUE(owner_id,occurrence));
               CREATE TABLE IF NOT EXISTS control_seed_reports (owner_id TEXT PRIMARY KEY);
             ''')
+        from .control_android import AndroidControl
+        self.android = AndroidControl(self)
 
     def begin(self, name, proof):
         self.store.throttle('control_pair', maximum=10, period=60)
@@ -65,7 +67,8 @@ class Broker:
 
     def authenticate(self, token):
         with self.store.transaction() as db:
-            row = db.execute('SELECT * FROM control_nodes WHERE credential=? AND revoked=0', (digest(token),)).fetchone()
+            row = db.execute('SELECT * FROM control_nodes WHERE credential=? AND revoked=0 '
+                             'AND id NOT IN (SELECT node_id FROM control_android_links)', (digest(token),)).fetchone()
         if not row or not self.sessions:
             raise DomainError('UNAUTHORIZED', 401)
         user = self.sessions.require_hash(row['auth_session'])
@@ -86,11 +89,12 @@ class Broker:
             node['connected'] = not node['revoked'] and node['last_seen'] is not None and self.store.clock() - node['last_seen'] < 45
             node['profiles'] = json.loads(node['profiles'])
             node['last_seen'] = timestamp(node['last_seen'])
+        self.android.enrich(nodes)
         schedules = plan(catalog, self.store.clock())
         for value in schedules:
             value['state'] = states.get(value['id'], 'PLANNED')
         return {**catalog, 'nodes': nodes, 'schedule': schedules, 'reports': reports,
-                'execution_mode': 'windows_bridge', 'autonomous_android_publication': False,
+                'execution_mode': 'windows_and_android', 'autonomous_android_publication': True,
                 'scheduler':self.scheduler.status(user) if self.scheduler else {'enabled':False},
                 'terminal':self.terminal.read(user)}
 
@@ -146,6 +150,9 @@ class Broker:
             row = db.execute("SELECT * FROM control_jobs WHERE node_id=? AND owner_id=? AND state='QUEUED' ORDER BY created LIMIT 1",
                              (node['id'], node['owner_id'])).fetchone()
             if not row:
+                return {'job': None}
+            from .control_phone_lock import phone_busy
+            if phone_busy(db, node['owner_id'], json.loads(row['payload'])['device']):
                 return {'job': None}
             due = json.loads(row['payload'])['due_at']
             from datetime import datetime
