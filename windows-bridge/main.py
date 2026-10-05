@@ -18,11 +18,8 @@ ADB = Path.home() / 'AppData/Local/Android/Sdk/platform-tools/adb.exe'
 
 
 def available():
-    profiles = json.loads((ROOT / 'config/profiles.json').read_text(encoding='utf-8-sig'))['profiles']
-    result = subprocess.run([str(ADB), 'devices'], capture_output=True, text=True, check=True, timeout=15)
-    identities = {line.split()[0] for line in result.stdout.splitlines()[1:] if len(line.split()) == 2 and line.split()[1] == 'device'}
-    return {name: value for name, value in profiles.items() if value.get('enabled', True)
-            and (value.get('adb_serial') in identities or value.get('device_id') in identities)}
+    from profile_settings import available as discover
+    return discover(ROOT,ADB)
 
 
 @contextmanager
@@ -66,7 +63,9 @@ def run():
         print('Moteur prêt. Seules les publications lancées dans le web seront exécutées.', flush=True)
         while True:
             try:
-                profiles = available()
+                from profile_settings import available as discover
+                settings=api.post('/v1/control/windows/settings',{})
+                profiles = discover(ROOT,ADB,settings['profiles'])
                 api.post('/v1/control/windows/heartbeat', {'profiles': list(profiles)})
                 flush(api)
                 job = api.post('/v1/control/windows/claim', {}).get('job')

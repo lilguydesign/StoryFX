@@ -1,4 +1,5 @@
 import { escape } from './views.js';
+import { profileForm, readProfile } from './profile-editor.js';
 
 export const controlTitles = {
   launch: 'Lancement', programming: 'Programmation', pages: 'Pages', profiles: 'Profils',
@@ -27,6 +28,7 @@ export const descriptions = {
 };
 
 export function fields(collection, value, catalog) {
+  if (collection === 'profiles') return profileForm(value);
   return definitions[collection].map(([key, label, kind]) => {
     const current = value[key] ?? (kind === 'checkbox' ? true : kind === 'number' ? (key.includes('count') ? 1 : 0) : '');
     let input;
@@ -41,6 +43,7 @@ export function fields(collection, value, catalog) {
 }
 
 export function readFields(collection, form) {
+  if (collection === 'profiles') return readProfile(form);
   return Object.fromEntries(definitions[collection].map(([key, , kind]) => {
     const input = form.elements.namedItem(key);
     const value = kind === 'checkbox' ? input.checked : kind === 'number' ? Number(input.value) :

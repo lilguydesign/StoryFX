@@ -7,6 +7,8 @@ from .control_models import Strict, Change, Removal, Launch
 from .control_catalog import Catalog
 from .control_broker import Broker
 from .models import Empty
+from .control_scheduler import Scheduler
+from .control_scheduler_models import Window, Schedule, Stop
 
 
 class PairStart(Strict):
@@ -36,6 +38,8 @@ def build_control_router(store, sessions, owner, credential):
     router = APIRouter(prefix='/v1/control')
     catalog = Catalog(store)
     broker = Broker(store, catalog, sessions)
+    scheduler = Scheduler(broker)
+    broker.scheduler = scheduler
 
     def node(token=Depends(credential)):
         return broker.authenticate(token)
@@ -59,6 +63,36 @@ def build_control_router(store, sessions, owner, credential):
     @router.post('/launch')
     def launch(body: Launch, user=Depends(owner)):
         return broker.launch(user, body)
+
+    @router.post('/catchup/preview')
+    def catchup_preview(body: Window, user=Depends(owner)):
+        return scheduler.preview(user,body)
+
+    @router.post('/catchup/launch')
+    def catchup_launch(body: Window, user=Depends(owner)):
+        return scheduler.catchup(user,body)
+
+    @router.post('/scheduler/start')
+    def scheduler_start(body: Schedule, user=Depends(owner)):
+        return scheduler.start(user,body)
+
+    @router.post('/scheduler/stop')
+    def scheduler_stop(_body: Empty, user=Depends(owner)):
+        return scheduler.stop(user)
+
+    @router.post('/stop')
+    def stop(body: Stop, user=Depends(owner)):
+        return scheduler.stop_jobs(user,body.stop_scheduler)
+
+    @router.post('/terminal/clear')
+    def clear_terminal(_body: Empty, user=Depends(owner)):
+        return broker.terminal.clear(user)
+
+    @router.post('/windows/settings')
+    def windows_settings(_body: Empty, executor=Depends(node)):
+        user = sessions.require_hash(executor['auth_session'])
+        snapshot = catalog.read(user)
+        return {'profiles':snapshot['collections']['profiles'],'revision':snapshot['revision']}
 
     @router.post('/windows/start')
     def start(body: PairStart):
@@ -88,4 +122,4 @@ def build_control_router(store, sessions, owner, credential):
     def ready(job_id: UUID, _body: Empty, executor=Depends(node)):
         return broker.ready(executor, str(job_id))
 
-    return router
+    return router, scheduler

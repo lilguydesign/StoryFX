@@ -1,12 +1,32 @@
 .nav-list { overflow-y: auto; min-height: 0; }
 .sidebar-note { flex-shrink: 0; }
 .control-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.control-fields label { margin: 0; }
+.control-fields label { margin: 0; min-width:0; }
+.control-fields input:not([type="checkbox"]) { width:100%; min-width:0; }
 .control-fields input[type="checkbox"] { width: 22px; height: 22px; display: block; }
 .control-help { padding: 8px 0; }
 .control-filters { display: flex; gap: 16px; flex-wrap: wrap; padding: 18px 0; }
 .control-filters label { flex: 1; min-width: 170px; margin: 0; }
-#setting-dialog { width: min(720px, calc(100vw - 32px)); }
+#setting-dialog { width: min(720px, calc(100vw - 32px)); max-width:720px; }
 #pane-matrix table { min-width: 1100px; }
 #pane-programming table, #pane-launch table { min-width: 850px; }
 @media (max-width: 620px) { .control-fields { grid-template-columns: 1fr; } }
+.field-help { display:block; margin-top:6px; font-size:12px; font-weight:400; line-height:1.5; color:var(--muted); overflow-wrap:anywhere; }
+.profile-wide { grid-column:1/-1; }
+.control-fields textarea { width:100%; min-height:110px; padding:12px; background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px; font:13px/1.5 Consolas,monospace; }
+#control-profiles table { min-width:1300px; }
+.launch-controls,.terminal-panel { padding:22px; margin-bottom:20px; }
+.terminal-heading { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+.terminal-heading h2 { margin:0; font-size:20px; }
+.profile-choices,.scheduler-actions,.terminal-actions { display:flex; flex-wrap:wrap; gap:10px; }
+.launch-controls fieldset { border:1px solid var(--border); border-radius:12px; padding:14px; margin-top:16px; }
+.launch-controls legend { font-size:13px; padding:0 6px; }
+.profile-choices .choice { display:flex; gap:8px; align-items:center; margin:0; padding:6px; }
+.profile-choices input,.propagation-options input,[data-profile-desc] { width:18px; height:18px; }
+.scheduler-actions { margin-top:16px; }
+#control-terminal { background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:12px; padding:16px; min-height:220px; max-height:380px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; font:13px/1.7 Consolas,monospace; }
+#scheduler-dialog { width:min(840px,calc(100vw - 32px)); }
+#scheduler-review { max-height:52vh; overflow:auto; }
+#setting-dialog { max-height:calc(100dvh - 32px); overflow:auto; }
+.button.danger { background:color-mix(in srgb,var(--danger) 12%,var(--surface)); border:1px solid color-mix(in srgb,var(--danger) 55%,transparent); color:var(--danger); }
+@media(max-width:620px) { .launch-controls,.terminal-panel { padding:16px; } .scheduler-actions .button { flex:1 1 100%; } }

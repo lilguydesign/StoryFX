@@ -14,6 +14,9 @@ export class PilotError extends Error {
       NAME_ALREADY_EXISTS: 'Ce nom existe déjà dans cette rubrique.',
       CONFIGURATION_CHANGED: 'La configuration a changé. Fermez le formulaire, actualisez et reprenez la modification.',
       SETTING_REFERENCE_MISSING: 'Sélectionnez un profil, un système et des albums enregistrés.',
+      CATCHUP_INTERVAL_INVALID:'Le début doit précéder la fin du rattrapage aujourd’hui.',
+      CATCHUP_FUTURE_END:'La fin du rattrapage ne peut pas être dans le futur.',
+      SCHEDULER_ALREADY_RUNNING:'Le scheduler est déjà actif. Arrêtez-le avant de changer son périmètre.',
     };
     super(controlMessages[code] || messages[kind] || messages.unavailable);
     this.kind = kind;

@@ -1,6 +1,7 @@
-"""Transport-free business settings accepted by the private control center."""
+"""Closed business settings and owner-private profile metadata."""
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from .control_profile_models import Profile
 
 
 class Strict(BaseModel):
@@ -9,12 +10,6 @@ class Strict(BaseModel):
 
 class Named(Strict):
     name: str = Field(min_length=1, max_length=80, pattern=r'^[^\x00-\x1f]+$')
-
-
-class Profile(Named):
-    enabled: bool = True
-    offset_minutes: int = Field(default=0, ge=-10080, le=10080)
-    label: str = Field(default='', max_length=80)
 
 
 class Album(Named):
@@ -65,6 +60,8 @@ MODELS = dict(profiles=Profile, albums=Album, systems=System, pages=Page,
 class Change(Strict):
     revision: int = Field(ge=0)
     value: dict
+    propagate_device: bool = False
+    propagate_serial: bool = False
 
 
 class Removal(Strict):

@@ -32,6 +32,7 @@ def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | 
             try:
                 with store.transaction() as db:
                     store.recover(db)
+                await asyncio.to_thread(app.state.control_scheduler.tick)
                 heartbeat_state.update(last_tick=clock(), healthy=True)
             except Exception:
                 heartbeat_state['healthy'] = False
@@ -85,7 +86,9 @@ def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | 
         app.state.auth_sessions = sessions
 
     from .control_routes import build_control_router
-    app.include_router(build_control_router(store, sessions, owner, credential))
+    control_router, scheduler = build_control_router(store, sessions, owner, credential)
+    app.state.control_scheduler = scheduler
+    app.include_router(control_router)
 
     @app.exception_handler(DomainError)
     async def domain_error(_request, error):
@@ -132,7 +135,9 @@ def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | 
                              'recovery_worker_ok': bool(recent_tick and heartbeat_state['healthy']),
                              'account_auth_enabled': sessions is not None, 'version': '0.3.0',
                              'control_center_mode': 'windows_bridge', 'windows_publication_enabled': True,
-                             'android_publication_enabled': False},
+                             'android_publication_enabled': False, 'scheduler_available':True,
+                             'scheduler_worker_ok':bool(recent_tick and heartbeat_state['healthy']),
+                             'scheduler_tick_seconds':10},
                             status_code=200 if healthy else 503)
 
     @app.get('/v1/dashboard')
