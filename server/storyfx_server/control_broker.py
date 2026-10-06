@@ -6,6 +6,7 @@ from .control_plan import plan, occurrence
 from .store import DomainError, digest, timestamp
 from .control_terminal import Terminal
 from .control_publications import reserve
+from .control_status_reviews import empty_review
 
 
 class Broker:
@@ -83,7 +84,8 @@ class Broker:
             db.execute("UPDATE control_jobs SET state='NEEDS_REVIEW' WHERE owner_id=? AND state IN ('CLAIMED','CANCEL_REQUESTED') AND claimed<?",
                        (user['id'], self.store.clock() - 900))
             nodes = [dict(row) for row in db.execute('SELECT id,name,last_seen,profiles,revoked FROM control_nodes WHERE owner_id=?', (user['id'],))]
-            reports = [self.report(row) for row in db.execute('SELECT * FROM control_jobs WHERE owner_id=? ORDER BY created DESC LIMIT 200', (user['id'],))]
+            reports = [{**self.report(row), 'empty_status_review_available':empty_review(db, row, self.store.clock())}
+                       for row in db.execute('SELECT * FROM control_jobs WHERE owner_id=? ORDER BY created DESC LIMIT 200', (user['id'],))]
             attempts = list(db.execute('SELECT occurrence,state,payload FROM control_jobs WHERE owner_id=? ORDER BY created,id', (user['id'],)))
             states = {}
             depths = {}

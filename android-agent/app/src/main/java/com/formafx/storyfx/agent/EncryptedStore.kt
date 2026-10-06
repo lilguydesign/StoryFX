@@ -73,7 +73,9 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
         check(!org.json.JSONObject(publicationState()).has("pending"))
         check(prefs.edit().remove("server").remove("device_id").remove("token")
             .remove("outbox").remove("last_status").remove("account").remove("auth_pending")
-            .remove("publication_profile").putBoolean("publication_enabled", false).commit())
+            .remove("publication_profile").remove("unlock_credential").remove("unlock_attempted")
+            .remove("unlock_test_until").putBoolean("publication_enabled", false).commit())
+        LocalUnlockTest.clear()
     }
 
     fun status(): String = prefs.getString("last_status", "Association requise")!!
@@ -92,6 +94,30 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
         check(prefs.edit().putString("publication_profile", encrypt(profile))
             .putBoolean("publication_enabled", enabled).commit())
     }
+
+    fun saveUnlockPin(pin: String) {
+        require(session() != null && publicationEnabled() && publicationProfile().isNotBlank())
+        require(pin.matches(Regex("[0-9]{4,16}")))
+        val value = org.json.JSONObject().put("profile", publicationProfile())
+            .put("installation", installationId()).put("pin", pin)
+        check(prefs.edit().putString("unlock_credential", encrypt(value.toString()))
+            .remove("unlock_attempted").commit())
+    }
+    fun unlockPin(): CharArray? = readSecret("unlock_credential")?.let {
+        val value = org.json.JSONObject(it)
+        if (value.getString("profile") != publicationProfile() || value.getString("installation") != installationId()) null
+        else value.getString("pin").takeIf { pin -> pin.matches(Regex("[0-9]{4,16}")) }?.toCharArray()
+    }
+    fun disableUnlock() { check(prefs.edit().remove("unlock_credential").commit()); LocalUnlockTest.clear() }
+    fun unlockAttempted() = prefs.getBoolean("unlock_attempted", false)
+    fun markUnlockAttempt() { check(prefs.edit().putBoolean("unlock_attempted", true).commit()) }
+    fun unlockSucceeded() { check(prefs.edit().remove("unlock_attempted").commit()); LocalUnlockTest.clear() }
+    fun requestUnlockTest() {
+        require(unlockPin()?.also { it.fill('\u0000') } != null && !unlockAttempted())
+        LocalUnlockTest.request(publicationProfile(), installationId())
+    }
+    fun unlockTestPending() = LocalUnlockTest.pending(publicationProfile(), installationId())
+    fun consumeUnlockTest() { LocalUnlockTest.clear() }
 
     override fun read(): String = readSecret("outbox") ?: "[]"
 

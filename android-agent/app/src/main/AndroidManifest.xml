@@ -46,5 +46,6 @@
                 <data android:scheme="storyfx-android" android:host="auth" android:path="/callback" />
             </intent-filter>
         </activity>
+        <activity android:name=".publication.UnlockActivity" android:exported="false" android:excludeFromRecents="true" />
     </application>
 </manifest>

@@ -6,6 +6,7 @@ from .control_models import Strict
 from .models import Empty
 from .store import DomainError
 from .control_result_proofs import native_proof
+from .control_unlock import unlock_authorized
 
 
 class Binding(Strict):
@@ -17,6 +18,7 @@ class NativeContact(Strict):
     service_ready: StrictBool
     media_ready: StrictBool
     screen_locked: StrictBool
+    own_status_empty: StrictBool = False
     app_version: str = Field(pattern=r'^\d+\.\d+\.\d+$', max_length=32)
     battery_percent: int | None = Field(default=None, ge=0, le=100)
 
@@ -35,6 +37,10 @@ def mount_android(router, broker, agent, completion):
     @router.post('/android/heartbeat')
     def heartbeat(body: NativeContact, identity=Depends(agent)):
         return native.heartbeat(identity, body)
+
+    @router.post('/android/unlock-authorized')
+    def authorize_unlock(_body: Empty, identity=Depends(agent)):
+        return unlock_authorized(native, identity)
 
     @router.post('/android/claim')
     def claim(_body: Empty, identity=Depends(agent)):

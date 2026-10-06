@@ -5,6 +5,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PublicationScreenLabelsTest {
+    @Test fun emptyOwnStatusDoesNotAcceptOtherRecipientsOrApproximateCaptions() {
+        assertTrue(PublicationScreenLabels.emptyOwn("Add status", ""))
+        assertTrue(PublicationScreenLabels.emptyOwn("", "Ajouter un statut"))
+        assertFalse(PublicationScreenLabels.emptyOwn("Add status to a group", ""))
+        assertFalse(PublicationScreenLabels.emptyOwn("My status", ""))
+    }
     @Test fun acceptsProviderTextAndAccessibilityDescriptions() {
         for (label in listOf("Updates", "Actus", "Mises à jour")) {
             assertTrue(PublicationScreenLabels.updates(label, ""))

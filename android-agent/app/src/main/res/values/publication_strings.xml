@@ -1,3 +1,3 @@
 <resources>
-    <string name="publication_accessibility_description">StoryFX lit les commandes de WhatsApp Business et agit pour publier les images de vos albums dans Mon statut, uniquement sur demande de votre serveur. Il ne transmet pas le contenu de vos discussions. Vous pouvez désactiver ce service à tout moment.</string>
+    <string name="publication_accessibility_description">StoryFX lit les commandes de WhatsApp Business et agit pour publier les images de vos albums dans Mon statut, uniquement sur demande de votre serveur. Si vous configurez un code local, il peut saisir ce code uniquement sur le clavier PIN Android reconnu. Il ne transmet ni ce code ni le contenu de vos discussions. Vous pouvez désactiver ce service et supprimer le code à tout moment.</string>
 </resources>
