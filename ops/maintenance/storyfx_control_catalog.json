@@ -1,6 +1,6 @@
 {
   "application": "StoryFX",
-  "function": "Private web scheduler, Windows bridge and opt-in native Android WhatsApp image pilot",
+  "function": "Private web scheduler, Windows bridge and opt-in native Android WhatsApp image pilot; explicit safe pre-send recovery and closed failure stages",
   "maturity": "private_android_publication_pilot_physical_validation_pending",
   "probe": "storyfx_control_probe.py",
   "public_endpoint": "https://story.formafx.com/health",
@@ -22,11 +22,12 @@
     "Failed or interrupted PIN attempt blocks further automatic unlock until manual unlock; never send PIN to the server",
     "Android service disabled or photo permission missing",
     "Screen off/locked, first unlock after reboot pending, no Internet, or Android force-stop",
-    "Native pilot excludes videos, intro engines, Facebook pages and non-WhatsApp providers"
+    "Native pilot excludes videos, intro engines, Facebook pages and non-WhatsApp providers",
+    "Generic legacy failures, post-picker transitions, uncertain or confirmed results are never retried automatically"
   ],
   "symptom": "Invalid control or scheduler health contract, unavailable official latest APK, claimed publication without a result after 15 minutes",
   "diagnostic": "Public health contract and official release metadata; inspect private reports only with the active owner; never replay ambiguous publications",
-  "repair": "Restore HTTPS or the isolated control release; reconnect the known Windows executor; a configuration or owner-access change pauses scheduling; inspect private own-status evidence and preserve one-attempt journals; scheduler stop cancels its queued jobs, Stop cancels all queued jobs and denies the final provider action when still pending; Android: verify existing account/profile binding, photo permission, visible Accessibility opt-in, first unlock and Samsung background restrictions; inspect own-status evidence without automatic replay",
+  "repair": "Restore HTTPS or the isolated control release; reconnect the known Windows executor; a configuration or owner-access change pauses scheduling; inspect private own-status evidence and preserve one-attempt journals; scheduler stop cancels its queued jobs, Stop cancels all queued jobs and denies the final provider action when still pending; Android: verify existing account/profile binding, photo permission, visible Accessibility opt-in, first unlock and Samsung background restrictions; inspect own-status evidence without automatic replay; eligible proven pre-send failures may be retried explicitly from Reports; retain the original audit and never replay generic or uncertain outcomes",
   "rollback": "Previous backend release and latest APK pointer; retain confirmed/uncertain publication reservations and Android encrypted association",
   "illustration": "https://apps.formafx.com/assets/images/app-icons/storyfx.svg",
   "illustrated_template": "Existing StoryFX maintenance alert; approval and delivery not revalidated by this milestone",
@@ -39,7 +40,9 @@
     "native_update_physical_install": "not_verified_by_usb_install",
     "autonomous_android_publication": "native_whatsapp_images_implemented_physical_publication_not_verified",
     "windows_secure_unlock": "CurrentUser DPAPI, trusted hardware only, bounded numeric keyguard attempt; six synthetic tests passed; JK657_S23+ physically locked then unlocked successfully on 2026-10-05; second phone not verified",
-    "android_reboot": "implemented_system_rebind_and_boot_receiver_physical_reboot_not_verified"
+    "android_reboot": "implemented_system_rebind_and_boot_receiver_physical_reboot_not_verified",
+    "manual_retry_contract": "HTTPS health flags checked by the executed control probe; synthetic ownership/plan/readiness/anti-replay tests; physical publication separately verified or unknown",
+    "private_native_failure_monitoring": "Not covered by the public hourly probe; owner-private results inspected during this task only"
   },
   "notifications_sent_by_validation": false,
   "maintenance_timers_modified": false,

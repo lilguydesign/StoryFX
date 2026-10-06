@@ -15,12 +15,20 @@ object PublicationPolicy {
         require(payload.getBoolean("web_triggered"))
         require(payload.getString("platform") == "WhatsApp" && payload.getString("engine") == "multi")
         require(payload.getInt("count") in 1..30)
-        require(payload.optString("page").isBlank() && payload.optString("page_name").isBlank())
+        require(optionalText(payload, "page").isBlank() && optionalText(payload, "page_name").isBlank())
         require(!Instant.parse(payload.getString("due_at")).isAfter(Instant.now()))
         require(album(payload).isNotBlank())
-        require(!("${payload.optString("system")}${album(payload)}").contains("video", ignoreCase = true))
+        require(!("${optionalText(payload, "system")}${album(payload)}").contains("video", ignoreCase = true))
         return payload
     }
 
-    fun album(payload: JSONObject) = payload.optString("album2").ifBlank { payload.optString("album") }
+    // Android's JSONObject coerces JSONObject.NULL to the literal "null"; JVM test JSON differs.
+    // Read the value explicitly so a missing optional destination never becomes a real destination.
+    fun optionalText(payload: JSONObject, key: String): String {
+        if (payload.isNull(key)) return ""
+        val value = payload.opt(key)
+        require(value is String)
+        return value
+    }
+    fun album(payload: JSONObject) = optionalText(payload, "album2").ifBlank { optionalText(payload, "album") }
 }

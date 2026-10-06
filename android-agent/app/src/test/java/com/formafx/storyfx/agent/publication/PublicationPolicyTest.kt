@@ -26,4 +26,18 @@ class PublicationPolicyTest {
         }
         assertEquals(3, PublicationPolicy.validate(job(), "Validation technique").getInt("count"))
     }
+    @Test fun optionalNullsAreBlankAndAlbumFallsBackWithoutCoercion() {
+        val input = job()
+        val payload = input.getJSONObject("payload")
+        for (key in listOf("page", "page_name", "album2", "system")) payload.put(key, JSONObject.NULL)
+        assertEquals(3, PublicationPolicy.validate(input, "Validation technique").getInt("count"))
+        assertEquals("Validation technique", PublicationPolicy.album(payload))
+        assertEquals("", PublicationPolicy.optionalText(payload, "page_name"))
+    }
+    @Test fun optionalDestinationTypesAndLiteralNullTextAreNotAcceptedAsBlank() {
+        for (value in listOf(42, true, "null")) {
+            val input = job(); input.getJSONObject("payload").put("page_name", value)
+            assertThrows(IllegalArgumentException::class.java) { PublicationPolicy.validate(input, "Validation technique") }
+        }
+    }
 }

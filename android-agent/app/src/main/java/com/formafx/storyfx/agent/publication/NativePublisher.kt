@@ -19,10 +19,11 @@ class NativePublisher(
     }
 
     fun execute(payload: JSONObject) {
-        var uncertain = false
+        val progress = PublicationProgress()
         try {
             val count = payload.getInt("count")
             val media = AlbumMedia.images(context, PublicationPolicy.album(payload), count)
+            progress.enter("provider_not_ready")
             authorize()
             ui {
                 val intent = requireNotNull(context.packageManager.getLaunchIntentForPackage(PublicationPolicy.provider))
@@ -30,6 +31,7 @@ class NativePublisher(
             }
             Thread.sleep(2500)
             authorize()
+            progress.enter("updates_navigation_failed")
             ui {
                 if (!screen().hasUpdates()) {
                     check(screen().isOwnStatusList())
@@ -38,6 +40,7 @@ class NativePublisher(
             }
             Thread.sleep(1000)
             action { it.updates() }
+            progress.enter("own_status_unavailable")
             action { it.openOwnStatus() }
             // A fresh own-status baseline must have no recent statuses to confuse with this job.
             var baselineReady = false
@@ -51,14 +54,19 @@ class NativePublisher(
             check(baselineReady)
             ui { check(screen().recentCount() == 0) }
             authorize()
+            progress.enter("share_selection_refused")
             ui { AlbumMedia.share(context, media) }
             Thread.sleep(2500)
             action { it.selectOwnStatus() }
+            // Even the picker arrow may change behavior in a future provider version.
+            // A missing preview after this action must never authorize an automatic replay.
+            progress.beforeProviderSend()
             action { check(it.selectionIsOwnOnly()); it.send() }
             authorize()
+            progress.enter("contacts_preview_refused")
             ui { check(screen().contactsPreview()) }
             // The encrypted reservation already contains NEEDS_REVIEW before this final action.
-            uncertain = true
+            progress.beforeProviderSend()
             action { check(it.contactsPreview()); it.send() }
             Thread.sleep(7000)
             action { it.openOwnStatus() }
@@ -81,8 +89,8 @@ class NativePublisher(
             check(countVerified)
             journal.finish("CONFIRMED", "own_status_verified")
         } catch (_: Exception) {
-            journal.finish(if (uncertain) "NEEDS_REVIEW" else "FAILED_BEFORE_PUBLICATION",
-                if (uncertain) "result_uncertain" else "preflight_refused")
+            val (state, evidence) = progress.failure()
+            journal.finish(state, evidence)
         }
     }
 }

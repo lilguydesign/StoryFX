@@ -4,6 +4,7 @@ import { controlTitles, definitions, descriptions, fields, readFields } from './
 import { mountLauncher, renderLauncher } from './launch-panel.js';
 import { profilesTable, changeProfileSort } from './profile-editor.js';
 import { showAssociationLink } from './association-link.js';
+import { failureLabels, recoveryButton, mountRecovery } from './publication-recovery.js';
 
 let data = null, enabled = false, busy = false, editing = null, editRevision = null, selected = null;
 let profileFilter = '', platformFilter = '';
@@ -89,6 +90,7 @@ export function mountControl(notice) {
     });
   });
   mountLauncher({getSnapshot:()=>data,perform:action,notice,redraw:render});
+  mountRecovery({snapshot:()=>data,perform:action});
   render();
   document.addEventListener('change', event => {
     if (changeProfileSort(event)) {render();return;}
@@ -127,9 +129,10 @@ function render() {
   const filters = `<div class="control-filters"><label>Profil<select data-profile-filter>${options((data?.collections.profiles || []).map(value => value.name), profileFilter, 'Tous les profils')}</select></label><label>Plateforme<select data-platform-filter>${options(['WhatsApp', 'Facebook', 'Instagram', 'TikTok'], platformFilter, 'Toutes les plateformes')}</select></label></div>`;
   for (const name of ['launch', 'programming']) find(`#control-${name}`).innerHTML =
     `<p class="helper control-help">Africa/Douala · ${escape(filtered.length)} / ${escape(data?.schedule.length || 0)} occurrences aujourd’hui · ${data?.nodes.some(node => node.connected) ? 'Agent de publication prêt' : 'Aucun agent de publication prêt'}</p><button class="button secondary" data-windows ${active ? '' : 'disabled'}>Connecter Windows</button>` + filters + table(['Heure', 'Profil', 'Plateforme', 'Système', 'Album', 'Images', 'État', ''], rows);
-  find('#control-reports').innerHTML = table(['Date', 'Profil', 'Plateforme', 'Système', 'Résultat', 'Origine', 'Preuve'], (data?.reports || []).map(value => [
+  find('#control-reports').innerHTML = table(['Date', 'Profil', 'Plateforme', 'Système', 'Résultat', 'Origine', 'Preuve', 'Reprise'], (data?.reports || []).map(value => [
     escape(dateLabel(value.completed_at || value.created_at)), escape(value.publication.device), escape(value.publication.platform), escape(value.publication.system),
-    escape(states[value.state] || value.state), value.publication.execution_origin === 'web_android_agent' ? 'Web → Android' : value.publication.web_triggered ? 'Web → Windows' : 'Moteur local', escape(evidenceLabels[value.evidence] || 'En attente'),
+    escape(states[value.state] || value.state), value.publication.execution_origin === 'web_android_agent' ? 'Web → Android' : value.publication.web_triggered ? 'Web → Windows' : 'Moteur local', escape(evidenceLabels[value.evidence] || failureLabels[value.evidence] || 'En attente'),
+    recoveryButton(value, data.reports, active),
   ]));
   renderLauncher(data,active);
   showAssociationLink(active);

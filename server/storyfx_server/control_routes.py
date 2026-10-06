@@ -9,6 +9,8 @@ from .control_broker import Broker
 from .models import Empty
 from .control_scheduler import Scheduler
 from .control_scheduler_models import Window, Schedule, Stop
+from .control_result_proofs import Evidence
+from .control_recovery import repeat
 
 
 class PairStart(Strict):
@@ -31,7 +33,11 @@ class Contact(Strict):
 
 class Completion(Strict):
     state: Literal['CONFIRMED', 'NEEDS_REVIEW', 'FAILED_BEFORE_PUBLICATION']
-    evidence: Literal['own_status_verified', 'provider_ui_verified', 'result_uncertain', 'preflight_refused']
+    evidence: Evidence
+
+
+class Retry(Strict):
+    revision: int = Field(ge=0)
 
 
 def build_control_router(store, sessions, owner, credential, agent):
@@ -63,6 +69,10 @@ def build_control_router(store, sessions, owner, credential, agent):
     @router.post('/launch')
     def launch(body: Launch, user=Depends(owner)):
         return broker.launch(user, body)
+
+    @router.post('/jobs/{job_id}/retry')
+    def retry(job_id: UUID, body: Retry, user=Depends(owner)):
+        return repeat(broker, user, str(job_id), body.revision)
 
     @router.post('/catchup/preview')
     def catchup_preview(body: Window, user=Depends(owner)):

@@ -5,6 +5,7 @@ from pydantic import Field, StrictBool
 from .control_models import Strict
 from .models import Empty
 from .store import DomainError
+from .control_result_proofs import native_proof
 
 
 class Binding(Strict):
@@ -45,8 +46,6 @@ def mount_android(router, broker, agent, completion):
 
     @router.post('/android/jobs/{job_id}/complete')
     def complete(job_id: UUID, body: completion, identity=Depends(agent)):
-        proofs = {'CONFIRMED': 'own_status_verified', 'NEEDS_REVIEW': 'result_uncertain',
-                  'FAILED_BEFORE_PUBLICATION': 'preflight_refused'}
-        if proofs.get(body.state) != body.evidence:
+        if not native_proof(body.state, body.evidence):
             raise DomainError('ANDROID_RESULT_INVALID', 422)
         return broker.complete(native.node(identity, require_ready=False), str(job_id), body.state, body.evidence)
