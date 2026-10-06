@@ -71,6 +71,13 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) 
     }
     fun updates() { val targets = updateTargets(); check(targets.size == 1); click(targets.single()) }
     fun hasUpdates() = updateTargets().size == 1
+    fun ownStatusReady(): Boolean {
+        if (isOwnStatusList()) return true
+        val evidence = homeEvidence()
+        return correctPackage && evidence.getBoolean("portrait") && evidence.getBoolean("header") &&
+            evidence.getBoolean("section") && !evidence.getBoolean("send_control") &&
+            nodes.count { it.isVisibleToUser && own(it) } == 1
+    }
     /** Closed structural flags only: no contact labels, captions or password contents. */
     fun homeEvidence(): JSONObject {
         val visible = nodes.filter { it.isVisibleToUser }

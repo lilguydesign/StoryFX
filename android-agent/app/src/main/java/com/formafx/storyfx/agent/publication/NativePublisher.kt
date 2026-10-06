@@ -71,6 +71,16 @@ class NativePublisher(
             progress.beforeProviderSend()
             action { check(it.contactsPreview()); it.send() }
             Thread.sleep(7000)
+            // Provider uploads can finish before its own-status target appears.
+            // Read only until the exact target is ready; never repeat the send.
+            var ownReady = false
+            for (attempt in 0 until 20) {
+                authorize()
+                ui { ownReady = screen().ownStatusReady() }
+                if (ownReady) break
+                Thread.sleep(1500)
+            }
+            check(ownReady)
             action { it.openOwnStatus() }
             val rows = mutableSetOf<Int>()
             var countVerified = false
