@@ -109,6 +109,12 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
         else value.getString("pin").takeIf { pin -> pin.matches(Regex("[0-9]{4,16}")) }?.toCharArray()
     }
     fun disableUnlock() { check(prefs.edit().remove("unlock_credential").commit()); LocalUnlockTest.clear() }
+    fun unlockResult(): String = prefs.getString("unlock_result", "NON_TESTÉ")!!
+    fun saveUnlockResult(value: String) {
+        require(value in setOf("NON_CONFIGURÉ", "AUTORISATION", "RÉVEIL_DEMANDÉ", "CLAVIER_NON_RECONNU",
+            "SAISIE_EN_COURS", "CONFIRMÉ", "NON_CONFIRMÉ", "ERREUR", "AUTORISATION_REFUSÉE"))
+        check(prefs.edit().putString("unlock_result", value).commit())
+    }
     fun unlockAttempted() = prefs.getBoolean("unlock_attempted", false)
     fun markUnlockAttempt() { check(prefs.edit().putBoolean("unlock_attempted", true).commit()) }
     fun unlockSucceeded() { check(prefs.edit().remove("unlock_attempted").commit()); LocalUnlockTest.clear() }

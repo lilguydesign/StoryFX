@@ -1,10 +1,14 @@
 package com.formafx.storyfx.agent.publication
 
 import android.view.accessibility.AccessibilityNodeInfo
+import android.graphics.Rect
 
 /** Screen contents are inspected in memory, never logged or sent to the server. */
 class WhatsAppScreen(root: AccessibilityNodeInfo?) {
     private val nodes = mutableListOf<AccessibilityNodeInfo>()
+    private val bounds = Rect().also { root?.getBoundsInScreen(it) }
+    private fun position(node: AccessibilityNodeInfo) = Rect().also { node.getBoundsInScreen(it) }
+    private fun top(node: AccessibilityNodeInfo) = position(node).top - bounds.top
     val correctPackage = root?.packageName?.toString() == PublicationPolicy.provider
     init {
         fun walk(node: AccessibilityNodeInfo) {
@@ -26,7 +30,8 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
         return null
     }
     private fun updateTargets() = if (!correctPackage) emptyList() else nodes.filter {
-        it.isVisibleToUser && PublicationScreenLabels.updates(text(it), description(it))
+        it.isVisibleToUser && PublicationScreenLabels.updates(text(it), description(it)) &&
+            WhatsAppHomeShape.navigation(top(it), bounds.height())
     }.mapNotNull(::clickableParent).distinct()
     private fun unique(predicate: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo {
         check(correctPackage)
@@ -47,12 +52,18 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
     fun updates() { val targets = updateTargets(); check(targets.size == 1); click(targets.single()) }
     fun hasUpdates() = updateTargets().size == 1
     fun hasNoOwnStatus(): Boolean {
-        if (!correctPackage || !hasUpdates() || nodes.any { it.isVisibleToUser && own(it) }) return false
-        val targets = nodes.filter { it.isVisibleToUser && PublicationScreenLabels.emptyOwn(text(it), description(it)) }
-            .mapNotNull(::clickableParent).distinct()
-        return targets.size == 1 && nodes.none {
-            it.isVisibleToUser && it.viewIdResourceName == "${PublicationPolicy.provider}:id/send"
-        }
+        if (!correctPackage) return false
+        val visible = nodes.filter { it.isVisibleToUser }
+        return WhatsAppHomeShape.empty(
+            WhatsAppHomeShape.portrait(bounds.width(), bounds.height()),
+            visible.any { PublicationScreenLabels.updates(text(it), description(it)) &&
+                WhatsAppHomeShape.header(top(it), bounds.height()) },
+            visible.any { text(it) in setOf("Status", "Statut", "Statuts") &&
+                WhatsAppHomeShape.section(top(it), bounds.height()) },
+            visible.any { PublicationScreenLabels.emptyOwn(text(it), description(it)) &&
+                WhatsAppHomeShape.ownTile(position(it).centerX() - bounds.left, top(it), bounds.width(), bounds.height()) },
+            visible.any(::own),
+            visible.any { it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" })
     }
     fun isOwnStatusList() = correctPackage && !hasUpdates() && nodes.count { it.isVisibleToUser && own(it) } == 1 &&
         nodes.none { it.isVisibleToUser && it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" } &&

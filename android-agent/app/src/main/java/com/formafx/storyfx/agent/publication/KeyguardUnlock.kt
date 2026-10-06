@@ -12,16 +12,21 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
     private fun locked() = manager.isDeviceLocked || manager.isKeyguardLocked
     private fun interactive() = service.getSystemService(PowerManager::class.java).isInteractive
     private fun nodes(): List<AccessibilityNodeInfo> {
-        val root = service.rootInActiveWindow ?: return emptyList()
-        if (root.packageName?.toString() != KeyguardShape.system) return emptyList()
-        val found = mutableListOf<AccessibilityNodeInfo>()
-        fun walk(node: AccessibilityNodeInfo) {
-            check(found.size < 1000)
-            if (node.isVisibleToUser) found.add(node)
-            for (i in 0 until node.childCount) node.getChild(i)?.let(::walk)
-        }
-        walk(root)
-        return found
+        // A dismiss-keyguard activity can remain the active application window while
+        // Android's PIN challenge is in a separate System UI window.
+        val roots = (listOfNotNull(service.rootInActiveWindow) + service.windows.mapNotNull { it.root })
+            .filter { it.packageName?.toString() == KeyguardShape.system }.distinct()
+        val candidates = roots.map { root ->
+            val found = mutableListOf<AccessibilityNodeInfo>()
+            fun walk(node: AccessibilityNodeInfo) {
+                check(found.size < 1000)
+                if (node.isVisibleToUser) found.add(node)
+                for (i in 0 until node.childCount) node.getChild(i)?.let(::walk)
+            }
+            walk(root)
+            found
+        }.filter { entry(it) != null }
+        return candidates.singleOrNull() ?: emptyList()
     }
     private fun entry(values: List<AccessibilityNodeInfo>) = values.singleOrNull {
         it.packageName?.toString() == KeyguardShape.system &&
@@ -39,13 +44,16 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
         error("KEYGUARD_CONTROL_UNAVAILABLE")
     }
     fun attempt(store: EncryptedStore, authorize: () -> Boolean): Boolean {
-        if (!locked() && interactive()) { store.unlockSucceeded(); return true }
-        if (store.unlockAttempted() || !store.publicationEnabled() || !authorize()) return false
+        if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult("CONFIRMÉ"); return true }
+        if (store.unlockAttempted() || !store.publicationEnabled()) return false
+        store.saveUnlockResult("AUTORISATION")
+        if (!authorize()) { store.saveUnlockResult("AUTORISATION_REFUSÉE"); return false }
         val pin = store.unlockPin() ?: return false
         try {
+            store.saveUnlockResult("RÉVEIL_DEMANDÉ")
             ui { service.startActivity(Intent(service, UnlockActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             Thread.sleep(300)
-            if (!locked() && interactive()) { store.unlockSucceeded(); return true }
+            if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult("CONFIRMÉ"); return true }
             var recognized = false
             repeat(20) {
                 if (!recognized) {
@@ -58,8 +66,10 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
                     if (!recognized) Thread.sleep(300)
                 }
             }
-            if (!recognized || !authorize()) return false
+            if (!recognized) { store.saveUnlockResult("CLAVIER_NON_RECONNU"); return false }
+            if (!authorize()) { store.saveUnlockResult("AUTORISATION_REFUSÉE"); return false }
             store.markUnlockAttempt()
+            store.saveUnlockResult("SAISIE_EN_COURS")
             for (digit in pin) {
                 if (!locked()) break
                 check(authorize())
@@ -79,10 +89,10 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
                 }
             }
             Thread.sleep(1500)
-            if (locked()) return false
-            store.unlockSucceeded()
+            if (locked()) { store.saveUnlockResult("NON_CONFIRMÉ"); return false }
+            store.unlockSucceeded(); store.saveUnlockResult("CONFIRMÉ")
             return true
-        } catch (_: Exception) { return false }
+        } catch (_: Exception) { store.saveUnlockResult("ERREUR"); return false }
         finally { pin.fill('\u0000') }
     }
 }
