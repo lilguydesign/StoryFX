@@ -18,7 +18,7 @@ import java.util.concurrent.FutureTask
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-/** Android binds this opt-in service again after reboot and the first device unlock. */
+/** Android binds the opted-in service during Direct Boot; private sessions stay in CE. */
 class PublicationService : AccessibilityService() {
     private val worker = Executors.newSingleThreadScheduledExecutor()
     private val main = Handler(Looper.getMainLooper())
@@ -91,6 +91,16 @@ class PublicationService : AccessibilityService() {
     }
 
     private fun synchronize() {
+        val boot = BootUnlockStore(this)
+        if (!boot.userUnlocked()) {
+            runCatching {
+                if (boot.shouldInvoke() && active && !closed) {
+                    boot.reserveInvocation()
+                    KeyguardUnlock(this, ::keyguardUi).attempt(boot) { boot.unlockAllowed() && active && !closed }
+                }
+            }.onFailure { boot.saveUnlockResult(KeyguardResult.ERROR) }
+            return
+        }
         try {
             val store = EncryptedStore(this)
             val session = store.session() ?: return
@@ -144,11 +154,13 @@ class PublicationService : AccessibilityService() {
             null -> "unavailable"
             else -> "other"
         }
+        val boot = BootUnlockStore(this)
         val result = JSONObject().put("app_version", BuildConfig.VERSION_NAME).put("service_ready", active)
+            .put("boot_unlock", boot.diagnostics())
             .put("screen_locked", locked()).put("active_root_kind", kind)
             .put("provider_layout_nodes_enabled", serviceInfo.flags and AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS != 0)
             .put("provider_tap_capable", serviceInfo.capabilities and AccessibilityServiceInfo.CAPABILITY_CAN_PERFORM_GESTURES != 0)
-            .put("unlock_result", EncryptedStore(this).unlockResult())
+        if (boot.userUnlocked()) result.put("unlock_result", EncryptedStore(this).unlockResult())
             .put("local_unlock_result", EncryptedStore(this).localUnlockResult())
             .put("unlock_failure", EncryptedStore(this).unlockFailure())
             .put("local_test_pending", EncryptedStore(this).unlockTestPending())

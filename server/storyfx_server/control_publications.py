@@ -6,7 +6,7 @@ from .control_android import executors
 
 
 def supported(value):
-    return (value['platform'] == 'WhatsApp' and value['engine'] == 'multi'
+    return (value.get('enabled', True) and value['platform'] == 'WhatsApp' and value['engine'] == 'multi'
             and 1 <= value['count'] <= 30 and not value.get('page_name') and not value.get('page'))
 
 
@@ -34,6 +34,8 @@ def reserve(broker, user, snapshot, selected, *, strict=True, scheduler_id=None)
                     raise DomainError('WINDOWS_EXECUTOR_UNAVAILABLE',409)
                 continue
             row = next(row for row in snapshot['collections']['matrix'] if row['id'] == value['row_id'])
+            if not row.get('enabled', True):
+                raise DomainError('PUBLICATION_PLAN_CHANGED', 409)
             payload = {**row, 'due_at':value['due_at'], 'catalog_revision':snapshot['revision'],
                        'execution_origin':'web_android_agent' if nodes[0].get('executor') == 'android_whatsapp_images_v1' else 'web_windows_bridge', 'web_triggered':True}
             if scheduler_id is not None:

@@ -37,6 +37,7 @@ class Page(Named):
 
 
 class Matrix(Named):
+    enabled: bool = True
     device: str = Field(min_length=1, max_length=80)
     platform: Literal['WhatsApp', 'Facebook', 'Instagram', 'TikTok']
     system: str = Field(min_length=1, max_length=80)

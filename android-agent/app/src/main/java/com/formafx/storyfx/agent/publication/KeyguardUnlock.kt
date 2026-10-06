@@ -4,7 +4,6 @@ import android.app.KeyguardManager
 import android.content.Intent
 import android.os.PowerManager
 import android.view.accessibility.AccessibilityNodeInfo
-import com.formafx.storyfx.agent.EncryptedStore
 
 /** One persisted attempt on a recognized numeric System UI keypad; no screen logging. */
 class KeyguardUnlock(private val service: PublicationService, private val ui: (() -> Unit) -> Unit) {
@@ -55,9 +54,9 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
             .put("numeric_keys", values.mapNotNull { it.viewIdResourceName }
                 .filter { it.matches(Regex("com\\.android\\.systemui:id/key[0-9]")) }.distinct().size)
     }
-    fun attempt(store: EncryptedStore, authorize: () -> Boolean): Boolean {
+    fun attempt(store: UnlockState, authorize: () -> Boolean): Boolean {
         if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult(KeyguardResult.WAKE_CONFIRMED); return true }
-        if (store.unlockAttempted() || !store.publicationEnabled()) return false
+        if (store.unlockAttempted() || !store.unlockAllowed()) return false
         store.saveUnlockResult(KeyguardResult.AUTHORIZATION)
         if (!authorize()) { store.saveUnlockResult(KeyguardResult.AUTHORIZATION_REFUSED); return false }
         val pin = store.unlockPin() ?: return false
