@@ -65,7 +65,8 @@ class PublicationService : AccessibilityService() {
             return binding?.optString("profile") == store.publicationProfile() && binding?.optInt("enabled") == 1
         }
         if (localTest) store.consumeUnlockTest()
-        return KeyguardUnlock(this, ::keyguardUi).attempt(store, ::authorized)
+        return try { KeyguardUnlock(this, ::keyguardUi).attempt(store, ::authorized) }
+            finally { if (localTest) store.rememberLocalUnlockResult() }
     }
     private fun contact(api: AgentApi): JSONObject {
         var empty = false
@@ -117,7 +118,9 @@ class PublicationService : AccessibilityService() {
             awake.acquire(240000)
             try {
                 val deadline = android.os.SystemClock.elapsedRealtime() + 210000
-                NativePublisher(this, ::onUi, { WhatsAppScreen(ProviderWindow.root(this)) }, {
+                NativePublisher(this, ::onUi, { WhatsAppScreen(ProviderWindow.root(this)) { x, y ->
+                    ProviderTap.perform(this, x, y)
+                } }, {
                     check(performGlobalAction(GLOBAL_ACTION_BACK))
                 }, {
                     check(!closed && active && store.publicationEnabled() && !locked())
@@ -144,7 +147,10 @@ class PublicationService : AccessibilityService() {
         val result = JSONObject().put("app_version", BuildConfig.VERSION_NAME).put("service_ready", active)
             .put("screen_locked", locked()).put("active_root_kind", kind)
             .put("provider_layout_nodes_enabled", serviceInfo.flags and AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS != 0)
+            .put("provider_tap_capable", serviceInfo.capabilities and AccessibilityServiceInfo.CAPABILITY_CAN_PERFORM_GESTURES != 0)
             .put("unlock_result", EncryptedStore(this).unlockResult())
+            .put("local_unlock_result", EncryptedStore(this).localUnlockResult())
+            .put("unlock_failure", EncryptedStore(this).unlockFailure())
             .put("local_test_pending", EncryptedStore(this).unlockTestPending())
             .put("unlock_credential_present", EncryptedStore(this).unlockPin()?.also { it.fill('\u0000') } != null)
             .put("unlock_attempted", EncryptedStore(this).unlockAttempted())

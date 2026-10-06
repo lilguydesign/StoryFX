@@ -1,4 +1,4 @@
-# Déverrouillage local Android — 0.4.5
+# Déverrouillage local Android — 0.4.7
 
 Dans StoryFX Android, « Déverrouillage local » permet d'enregistrer, tester ou
 supprimer le PIN du téléphone associé. Le champ reste masqué, sans remplissage
@@ -84,3 +84,26 @@ nécessaire. Les validations matérielles et publications restent à contrôler.
 Les éléments de disposition Android sont demandés dans les seules fenêtres WhatsApp et System UI déjà autorisées. Android permet ce réglage via `FLAG_INCLUDE_NOT_IMPORTANT_VIEWS` : https://developer.android.com/reference/android/accessibilityservice/AccessibilityServiceInfo#FLAG_INCLUDE_NOT_IMPORTANT_VIEWS. Aucun texte de discussion ni identifiant de contact n’est exporté.
 
 Une sélection de partage refusée avant la première flèche d’envoi peut être reprise uniquement sur demande explicite du propriétaire, après une nouvelle preuve native entièrement vide de Mon statut, postérieure à l’échec, fraîche de moins de 45 secondes, sur le même téléphone et avec la même programmation. Aucun résultat CONFIRMED, NEEDS_REVIEW ou refus de l’aperçu après la flèche ne devient rejouable. Les anciennes tâches restent immuables.
+
+## Diagnostic du clavier 0.4.7
+
+La reconnaissance exige le véritable champ de mot de passe System UI, son identifiant PIN, un champ vide et les dix touches numériques. Elle ne dépend plus du package d’un élément décoratif. Le dialogue Android est demandé après la reprise visible de l’activité. Le résultat du dernier test local est conservé séparément des refus ordinaires de pilotage, qui ne doivent pas masquer ce test. Aucun code n’est enregistré en clair ni transmis au serveur.
+
+
+La version finale 0.4.7 a réveillé et déverrouillé physiquement le S23 FE et le S23+, avec le résultat PIN_CONFIRMÉ, sans saisie SDK du PIN, arrêt Appium ou modification des protections Android. Les deux tests portent sur le même APK signé que la livraison. La validation du dernier chiffre est reconnue seulement après une tentative réservée et le retour des deux verrous Android à l'état déverrouillé, écran interactif.
+
+Les commandes WhatsApp reconnues peuvent utiliser un toucher au centre de leur propre nœud visible et borné, lorsqu'aucun ancêtre ne fournit ACTION_CLICK. La fenêtre doit rester celle de WhatsApp Business au premier plan, Android déverrouillé, sans agrandissement ni exploration tactile. Aucun toucher supplémentaire n'est tenté après une action native échouée ; les vérifications Mon statut / Contacts et le journal avant envoi sont conservés. Cette capacité Android est déclarée explicitement : https://developer.android.com/reference/android/accessibilityservice/AccessibilityService#dispatchGesture(android.accessibilityservice.GestureDescription,%20android.accessibilityservice.AccessibilityService.GestureResultCallback,%20android.os.Handler).
+
+Le contrôle automatique a refusé de retirer l'exclusion des tâches enfants déjà rejouées : les quatre reprises concernées restent exclues, sans nouvelle demande ni réécriture d'audit. Le test de publication doit utiliser une programmation originale distincte, encore non exécutée, ou une autre reprise originale sans descendant après les preuves exigées.
+
+
+Les états de réveil sont désormais un type Kotlin avec des identifiants ASCII stables. Les libellés français sont traduits à l'affichage et les anciennes préférences restent lisibles. Une corruption d'encodage dans une modification intermédiaire avait fait refuser le réveil avant toute saisie ; le candidat concerné n'a pas été publié. La revue des sources vérifie désormais explicitement l'encodage.
+
+La vérification du lot peut comparer le nombre complet de lignes de la collection Mon statut avant et après l'envoi. Les deux nombres doivent provenir de la vue fournisseur vérifiée, et leur différence doit égaler exactement le nombre demandé ; une métadonnée absente n'est jamais zéro. Les résultats déjà incertains restent conservés sans reprise ni promotion automatique après modification du code.
+
+
+## Vérification matérielle du 6 octobre 2026
+
+APK signé : `a79fda5d3ddd474e3521428c47e56708a7a0c667f38abfc0801cd7198f094d1e`. Les deux tests physiques du code sont détaillés dans le reçu matériel fermé de livraison. Le S23 FE et le S23+ présentent chacun onze nouvelles images de la programmation originale de 16 h 40 et 16 h 45 UTC, dans Mon statut. La comparaison visuelle des pages et de leur fin est une preuve manuelle ; les deux rapports NEEDS_REVIEW restent immuables. WhatsApp expose ici une ListView sans total ni index de collection : la confirmation automatique du lot complet reste non vérifiée sur ces téléphones.
+
+Après l'envoi, StoryFX attend de manière bornée que la cible exacte Mon statut réapparaisse, sans second envoi. Une interface non reconnue ou un total absent ne devient jamais une preuve de publication complète. Redémarrage physique, coupure du câble/réseau, veille profonde et installation par le bouton de mise à jour Android restent non testés. Le premier déverrouillage après redémarrage complet reste manuel.

@@ -10,7 +10,7 @@ import com.formafx.storyfx.agent.EncryptedStore
 
 class UnlockCard(private val activity: Activity, ui: AgentUi) {
     private val store get() = EncryptedStore(activity)
-    private val status = ui.text("Dernier contrôle : ${store.unlockResult()}. Code local non affiché.", 13f)
+    private val status = ui.text("Dernier test local : ${store.localUnlockResult()}. Code local non affiché.", 13f)
     private val pin = ui.field("Code PIN Android", InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD).apply {
         isSaveEnabled = false
         importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
@@ -44,7 +44,7 @@ class UnlockCard(private val activity: Activity, ui: AgentUi) {
             setOnClickListener { store.disableUnlock(); status.text = "Code local supprimé." }
         })
         addView(ui.button("Voir le résultat du déverrouillage").apply {
-            setOnClickListener { status.text = "Dernier contrôle : ${store.unlockResult()}. Code local non affiché." }
+            setOnClickListener { status.text = "Dernier test local : ${store.localUnlockResult()}. Code local non affiché." }
         })
         addView(status)
     }

@@ -5,7 +5,7 @@ import android.graphics.Rect
 import org.json.JSONObject
 
 /** Screen contents are inspected in memory, never logged or sent to the server. */
-class WhatsAppScreen(root: AccessibilityNodeInfo?) {
+class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) -> Boolean)? = null) {
     private val nodes = mutableListOf<AccessibilityNodeInfo>()
     private val bounds = Rect().also { root?.getBoundsInScreen(it) }
     private fun position(node: AccessibilityNodeInfo) = Rect().also { node.getBoundsInScreen(it) }
@@ -22,20 +22,32 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
     private fun text(node: AccessibilityNodeInfo) = node.text?.toString().orEmpty()
     private fun description(node: AccessibilityNodeInfo) = node.contentDescription?.toString().orEmpty()
     private fun own(node: AccessibilityNodeInfo) = PublicationScreenLabels.own(text(node), description(node))
+    private fun acceptsClick(node: AccessibilityNodeInfo, navigation: Boolean): Boolean {
+        val area = position(node)
+        return node.packageName?.toString() == PublicationPolicy.provider &&
+            (node.isClickable || node.actionList.any { it.id == AccessibilityNodeInfo.ACTION_CLICK }) &&
+            ProviderClickShape.accepts(area.width(), area.height(), bounds.width(), bounds.height(), navigation)
+    }
     private fun clickableParent(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
         var target: AccessibilityNodeInfo? = node
-        repeat(5) {
-            if (target?.isClickable == true) return target
+        repeat(12) {
+            if (target != null && acceptsClick(target!!, true)) return target
             target = target?.parent
         }
         return null
+    }
+    private fun acceptsTap(node: AccessibilityNodeInfo, navigation: Boolean): Boolean {
+        val area = position(node)
+        return node.isVisibleToUser && node.packageName?.toString() == PublicationPolicy.provider &&
+            bounds.contains(area) && ProviderClickShape.accepts(area.width(), area.height(),
+                bounds.width(), bounds.height(), navigation)
     }
     private fun updateTargets(): List<AccessibilityNodeInfo> {
         if (!correctPackage) return emptyList()
         val visible = nodes.filter { it.isVisibleToUser && WhatsAppHomeShape.navigation(top(it), bounds.height()) }
         val textTargets = visible.filter { PublicationScreenLabels.updates(text(it), "") }
         val targets = textTargets.ifEmpty { visible.filter { PublicationScreenLabels.updates("", description(it)) } }
-        return targets.mapNotNull(::clickableParent).distinct()
+        return targets.mapNotNull { clickableParent(it) ?: it.takeIf { node -> acceptsTap(node, true) } }.distinct()
     }
     private fun unique(predicate: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo {
         check(correctPackage)
@@ -45,16 +57,27 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
     }
     private fun click(node: AccessibilityNodeInfo) {
         var target: AccessibilityNodeInfo? = node
-        repeat(5) {
-            if (target?.isClickable == true) {
+        repeat(12) {
+            if (target != null && acceptsClick(target!!, false)) {
                 check(target!!.performAction(AccessibilityNodeInfo.ACTION_CLICK)); return
             }
             target = target?.parent
         }
-        error("NO_CLICK_TARGET")
+        // No second gesture after an attempted ACTION_CLICK: its outcome could be uncertain.
+        // Fallback is reserved for an exact unique label/id with no actionable ancestor.
+        check(correctPackage && acceptsTap(node, false))
+        val area = position(node)
+        check(requireNotNull(tap)(area.centerX(), area.centerY()))
     }
     fun updates() { val targets = updateTargets(); check(targets.size == 1); click(targets.single()) }
     fun hasUpdates() = updateTargets().size == 1
+    fun ownStatusReady(): Boolean {
+        if (isOwnStatusList()) return true
+        val evidence = homeEvidence()
+        return correctPackage && evidence.getBoolean("portrait") && evidence.getBoolean("header") &&
+            evidence.getBoolean("section") && !evidence.getBoolean("send_control") &&
+            nodes.count { it.isVisibleToUser && own(it) } == 1
+    }
     /** Closed structural flags only: no contact labels, captions or password contents. */
     fun homeEvidence(): JSONObject {
         val visible = nodes.filter { it.isVisibleToUser }
@@ -76,6 +99,13 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
             .put("updates_navigation", hasUpdates()).put("updates_targets", updateTargets().size)
             .put("updates_text_nodes", visible.count { PublicationScreenLabels.updates(text(it), "") &&
                 WhatsAppHomeShape.navigation(top(it), bounds.height()) })
+            .put("own_label_all_nodes", nodes.count { own(it) })
+            .put("own_list", isOwnStatusList()).put("own_list_total", statusCount() ?: JSONObject.NULL)
+            .put("own_prefix_all_nodes", nodes.count { text(it).startsWith("My status") || description(it).startsWith("My status") })
+            .put("own_list_containers", org.json.JSONArray(nodes.filter { it.isVisibleToUser && it.isScrollable }
+                .map { JSONObject().put("recycler", it.className?.toString()?.endsWith("RecyclerView") == true)
+                    .put("list", it.className?.toString()?.endsWith("ListView") == true)
+                    .put("rows", it.collectionInfo?.rowCount ?: -1).put("columns", it.collectionInfo?.columnCount ?: -1) }))
     }
     fun hasNoOwnStatus(): Boolean {
         if (!correctPackage) return false
@@ -91,6 +121,13 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
         nodes.none { it.isVisibleToUser && it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" } &&
         nodes.any { it.isVisibleToUser && Regex("\\d+ (views?|vues?)", RegexOption.IGNORE_CASE).matches(text(it)) }
     fun ownStatus() = click(unique { own(it) })
+    fun statusCount(): Int? {
+        if (!isOwnStatusList()) return null
+        return nodes.filter { it.isVisibleToUser && it.isScrollable &&
+            (it.className?.toString()?.endsWith("RecyclerView") == true || it.className?.toString()?.endsWith("ListView") == true) }
+            .mapNotNull { it.collectionInfo?.takeIf { info -> info.columnCount == 1 && info.rowCount in 0..600 }?.rowCount }
+            .distinct().singleOrNull()
+    }
     fun openOwnStatus() { if (!hasNoOwnStatus() && !isOwnStatusList()) ownStatus() }
     fun selectOwnStatus() = click(unique {
         it.viewIdResourceName == "${PublicationPolicy.provider}:id/contactpicker_row_name" && own(it)

@@ -42,6 +42,8 @@ class NativePublisher(
             action { if (!it.hasNoOwnStatus()) it.updates() }
             progress.enter("own_status_unavailable")
             action { it.openOwnStatus() }
+            var baselineTotal: Int? = null
+            ui { val current = screen(); baselineTotal = if (current.hasNoOwnStatus()) 0 else current.statusCount() }
             // A fresh own-status baseline must have no recent statuses to confuse with this job.
             var baselineReady = false
             for (attempt in 0 until 45) {
@@ -69,6 +71,16 @@ class NativePublisher(
             progress.beforeProviderSend()
             action { check(it.contactsPreview()); it.send() }
             Thread.sleep(7000)
+            // Provider uploads can finish before its own-status target appears.
+            // Read only until the exact target is ready; never repeat the send.
+            var ownReady = false
+            for (attempt in 0 until 20) {
+                authorize()
+                ui { ownReady = screen().ownStatusReady() }
+                if (ownReady) break
+                Thread.sleep(1500)
+            }
+            check(ownReady)
             action { it.openOwnStatus() }
             val rows = mutableSetOf<Int>()
             var countVerified = false
@@ -80,7 +92,8 @@ class NativePublisher(
                     val visible = current.recentCount()
                     val indexes = current.recentRows()
                     if (indexes != null) rows.addAll(indexes)
-                    countVerified = if (page == 0 && visible == count) true else indexes != null && rows.size == count
+                    countVerified = PublicationCountDelta.matches(baselineTotal, current.statusCount(), count) ||
+                        if (page == 0 && visible == count) true else indexes != null && rows.size == count
                     if (!countVerified && indexes != null && rows.size < count) moved = current.scrollStatuses()
                 }
                 if (countVerified || !moved) break
