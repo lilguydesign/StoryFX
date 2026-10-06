@@ -137,6 +137,7 @@ def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | 
                              'control_center_mode': 'windows_bridge', 'windows_publication_enabled': True,
                              'android_publication_enabled': True, 'android_executor':'whatsapp_images_pilot', 'scheduler_available':True,
                              'manual_android_retry_available': True, 'publication_failure_stages': True,
+                             'local_android_unlock_available': True, 'empty_status_review_available': True,
                              'scheduler_worker_ok':bool(recent_tick and heartbeat_state['healthy']),
                              'scheduler_tick_seconds':10},
                             status_code=200 if healthy else 503)

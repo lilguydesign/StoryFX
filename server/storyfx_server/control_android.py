@@ -1,6 +1,7 @@
 """Owner-bound Android executors; no hardware grants or Windows credentials."""
 import json
 import secrets
+from .control_status_reviews import record
 from uuid import uuid4
 from .store import DomainError, digest
 
@@ -14,6 +15,8 @@ class AndroidControl:
               profile TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 0,
               ready INTEGER NOT NULL DEFAULT 0, reason TEXT NOT NULL DEFAULT 'DISABLED',
               UNIQUE(owner_id,profile))''')
+            db.execute('''CREATE TABLE IF NOT EXISTS control_status_reviews (
+              node_id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, profile TEXT NOT NULL, observed REAL NOT NULL)''')
 
     def principal(self, identity):
         if not self.broker.sessions or not identity.auth_session_hash:
@@ -84,6 +87,7 @@ class AndroidControl:
         with self.store.transaction() as db:
             self.store.authenticate_in_transaction(db, identity)
             db.execute('UPDATE control_android_links SET ready=?,reason=? WHERE device_id=?', (int(not reason), reason, identity.id))
+            record(db, node, body.own_status_empty, not reason, self.store.clock())
             db.execute('UPDATE control_nodes SET last_seen=?,auth_session=? WHERE id=?',
                        (self.store.clock() if not reason else None, identity.auth_session_hash, node['id']))
             db.execute('UPDATE devices SET last_seen=?,screen_locked=?,battery_percent=?,app_version=?,executor=? WHERE id=?',

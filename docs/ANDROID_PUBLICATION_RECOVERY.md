@@ -65,3 +65,7 @@ sans restaurer un ancien journal pour rejouer des publications. Template : logo
 officiel StoryFX ; livraison d’alerte non revalidée par ce chantier.
 Les preuves d’installation, de contrats, de sondes et de publication physique
 sont distinctes dans le rapport de livraison ; ne pas les déduire d’un build.
+
+## Extension 0.4.3
+
+Le refus générique reste exclu par défaut. La seule exception est une preuve native récente du statut personnel entièrement vide sur le même téléphone, sans publication en cours ni possibilité d’expiration du résultat original. Voir ANDROID_LOCAL_UNLOCK.md pour les limites de 45 secondes et 23 heures, ainsi que la validation atomique d’une sélection. Aucun résultat confirmé, incertain ou ayant franchi le sélecteur n’est rejoué.

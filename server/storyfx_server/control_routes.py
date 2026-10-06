@@ -10,7 +10,7 @@ from .models import Empty
 from .control_scheduler import Scheduler
 from .control_scheduler_models import Window, Schedule, Stop
 from .control_result_proofs import Evidence
-from .control_recovery import repeat
+from .control_recovery import repeat, repeat_many
 
 
 class PairStart(Strict):
@@ -38,6 +38,10 @@ class Completion(Strict):
 
 class Retry(Strict):
     revision: int = Field(ge=0)
+
+
+class RetryBatch(Retry):
+    jobs: list[UUID] = Field(min_length=1, max_length=20)
 
 
 def build_control_router(store, sessions, owner, credential, agent):
@@ -73,6 +77,10 @@ def build_control_router(store, sessions, owner, credential, agent):
     @router.post('/jobs/{job_id}/retry')
     def retry(job_id: UUID, body: Retry, user=Depends(owner)):
         return repeat(broker, user, str(job_id), body.revision)
+
+    @router.post('/retry-batch')
+    def retry_batch(body: RetryBatch, user=Depends(owner)):
+        return repeat_many(broker, user, [str(value) for value in body.jobs], body.revision)
 
     @router.post('/catchup/preview')
     def catchup_preview(body: Window, user=Depends(owner)):

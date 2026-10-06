@@ -23,7 +23,10 @@ def evaluate(value):
     recovery_keys = ('manual_android_retry_available', 'publication_failure_stages')
     recovery_verified = complete and all(value.get(key) is True for key in recovery_keys)
     recovery = complete and (not any(key in value for key in recovery_keys) or recovery_verified)
-    healthy = valid and android and recovery and value.get('status') == 'ok' and value.get('database_ok') is True
+    unlock_keys = ('local_android_unlock_available', 'empty_status_review_available')
+    unlock_verified = complete and all(value.get(key) is True for key in unlock_keys)
+    unlock = complete and (not any(key in value for key in unlock_keys) or unlock_verified)
+    healthy = valid and android and recovery and unlock and value.get('status') == 'ok' and value.get('database_ok') is True
     return {'id': 'storyfx_control_plane', 'application': 'StoryFX',
             'label': 'StoryFX — commandes web',
             'detail': 'Contrat HTTPS Windows et pilote Android ; disponibilité des téléphones et publication non observées.',
@@ -32,6 +35,7 @@ def evaluate(value):
             'metrics': {'public_contract_verified': healthy, 'windows_executor_observed': False,
                         'android_executor_observed': False, 'android_reboot_verified': False,
                         'manual_retry_contract_verified': bool(recovery_verified),
+                        'local_unlock_contract_verified': bool(unlock_verified),
                         'publication_verified': False, 'phone_actions': False},
             'notifications_sent': False, 'business_mutations': False}
 

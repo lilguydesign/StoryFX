@@ -27,7 +27,7 @@ class NativePublisher(
             authorize()
             ui {
                 val intent = requireNotNull(context.packageManager.getLaunchIntentForPackage(PublicationPolicy.provider))
-                context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP))
             }
             Thread.sleep(2500)
             authorize()

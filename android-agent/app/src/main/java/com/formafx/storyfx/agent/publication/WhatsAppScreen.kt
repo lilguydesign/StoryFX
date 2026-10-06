@@ -46,15 +46,24 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
     }
     fun updates() { val targets = updateTargets(); check(targets.size == 1); click(targets.single()) }
     fun hasUpdates() = updateTargets().size == 1
+    fun hasNoOwnStatus(): Boolean {
+        if (!correctPackage || !hasUpdates() || nodes.any { it.isVisibleToUser && own(it) }) return false
+        val targets = nodes.filter { it.isVisibleToUser && PublicationScreenLabels.emptyOwn(text(it), description(it)) }
+            .mapNotNull(::clickableParent).distinct()
+        return targets.size == 1 && nodes.none {
+            it.isVisibleToUser && it.viewIdResourceName == "${PublicationPolicy.provider}:id/send"
+        }
+    }
     fun isOwnStatusList() = correctPackage && !hasUpdates() && nodes.count { it.isVisibleToUser && own(it) } == 1 &&
         nodes.none { it.isVisibleToUser && it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" } &&
         nodes.any { it.isVisibleToUser && Regex("\\d+ (views?|vues?)", RegexOption.IGNORE_CASE).matches(text(it)) }
     fun ownStatus() = click(unique { own(it) })
-    fun openOwnStatus() { if (!isOwnStatusList()) ownStatus() }
+    fun openOwnStatus() { if (!hasNoOwnStatus() && !isOwnStatusList()) ownStatus() }
     fun selectOwnStatus() = click(unique {
         it.viewIdResourceName == "${PublicationPolicy.provider}:id/contactpicker_row_name" && own(it)
     })
     fun recentCount(): Int {
+        if (hasNoOwnStatus()) return 0
         unique { own(it) }
         return nodes.count { it.isVisibleToUser && text(it) in setOf("Just now", "À l’instant", "À l'instant") }
     }

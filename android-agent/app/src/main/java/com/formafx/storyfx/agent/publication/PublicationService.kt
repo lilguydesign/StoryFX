@@ -46,10 +46,39 @@ class PublicationService : AccessibilityService() {
         val power = getSystemService(PowerManager::class.java)
         return manager.isDeviceLocked || manager.isKeyguardLocked || !power.isInteractive
     }
-    private fun contact(api: AgentApi): JSONObject = api.post("/v1/control/android/heartbeat", JSONObject()
-        .put("service_ready", active).put("media_ready", AlbumMedia.allowed(this)).put("screen_locked", locked())
+
+    private fun keyguardUi(operation: () -> Unit) {
+        check(!closed && active)
+        val task = FutureTask { check(!closed && active); operation() }
+        main.post(task)
+        try { task.get(8, TimeUnit.SECONDS) } catch (failure: Exception) { task.cancel(false); throw failure }
+    }
+
+    private fun attemptUnlock(api: AgentApi, store: EncryptedStore): Boolean {
+        if (store.unlockAttempted() || store.unlockPin()?.also { it.fill('\u0000') } == null) return false
+        val localTest = store.unlockTestPending()
+        fun authorized(): Boolean {
+            if (!localTest) return api.post("/v1/control/android/unlock-authorized", JSONObject()).getBoolean("authorized")
+            val binding = api.post("/v1/control/android/settings", JSONObject()).optJSONObject("binding")
+            return binding?.optString("profile") == store.publicationProfile() && binding?.optInt("enabled") == 1
+        }
+        if (localTest) store.consumeUnlockTest()
+        return KeyguardUnlock(this, ::keyguardUi).attempt(store, ::authorized)
+    }
+    private fun contact(api: AgentApi): JSONObject {
+        var empty = false
+        if (active && !closed && !locked()) runCatching { onUi { empty = WhatsAppScreen(rootInActiveWindow).hasNoOwnStatus() } }
+        val body = JSONObject()
+        .put("service_ready", active).put("media_ready", AlbumMedia.allowed(this)).put("screen_locked", locked()).put("own_status_empty", empty)
         .put("app_version", BuildConfig.VERSION_NAME).put("battery_percent", getSystemService(BatteryManager::class.java)
-            .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY).takeIf { it in 0..100 } ?: JSONObject.NULL))
+            .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY).takeIf { it in 0..100 } ?: JSONObject.NULL)
+        return try { api.post("/v1/control/android/heartbeat", body) } catch (failure: AgentRequestException) {
+            if (failure.status != 422) throw failure
+            // The optional proof is omitted on a backend rollback; no review is granted there.
+            body.remove("own_status_empty")
+            api.post("/v1/control/android/heartbeat", body)
+        }
+    }
 
     private fun flush(api: AgentApi, journal: PublicationJournal) {
         val pending = journal.pending() ?: return
@@ -67,9 +96,13 @@ class PublicationService : AccessibilityService() {
             // A reboot acknowledges the reserved uncertain result; it never resumes provider gestures.
             flush(api, journal)
             if (!store.publicationEnabled()) return
-            val state = contact(api)
+            if (!locked() && store.unlockAttempted()) store.unlockSucceeded()
+            var state = contact(api)
+            if (!state.getBoolean("ready") && state.optString("reason") == "SCREEN_LOCKED" &&
+                attemptUnlock(api, store)) state = contact(api)
             if (!state.getBoolean("ready")) {
-                store.saveStatus(PublicationLabels.reason(state.optString("reason"))); return
+                store.saveStatus(if (store.unlockAttempted()) "Déverrouillage non confirmé : déverrouillez manuellement. Aucun nouvel essai automatique."
+                    else PublicationLabels.reason(state.optString("reason"))); return
             }
             val job = api.post("/v1/control/android/claim", JSONObject()).optJSONObject("job") ?: return
             if (!journal.reserve(job)) { flush(api, journal); return }
