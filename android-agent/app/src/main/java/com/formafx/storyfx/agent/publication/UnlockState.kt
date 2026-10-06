@@ -2,6 +2,7 @@ package com.formafx.storyfx.agent.publication
 
 /** Both stores reserve a single ordinary PIN entry before any keypad action. */
 interface UnlockState {
+    fun firstUnlockPending(): Boolean = false
     fun unlockAllowed(): Boolean
     fun unlockPin(): CharArray?
     fun unlockAttempted(): Boolean

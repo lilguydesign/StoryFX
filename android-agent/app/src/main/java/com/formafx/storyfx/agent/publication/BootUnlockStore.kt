@@ -21,6 +21,7 @@ class BootUnlockStore(private val context: Context) : UnlockState {
     private val alias = "storyfx_boot_pin_v1"
     val bootCount get() = Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1)
     fun userUnlocked() = context.getSystemService(UserManager::class.java).isUserUnlocked
+    override fun firstUnlockPending() = !userUnlocked()
     fun enabled() = prefs.getBoolean("consent", false)
     fun enable() {
         check(userUnlocked())
