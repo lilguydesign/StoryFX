@@ -112,7 +112,7 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
     fun unlockResult(): String = prefs.getString("unlock_result", "NON_TESTÉ")!!
     fun saveUnlockResult(value: String) {
         require(value in setOf("NON_CONFIGURÉ", "AUTORISATION", "RÉVEIL_DEMANDÉ", "CLAVIER_NON_RECONNU",
-            "SAISIE_EN_COURS", "CONFIRMÉ", "NON_CONFIRMÉ", "ERREUR", "AUTORISATION_REFUSÉE"))
+            "SAISIE_EN_COURS", "CONFIRMÉ", "NON_CONFIRMÉ", "ERREUR", "AUTORISATION_REFUSÉE", "RÉVEIL_CONFIRMÉ", "PIN_CONFIRMÉ"))
         check(prefs.edit().putString("unlock_result", value).commit())
     }
     fun unlockAttempted() = prefs.getBoolean("unlock_attempted", false)

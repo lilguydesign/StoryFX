@@ -1,4 +1,4 @@
-# Déverrouillage local Android — 0.4.4
+# Déverrouillage local Android — 0.4.5
 
 Dans StoryFX Android, « Déverrouillage local » permet d'enregistrer, tester ou
 supprimer le PIN du téléphone associé. Le champ reste masqué, sans remplissage
@@ -60,3 +60,21 @@ Le bouton Voir le résultat affiche ce diagnostic sur le téléphone.
 Le test matériel du 6 octobre a observé un vrai verrouillage du S23 FE, sans encore
 confirmer son déverrouillage par la version 0.4.3. La version 0.4.4 doit être
 validée séparément ; sa compilation et ses tests ne prouvent pas une publication.
+
+## Diagnostic matériel fermé — 0.4.5
+
+Le dump Android du service fournit uniquement des indicateurs : disponibilité du
+service, verrouillage, catégorie de fenêtre, dimensions, présence des repères du
+statut et clavier numérique reconnu. Aucune conversation, capture, valeur de PIN,
+identité de session ou jeton n’est lu ni imprimé par ce diagnostic. Le service
+n’expose aucune nouvelle commande réseau ; Android contrôle l’accès normal DUMP.
+
+La fenêtre WhatsApp retenue doit être une application du fournisseur avec le focus,
+unique ; une fenêtre système active ne peut plus masquer cette fenêtre. Le repère
+vide exige le texte Add status de la première tuile, avec les deux en-têtes. La
+simple description générique My status de son avatar n’est pas un statut actif ;
+un texte My status ou un contrôle Send exclut toujours la preuve.
+
+Le résultat PIN_CONFIRMÉ est réservé au retour déverrouillé après une saisie sur le
+clavier numérique reconnu. RÉVEIL_CONFIRMÉ signifie que la saisie n’a pas été
+nécessaire. Les validations matérielles et publications restent à contrôler.

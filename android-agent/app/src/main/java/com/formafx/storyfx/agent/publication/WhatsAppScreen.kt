@@ -2,6 +2,7 @@ package com.formafx.storyfx.agent.publication
 
 import android.view.accessibility.AccessibilityNodeInfo
 import android.graphics.Rect
+import org.json.JSONObject
 
 /** Screen contents are inspected in memory, never logged or sent to the server. */
 class WhatsAppScreen(root: AccessibilityNodeInfo?) {
@@ -51,19 +52,32 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
     }
     fun updates() { val targets = updateTargets(); check(targets.size == 1); click(targets.single()) }
     fun hasUpdates() = updateTargets().size == 1
+    /** Closed structural flags only: no contact labels, captions or password contents. */
+    fun homeEvidence(): JSONObject {
+        val visible = nodes.filter { it.isVisibleToUser }
+        return JSONObject().put("provider_window", correctPackage)
+            .put("portrait", WhatsAppHomeShape.portrait(bounds.width(), bounds.height()))
+            .put("root_width", bounds.width()).put("root_height", bounds.height())
+            .put("header", visible.any { PublicationScreenLabels.updates(text(it), "") &&
+                WhatsAppHomeShape.header(top(it), bounds.height()) })
+            .put("section", visible.any { text(it) in setOf("Status", "Statut", "Statuts") &&
+                WhatsAppHomeShape.section(top(it), bounds.height()) })
+            .put("empty_tile_text", visible.any { PublicationScreenLabels.emptyOwn(text(it), "") &&
+                WhatsAppHomeShape.ownTile(position(it).centerX() - bounds.left, top(it), bounds.width(), bounds.height()) })
+            .put("own_status_text", visible.any { PublicationScreenLabels.own(text(it), "") })
+            .put("own_avatar_description", visible.any { PublicationScreenLabels.own("", description(it)) })
+            .put("send_control", visible.any { it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" })
+            .put("updates_navigation", hasUpdates())
+    }
     fun hasNoOwnStatus(): Boolean {
         if (!correctPackage) return false
-        val visible = nodes.filter { it.isVisibleToUser }
-        return WhatsAppHomeShape.empty(
-            WhatsAppHomeShape.portrait(bounds.width(), bounds.height()),
-            visible.any { PublicationScreenLabels.updates(text(it), description(it)) &&
-                WhatsAppHomeShape.header(top(it), bounds.height()) },
-            visible.any { text(it) in setOf("Status", "Statut", "Statuts") &&
-                WhatsAppHomeShape.section(top(it), bounds.height()) },
-            visible.any { PublicationScreenLabels.emptyOwn(text(it), description(it)) &&
-                WhatsAppHomeShape.ownTile(position(it).centerX() - bounds.left, top(it), bounds.width(), bounds.height()) },
-            visible.any(::own),
-            visible.any { it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" })
+        val evidence = homeEvidence()
+        // An empty own-avatar may still be described as My status. Only its exact
+        // visible Add status text establishes an empty tile; an Add status button
+        // description on an active tile or a send screen cannot provide this proof.
+        return WhatsAppHomeShape.empty(evidence.getBoolean("portrait"), evidence.getBoolean("header"),
+            evidence.getBoolean("section"), evidence.getBoolean("empty_tile_text"),
+            evidence.getBoolean("own_status_text"), evidence.getBoolean("send_control"))
     }
     fun isOwnStatusList() = correctPackage && !hasUpdates() && nodes.count { it.isVisibleToUser && own(it) } == 1 &&
         nodes.none { it.isVisibleToUser && it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" } &&

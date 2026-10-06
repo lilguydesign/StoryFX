@@ -43,8 +43,17 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
         }
         error("KEYGUARD_CONTROL_UNAVAILABLE")
     }
+    fun diagnostics(): org.json.JSONObject {
+        val values = nodes()
+        return org.json.JSONObject().put("interactive", interactive()).put("device_locked", manager.isDeviceLocked)
+            .put("keyguard_locked", manager.isKeyguardLocked)
+            .put("system_windows", service.windows.count { it.root?.packageName?.toString() == KeyguardShape.system })
+            .put("pin_entry_visible", entry(values) != null)
+            .put("numeric_keys", values.mapNotNull { it.viewIdResourceName }
+                .filter { it.matches(Regex("com\\.android\\.systemui:id/key[0-9]")) }.distinct().size)
+    }
     fun attempt(store: EncryptedStore, authorize: () -> Boolean): Boolean {
-        if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult("CONFIRMÉ"); return true }
+        if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult("RÉVEIL_CONFIRMÉ"); return true }
         if (store.unlockAttempted() || !store.publicationEnabled()) return false
         store.saveUnlockResult("AUTORISATION")
         if (!authorize()) { store.saveUnlockResult("AUTORISATION_REFUSÉE"); return false }
@@ -53,7 +62,7 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
             store.saveUnlockResult("RÉVEIL_DEMANDÉ")
             ui { service.startActivity(Intent(service, UnlockActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             Thread.sleep(300)
-            if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult("CONFIRMÉ"); return true }
+            if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult("RÉVEIL_CONFIRMÉ"); return true }
             var recognized = false
             repeat(20) {
                 if (!recognized) {
@@ -90,7 +99,7 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
             }
             Thread.sleep(1500)
             if (locked()) { store.saveUnlockResult("NON_CONFIRMÉ"); return false }
-            store.unlockSucceeded(); store.saveUnlockResult("CONFIRMÉ")
+            store.unlockSucceeded(); store.saveUnlockResult("PIN_CONFIRMÉ")
             return true
         } catch (_: Exception) { store.saveUnlockResult("ERREUR"); return false }
         finally { pin.fill('\u0000') }
