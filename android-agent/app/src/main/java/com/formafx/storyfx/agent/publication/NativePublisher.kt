@@ -42,6 +42,8 @@ class NativePublisher(
             action { if (!it.hasNoOwnStatus()) it.updates() }
             progress.enter("own_status_unavailable")
             action { it.openOwnStatus() }
+            var baselineTotal: Int? = null
+            ui { val current = screen(); baselineTotal = if (current.hasNoOwnStatus()) 0 else current.statusCount() }
             // A fresh own-status baseline must have no recent statuses to confuse with this job.
             var baselineReady = false
             for (attempt in 0 until 45) {
@@ -80,7 +82,8 @@ class NativePublisher(
                     val visible = current.recentCount()
                     val indexes = current.recentRows()
                     if (indexes != null) rows.addAll(indexes)
-                    countVerified = if (page == 0 && visible == count) true else indexes != null && rows.size == count
+                    countVerified = PublicationCountDelta.matches(baselineTotal, current.statusCount(), count) ||
+                        if (page == 0 && visible == count) true else indexes != null && rows.size == count
                     if (!countVerified && indexes != null && rows.size < count) moved = current.scrollStatuses()
                 }
                 if (countVerified || !moved) break

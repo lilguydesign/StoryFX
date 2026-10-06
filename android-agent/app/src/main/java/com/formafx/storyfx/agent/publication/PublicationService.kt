@@ -150,6 +150,7 @@ class PublicationService : AccessibilityService() {
             .put("provider_tap_capable", serviceInfo.capabilities and AccessibilityServiceInfo.CAPABILITY_CAN_PERFORM_GESTURES != 0)
             .put("unlock_result", EncryptedStore(this).unlockResult())
             .put("local_unlock_result", EncryptedStore(this).localUnlockResult())
+            .put("unlock_failure", EncryptedStore(this).unlockFailure())
             .put("local_test_pending", EncryptedStore(this).unlockTestPending())
             .put("unlock_credential_present", EncryptedStore(this).unlockPin()?.also { it.fill('\u0000') } != null)
             .put("unlock_attempted", EncryptedStore(this).unlockAttempted())

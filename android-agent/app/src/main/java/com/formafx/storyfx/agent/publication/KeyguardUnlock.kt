@@ -56,17 +56,19 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
                 .filter { it.matches(Regex("com\\.android\\.systemui:id/key[0-9]")) }.distinct().size)
     }
     fun attempt(store: EncryptedStore, authorize: () -> Boolean): Boolean {
-        if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult("RÃ‰VEIL_CONFIRMÃ‰"); return true }
+        if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult(KeyguardResult.WAKE_CONFIRMED); return true }
         if (store.unlockAttempted() || !store.publicationEnabled()) return false
-        store.saveUnlockResult("AUTORISATION")
-        if (!authorize()) { store.saveUnlockResult("AUTORISATION_REFUSÃ‰E"); return false }
+        store.saveUnlockResult(KeyguardResult.AUTHORIZATION)
+        if (!authorize()) { store.saveUnlockResult(KeyguardResult.AUTHORIZATION_REFUSED); return false }
         val pin = store.unlockPin() ?: return false
+        var phase = "SHOW_CHALLENGE"
         try {
-            store.saveUnlockResult("RÃ‰VEIL_DEMANDÃ‰")
+            store.saveUnlockResult(KeyguardResult.WAKE_REQUESTED)
             ui { service.startActivity(Intent(service, UnlockActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             Thread.sleep(300)
-            if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult("RÃ‰VEIL_CONFIRMÃ‰"); return true }
+            if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult(KeyguardResult.WAKE_CONFIRMED); return true }
             var recognized = false
+            phase = "READ_KEYPAD"
             repeat(20) {
                 if (!recognized) {
                     ui {
@@ -79,10 +81,11 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
                     if (!recognized) Thread.sleep(300)
                 }
             }
-            if (!recognized) { store.saveUnlockResult("CLAVIER_NON_RECONNU"); return false }
-            if (!authorize()) { store.saveUnlockResult("AUTORISATION_REFUSÃ‰E"); return false }
+            if (!recognized) { store.saveUnlockResult(KeyguardResult.KEYPAD_UNRECOGNIZED); return false }
+            if (!authorize()) { store.saveUnlockResult(KeyguardResult.AUTHORIZATION_REFUSED); return false }
             store.markUnlockAttempt()
-            store.saveUnlockResult("SAISIE_EN_COURS")
+            phase = "PIN_KEYS"
+            store.saveUnlockResult(KeyguardResult.ENTERING_PIN)
             for (digit in pin) {
                 if (!locked()) break
                 check(authorize())
@@ -95,17 +98,19 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
                 Thread.sleep(100)
             }
             if (locked()) {
+                phase = "PIN_ENTER"
                 check(authorize())
                 ui {
                     val values = nodes(); check(entry(values) != null && locked())
                     click(values.single { it.viewIdResourceName == "${KeyguardShape.system}:id/key_enter" })
                 }
             }
+            phase = "VERIFY"
             Thread.sleep(1500)
-            if (locked()) { store.saveUnlockResult("NON_CONFIRMÃ‰"); return false }
-            store.unlockSucceeded(); store.saveUnlockResult("PIN_CONFIRMÃ‰")
+            if (locked()) { store.saveUnlockResult(KeyguardResult.NOT_CONFIRMED); return false }
+            store.unlockSucceeded(); store.saveUnlockResult(KeyguardResult.PIN_CONFIRMED)
             return true
-        } catch (_: Exception) {
+        } catch (failure: Exception) {
             // Samsung can validate the last digit before the explicit Enter gesture.
             // Only an already-reserved PIN attempt and both unlocked Android states
             // can turn that completion race into success; a locked error stays failed.
@@ -114,8 +119,9 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
                 KeyguardOutcome.confirmed(store.unlockAttempted(), manager.isDeviceLocked,
                     manager.isKeyguardLocked, interactive())
             }.getOrDefault(false)
-            if (completed) { store.unlockSucceeded(); store.saveUnlockResult("PIN_CONFIRMÉ"); return true }
-            store.saveUnlockResult("ERREUR"); return false
+            if (completed) { store.unlockSucceeded(); store.saveUnlockResult(KeyguardResult.PIN_CONFIRMED); return true }
+            store.saveUnlockFailure(phase, KeyguardFailure.kind(failure))
+            store.saveUnlockResult(KeyguardResult.ERROR); return false
         }
         finally { pin.fill('\u0000') }
     }

@@ -92,6 +92,13 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) 
             .put("updates_navigation", hasUpdates()).put("updates_targets", updateTargets().size)
             .put("updates_text_nodes", visible.count { PublicationScreenLabels.updates(text(it), "") &&
                 WhatsAppHomeShape.navigation(top(it), bounds.height()) })
+            .put("own_label_all_nodes", nodes.count { own(it) })
+            .put("own_list", isOwnStatusList()).put("own_list_total", statusCount() ?: JSONObject.NULL)
+            .put("own_prefix_all_nodes", nodes.count { text(it).startsWith("My status") || description(it).startsWith("My status") })
+            .put("own_list_containers", org.json.JSONArray(nodes.filter { it.isVisibleToUser && it.isScrollable }
+                .map { JSONObject().put("recycler", it.className?.toString()?.endsWith("RecyclerView") == true)
+                    .put("list", it.className?.toString()?.endsWith("ListView") == true)
+                    .put("rows", it.collectionInfo?.rowCount ?: -1).put("columns", it.collectionInfo?.columnCount ?: -1) }))
     }
     fun hasNoOwnStatus(): Boolean {
         if (!correctPackage) return false
@@ -107,6 +114,13 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) 
         nodes.none { it.isVisibleToUser && it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" } &&
         nodes.any { it.isVisibleToUser && Regex("\\d+ (views?|vues?)", RegexOption.IGNORE_CASE).matches(text(it)) }
     fun ownStatus() = click(unique { own(it) })
+    fun statusCount(): Int? {
+        if (!isOwnStatusList()) return null
+        return nodes.filter { it.isVisibleToUser && it.isScrollable &&
+            (it.className?.toString()?.endsWith("RecyclerView") == true || it.className?.toString()?.endsWith("ListView") == true) }
+            .mapNotNull { it.collectionInfo?.takeIf { info -> info.columnCount == 1 && info.rowCount in 0..600 }?.rowCount }
+            .distinct().singleOrNull()
+    }
     fun openOwnStatus() { if (!hasNoOwnStatus() && !isOwnStatusList()) ownStatus() }
     fun selectOwnStatus() = click(unique {
         it.viewIdResourceName == "${PublicationPolicy.provider}:id/contactpicker_row_name" && own(it)

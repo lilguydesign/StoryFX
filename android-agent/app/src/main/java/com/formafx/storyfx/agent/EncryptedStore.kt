@@ -6,6 +6,7 @@ import android.security.keystore.KeyProperties
 import android.util.Base64
 import java.security.KeyStore
 import java.util.UUID
+import com.formafx.storyfx.agent.publication.KeyguardResult
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -109,13 +110,22 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
         else value.getString("pin").takeIf { pin -> pin.matches(Regex("[0-9]{4,16}")) }?.toCharArray()
     }
     fun disableUnlock() { check(prefs.edit().remove("unlock_credential").commit()); LocalUnlockTest.clear() }
-    fun unlockResult(): String = prefs.getString("unlock_result", "NON_TESTÉ")!!
-    fun saveUnlockResult(value: String) {
-        require(value in setOf("NON_CONFIGURÉ", "AUTORISATION", "RÉVEIL_DEMANDÉ", "CLAVIER_NON_RECONNU",
-            "SAISIE_EN_COURS", "CONFIRMÉ", "NON_CONFIRMÉ", "ERREUR", "AUTORISATION_REFUSÉE", "RÉVEIL_CONFIRMÉ", "PIN_CONFIRMÉ"))
-        check(prefs.edit().putString("unlock_result", value).commit())
+    fun unlockResult(): String = KeyguardResult.read(prefs.getString("unlock_result", null)).label
+    fun saveUnlockResult(value: KeyguardResult) {
+        val editor = prefs.edit().putString("unlock_result", value.name)
+        if (value in setOf(KeyguardResult.WAKE_CONFIRMED, KeyguardResult.PIN_CONFIRMED))
+            editor.remove("unlock_failure_stage").remove("unlock_failure_kind")
+        check(editor.commit())
     }
-    fun localUnlockResult(): String = prefs.getString("local_unlock_result", "NON_TESTÉ")!!
+    fun localUnlockResult(): String = KeyguardResult.read(prefs.getString("local_unlock_result", null)).label
+    fun unlockFailure(): org.json.JSONObject = org.json.JSONObject()
+        .put("stage", prefs.getString("unlock_failure_stage", "NONE"))
+        .put("kind", prefs.getString("unlock_failure_kind", "NONE"))
+    fun saveUnlockFailure(stage: String, kind: String) {
+        require(stage in setOf("SHOW_CHALLENGE", "READ_KEYPAD", "PIN_KEYS", "PIN_ENTER", "VERIFY"))
+        require(kind in setOf("UI_TIMEOUT", "SECURITY", "STATE_GUARD", "KEY_NOT_UNIQUE", "INTERRUPTED", "PLATFORM_ERROR"))
+        check(prefs.edit().putString("unlock_failure_stage", stage).putString("unlock_failure_kind", kind).commit())
+    }
     fun rememberLocalUnlockResult() {
         check(prefs.edit().putString("local_unlock_result", unlockResult()).commit())
     }
