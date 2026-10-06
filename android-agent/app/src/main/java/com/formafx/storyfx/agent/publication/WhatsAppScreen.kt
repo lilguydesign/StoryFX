@@ -5,7 +5,7 @@ import android.graphics.Rect
 import org.json.JSONObject
 
 /** Screen contents are inspected in memory, never logged or sent to the server. */
-class WhatsAppScreen(root: AccessibilityNodeInfo?) {
+class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) -> Boolean)? = null) {
     private val nodes = mutableListOf<AccessibilityNodeInfo>()
     private val bounds = Rect().also { root?.getBoundsInScreen(it) }
     private fun position(node: AccessibilityNodeInfo) = Rect().also { node.getBoundsInScreen(it) }
@@ -22,20 +22,32 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
     private fun text(node: AccessibilityNodeInfo) = node.text?.toString().orEmpty()
     private fun description(node: AccessibilityNodeInfo) = node.contentDescription?.toString().orEmpty()
     private fun own(node: AccessibilityNodeInfo) = PublicationScreenLabels.own(text(node), description(node))
+    private fun acceptsClick(node: AccessibilityNodeInfo, navigation: Boolean): Boolean {
+        val area = position(node)
+        return node.packageName?.toString() == PublicationPolicy.provider &&
+            (node.isClickable || node.actionList.any { it.id == AccessibilityNodeInfo.ACTION_CLICK }) &&
+            ProviderClickShape.accepts(area.width(), area.height(), bounds.width(), bounds.height(), navigation)
+    }
     private fun clickableParent(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
         var target: AccessibilityNodeInfo? = node
-        repeat(5) {
-            if (target?.isClickable == true) return target
+        repeat(12) {
+            if (target != null && acceptsClick(target!!, true)) return target
             target = target?.parent
         }
         return null
+    }
+    private fun acceptsTap(node: AccessibilityNodeInfo, navigation: Boolean): Boolean {
+        val area = position(node)
+        return node.isVisibleToUser && node.packageName?.toString() == PublicationPolicy.provider &&
+            bounds.contains(area) && ProviderClickShape.accepts(area.width(), area.height(),
+                bounds.width(), bounds.height(), navigation)
     }
     private fun updateTargets(): List<AccessibilityNodeInfo> {
         if (!correctPackage) return emptyList()
         val visible = nodes.filter { it.isVisibleToUser && WhatsAppHomeShape.navigation(top(it), bounds.height()) }
         val textTargets = visible.filter { PublicationScreenLabels.updates(text(it), "") }
         val targets = textTargets.ifEmpty { visible.filter { PublicationScreenLabels.updates("", description(it)) } }
-        return targets.mapNotNull(::clickableParent).distinct()
+        return targets.mapNotNull { clickableParent(it) ?: it.takeIf { node -> acceptsTap(node, true) } }.distinct()
     }
     private fun unique(predicate: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo {
         check(correctPackage)
@@ -45,13 +57,17 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
     }
     private fun click(node: AccessibilityNodeInfo) {
         var target: AccessibilityNodeInfo? = node
-        repeat(5) {
-            if (target?.isClickable == true) {
+        repeat(12) {
+            if (target != null && acceptsClick(target!!, false)) {
                 check(target!!.performAction(AccessibilityNodeInfo.ACTION_CLICK)); return
             }
             target = target?.parent
         }
-        error("NO_CLICK_TARGET")
+        // No second gesture after an attempted ACTION_CLICK: its outcome could be uncertain.
+        // Fallback is reserved for an exact unique label/id with no actionable ancestor.
+        check(correctPackage && acceptsTap(node, false))
+        val area = position(node)
+        check(requireNotNull(tap)(area.centerX(), area.centerY()))
     }
     fun updates() { val targets = updateTargets(); check(targets.size == 1); click(targets.single()) }
     fun hasUpdates() = updateTargets().size == 1

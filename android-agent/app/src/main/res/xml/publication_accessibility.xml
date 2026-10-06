@@ -4,6 +4,7 @@
     android:notificationTimeout="250"
     android:packageNames="com.whatsapp.w4b,com.android.systemui"
     android:canRetrieveWindowContent="true"
+    android:canPerformGestures="true"
     android:accessibilityFlags="flagReportViewIds|flagRetrieveInteractiveWindows|flagIncludeNotImportantViews"
     android:description="@string/publication_accessibility_description"
     android:settingsActivity="com.formafx.storyfx.agent.MainActivity" />

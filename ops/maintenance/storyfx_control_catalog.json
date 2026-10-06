@@ -43,8 +43,9 @@
     "android_reboot": "implemented_system_rebind_and_boot_receiver_physical_reboot_not_verified",
     "manual_retry_contract": "HTTPS health flags checked by the executed control probe; synthetic ownership/plan/readiness/anti-replay tests; physical publication separately verified or unknown",
     "private_native_failure_monitoring": "Not covered by the public hourly probe; owner-private results inspected during this task only",
-    "native_provider_detection": "0.4.6 includes provider layout nodes; physical validation pending; closed native diagnostics export no messages, PIN or tokens",
-    "safe_selection_recovery": "Synthetic tests require post-completion empty-own-status proof, same owner/profile/node, current day/configuration, freshness under 45 s and no active provider job; after-send results remain excluded"
+    "native_provider_detection": "0.4.7 bounded exact provider controls and focused window; no second tap after an attempted native click; physical publication pending",
+    "safe_selection_recovery": "Synthetic tests require post-completion empty-own-status proof, same owner/profile/node, current day/configuration, freshness under 45 s and no active provider job; after-send results remain excluded; already-retried child-job guard removal was refused by managed review and remains excluded",
+    "native_local_unlock": "0.4.7 first candidate physically woke and unlocked both known phones without SDK PIN; last-digit completion race fixed; final candidate hardware confirmation pending"
   },
   "notifications_sent_by_validation": false,
   "maintenance_timers_modified": false,

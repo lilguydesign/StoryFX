@@ -115,6 +115,10 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
             "SAISIE_EN_COURS", "CONFIRMÉ", "NON_CONFIRMÉ", "ERREUR", "AUTORISATION_REFUSÉE", "RÉVEIL_CONFIRMÉ", "PIN_CONFIRMÉ"))
         check(prefs.edit().putString("unlock_result", value).commit())
     }
+    fun localUnlockResult(): String = prefs.getString("local_unlock_result", "NON_TESTÉ")!!
+    fun rememberLocalUnlockResult() {
+        check(prefs.edit().putString("local_unlock_result", unlockResult()).commit())
+    }
     fun unlockAttempted() = prefs.getBoolean("unlock_attempted", false)
     fun markUnlockAttempt() { check(prefs.edit().putBoolean("unlock_attempted", true).commit()) }
     fun unlockSucceeded() { check(prefs.edit().remove("unlock_attempted").commit()); LocalUnlockTest.clear() }
