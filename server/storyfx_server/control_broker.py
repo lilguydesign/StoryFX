@@ -84,7 +84,15 @@ class Broker:
                        (user['id'], self.store.clock() - 900))
             nodes = [dict(row) for row in db.execute('SELECT id,name,last_seen,profiles,revoked FROM control_nodes WHERE owner_id=?', (user['id'],))]
             reports = [self.report(row) for row in db.execute('SELECT * FROM control_jobs WHERE owner_id=? ORDER BY created DESC LIMIT 200', (user['id'],))]
-            states = {row['occurrence']:row['state'] for row in db.execute('SELECT occurrence,state FROM control_jobs WHERE owner_id=?',(user['id'],))}
+            attempts = list(db.execute('SELECT occurrence,state,payload FROM control_jobs WHERE owner_id=? ORDER BY created,id', (user['id'],)))
+            states = {}
+            depths = {}
+            for attempt in attempts:
+                payload = json.loads(attempt['payload'])
+                root = payload.get('original_occurrence', attempt['occurrence'])
+                depth = payload.get('retry_depth', 0)
+                if depth >= depths.get(root, -1):
+                    states[root], depths[root] = attempt['state'], depth
         for node in nodes:
             node['connected'] = not node['revoked'] and node['last_seen'] is not None and self.store.clock() - node['last_seen'] < 45
             node['profiles'] = json.loads(node['profiles'])

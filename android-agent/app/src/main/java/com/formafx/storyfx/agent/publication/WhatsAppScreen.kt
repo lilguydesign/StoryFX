@@ -15,7 +15,19 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
         if (correctPackage && root != null) walk(root)
     }
     private fun text(node: AccessibilityNodeInfo) = node.text?.toString().orEmpty()
-    private fun own(node: AccessibilityNodeInfo) = text(node) in setOf("My status", "Mon statut")
+    private fun description(node: AccessibilityNodeInfo) = node.contentDescription?.toString().orEmpty()
+    private fun own(node: AccessibilityNodeInfo) = PublicationScreenLabels.own(text(node), description(node))
+    private fun clickableParent(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+        var target: AccessibilityNodeInfo? = node
+        repeat(5) {
+            if (target?.isClickable == true) return target
+            target = target?.parent
+        }
+        return null
+    }
+    private fun updateTargets() = if (!correctPackage) emptyList() else nodes.filter {
+        it.isVisibleToUser && PublicationScreenLabels.updates(text(it), description(it))
+    }.mapNotNull(::clickableParent).distinct()
     private fun unique(predicate: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo {
         check(correctPackage)
         val found = nodes.filter { it.isVisibleToUser && predicate(it) }
@@ -32,10 +44,8 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
         }
         error("NO_CLICK_TARGET")
     }
-    fun updates() = click(unique { text(it) in setOf("Updates", "Actus", "Mises à jour") })
-    fun hasUpdates() = correctPackage && nodes.count {
-        it.isVisibleToUser && text(it) in setOf("Updates", "Actus", "Mises à jour")
-    } == 1
+    fun updates() { val targets = updateTargets(); check(targets.size == 1); click(targets.single()) }
+    fun hasUpdates() = updateTargets().size == 1
     fun isOwnStatusList() = correctPackage && !hasUpdates() && nodes.count { it.isVisibleToUser && own(it) } == 1 &&
         nodes.none { it.isVisibleToUser && it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" } &&
         nodes.any { it.isVisibleToUser && Regex("\\d+ (views?|vues?)", RegexOption.IGNORE_CASE).matches(text(it)) }

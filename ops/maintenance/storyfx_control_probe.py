@@ -20,7 +20,10 @@ def evaluate(value):
                              for key, expected in required.items())
     android = complete and (value['android_publication_enabled'] is False and not value.get('android_executor')
                             or value['android_publication_enabled'] is True and value.get('android_executor') == 'whatsapp_images_pilot')
-    healthy = valid and android and value.get('status') == 'ok' and value.get('database_ok') is True
+    recovery_keys = ('manual_android_retry_available', 'publication_failure_stages')
+    recovery_verified = complete and all(value.get(key) is True for key in recovery_keys)
+    recovery = complete and (not any(key in value for key in recovery_keys) or recovery_verified)
+    healthy = valid and android and recovery and value.get('status') == 'ok' and value.get('database_ok') is True
     return {'id': 'storyfx_control_plane', 'application': 'StoryFX',
             'label': 'StoryFX — commandes web',
             'detail': 'Contrat HTTPS Windows et pilote Android ; disponibilité des téléphones et publication non observées.',
@@ -28,6 +31,7 @@ def evaluate(value):
             'reason_code': 'CONTROL_CONTRACT_OK' if healthy else 'CONTROL_CONTRACT_INVALID' if complete else 'CONTROL_PROOF_MISSING',
             'metrics': {'public_contract_verified': healthy, 'windows_executor_observed': False,
                         'android_executor_observed': False, 'android_reboot_verified': False,
+                        'manual_retry_contract_verified': bool(recovery_verified),
                         'publication_verified': False, 'phone_actions': False},
             'notifications_sent': False, 'business_mutations': False}
 

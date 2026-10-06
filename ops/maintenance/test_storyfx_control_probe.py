@@ -32,3 +32,16 @@ def test_zero_activity_is_not_an_incident():
                             'jobs': 0, 'devices': 0, 'scheduler_available': True,
                             'scheduler_worker_ok': True, 'scheduler_tick_seconds': 10})
     assert result['status'] == 'ok' and result['business_mutations'] is False
+
+
+def test_retry_health_is_not_a_phone_or_publication_proof():
+    value = {'control_center_mode':'windows_bridge', 'windows_publication_enabled':True,
+             'android_publication_enabled':True, 'android_executor':'whatsapp_images_pilot',
+             'status':'ok', 'database_ok':True, 'scheduler_available':True,
+             'scheduler_worker_ok':True, 'scheduler_tick_seconds':10,
+             'manual_android_retry_available':True, 'publication_failure_stages':True}
+    result = probe.evaluate(value)
+    assert result['status'] == 'ok' and result['metrics']['manual_retry_contract_verified']
+    assert result['metrics']['publication_verified'] is False
+    assert probe.evaluate({**value,'publication_failure_stages':False})['status'] == 'incident'
+    assert probe.evaluate({k:v for k,v in value.items() if k != 'manual_android_retry_available'})['status'] == 'incident'
