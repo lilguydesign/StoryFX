@@ -1,6 +1,7 @@
 package com.formafx.storyfx.agent.publication
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.KeyguardManager
 import android.content.Context
 import android.os.Handler
@@ -25,6 +26,7 @@ class PublicationService : AccessibilityService() {
     private var scheduled = false
 
     override fun onServiceConnected() {
+        serviceInfo = serviceInfo.apply { flags = flags or AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS }
         active = true
         if (!scheduled) { scheduled = true; worker.scheduleWithFixedDelay({ synchronize() }, 0, 20, TimeUnit.SECONDS) }
     }
@@ -141,6 +143,7 @@ class PublicationService : AccessibilityService() {
         }
         val result = JSONObject().put("app_version", BuildConfig.VERSION_NAME).put("service_ready", active)
             .put("screen_locked", locked()).put("active_root_kind", kind)
+            .put("provider_layout_nodes_enabled", serviceInfo.flags and AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS != 0)
             .put("unlock_result", EncryptedStore(this).unlockResult())
             .put("local_test_pending", EncryptedStore(this).unlockTestPending())
             .put("unlock_credential_present", EncryptedStore(this).unlockPin()?.also { it.fill('\u0000') } != null)

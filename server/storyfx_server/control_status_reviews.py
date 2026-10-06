@@ -16,8 +16,10 @@ def record(db, node, empty, ready, now):
 
 
 def empty_review(db, parent, now):
+    # share_selection_refused is recorded only before the first provider send arrow.
+    # It still requires a fresh entirely empty own-status observation; never replay uncertain results.
     payload = json.loads(parent['payload'])
-    if (parent['state'] != 'FAILED_BEFORE_PUBLICATION' or parent['evidence'] != 'preflight_refused'
+    if (parent['state'] != 'FAILED_BEFORE_PUBLICATION' or parent['evidence'] not in {'preflight_refused', 'share_selection_refused'}
             or payload.get('execution_origin') != 'web_android_agent' or parent['claimed'] is None
             or not 0 <= now-parent['claimed'] < 23*3600):
         return False

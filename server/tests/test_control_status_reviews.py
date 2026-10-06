@@ -16,8 +16,9 @@ def batch(browser, jobs):
                               'jobs': jobs})
 
 
-def test_generic_failure_requires_fresh_empty_proof_and_keeps_audit(private):
-    _, browser, _, now, auth, contact, job = failed(private, evidence='preflight_refused')
+@pytest.mark.parametrize('evidence', ['preflight_refused', 'share_selection_refused'])
+def test_generic_failure_requires_fresh_empty_proof_and_keeps_audit(private, evidence):
+    _, browser, _, now, auth, contact, job = failed(private, evidence=evidence)
     assert retry(browser, job).status_code == 409
     contact_empty(browser, auth, contact)
     reports = browser.get('/v1/control').json()['reports']
@@ -43,8 +44,8 @@ def test_empty_proof_is_withdrawn_when_observation_or_permission_disappears(priv
 
 
 @pytest.mark.parametrize('state,evidence', [('CONFIRMED', 'own_status_verified'),
-    ('NEEDS_REVIEW', 'result_uncertain'), ('FAILED_BEFORE_PUBLICATION', 'share_selection_refused')])
-def test_empty_proof_never_replays_confirmed_uncertain_or_picker_results(private, state, evidence):
+    ('NEEDS_REVIEW', 'result_uncertain'), ('FAILED_BEFORE_PUBLICATION', 'contacts_preview_refused')])
+def test_empty_proof_never_replays_confirmed_uncertain_or_preview_results(private, state, evidence):
     _, browser, _, _, auth, contact, job = failed(private, state, evidence)
     contact_empty(browser, auth, contact)
     assert retry(browser, job).status_code == 409
