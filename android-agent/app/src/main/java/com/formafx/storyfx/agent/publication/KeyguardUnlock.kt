@@ -40,8 +40,8 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
     private fun fullyUnlocked(store: UnlockState) = KeyguardOutcome.awake(manager.isDeviceLocked,
         manager.isKeyguardLocked, interactive(), !store.firstUnlockPending())
     fun bootChallengeReady(store: UnlockState): Boolean {
-        if (!BootChallengePolicy.ready(!store.firstUnlockPending(), manager.isDeviceLocked,
-                manager.isKeyguardLocked, true) || !store.unlockAllowed() || store.unlockAttempted()) return false
+        if (!BootChallengePolicy.canPrepare(!store.firstUnlockPending(), store.unlockAllowed(),
+                store.unlockAttempted())) return false
         var recognized = false
         ui { recognized = keypadRecognized() }
         if (!recognized) {

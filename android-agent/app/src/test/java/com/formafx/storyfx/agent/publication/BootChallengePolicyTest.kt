@@ -4,6 +4,12 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BootChallengePolicyTest {
+    @Test fun preparationMayWakeTheChallengeBeforeLockFlagsAppearButNeverAfterAPinAttempt() {
+        assertTrue(BootChallengePolicy.canPrepare(false, true, false))
+        assertFalse(BootChallengePolicy.canPrepare(true, true, false))
+        assertFalse(BootChallengePolicy.canPrepare(false, false, false))
+        assertFalse(BootChallengePolicy.canPrepare(false, true, true))
+    }
     @Test fun bootAnimationIsNotAnUnlockOrAReadyChallenge() {
         assertFalse(BootChallengePolicy.ready(false, false, false, true))
         assertFalse(KeyguardOutcome.awake(false, false, true, false))
