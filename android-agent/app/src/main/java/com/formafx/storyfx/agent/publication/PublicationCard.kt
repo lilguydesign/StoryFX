@@ -36,8 +36,8 @@ class PublicationCard(private val activity: Activity, ui: AgentUi) {
         addView(ui.label("L’Accessibilité permet à StoryFX de lire les commandes visibles de WhatsApp Business " +
             "et d’agir pour publier uniquement dans Mon statut. Aucune lecture de vos discussions n’est envoyée au serveur. " +
             "Les photos sont lues localement dans l’album demandé. Activez le service vous-même dans les paramètres Android."))
-        addView(ui.label("Après redémarrage : déverrouillez Android une première fois. Le service activé reprend " +
-            "ensuite sans ouvrir cette page. Une tâche attend si l’écran est verrouillé, si Internet manque ou si une autorisation manque. " +
+        addView(ui.label("Après redémarrage, la reprise facultative ci-dessous peut saisir votre PIN local. Sans cette autorisation, " +
+            "déverrouillez Android une première fois. Le service reprend ensuite sans ouvrir cette page. Une tâche attend si Internet ou une autorisation manque. " +
             "Les gestes d’une tâche interrompue ne sont jamais rejoués automatiquement."))
         addView(status)
     }

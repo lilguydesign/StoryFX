@@ -10,7 +10,7 @@ export const definitions = {
   albums: [['name', 'Nom dans la galerie'], ['kind', 'Type'], ['album_size', 'Nombre d’images', 'number'], ['count_per_post', 'Images par publication', 'number']],
   systems: [['name', 'Nom du système'], ['times', 'Horaires HH:MM, séparés par des virgules', 'times']],
   pages: [['name', 'Nom de la page Facebook'], ['country', 'Pays']],
-  matrix: [['name', 'Nom de la matrice'], ['device', 'Profil', 'profiles'], ['platform', 'Plateforme', ['WhatsApp', 'Facebook', 'Instagram', 'TikTok']],
+  matrix: [['name', 'Nom de la matrice'], ['enabled', 'Activer cette ligne : désactive seulement ce canal et ces albums', 'checkbox'], ['device', 'Profil', 'profiles'], ['platform', 'Plateforme', ['WhatsApp', 'Facebook', 'Instagram', 'TikTok']],
     ['system', 'Système', 'systems'], ['engine', 'Moteur', ['intro', 'multi', 'intro+multi']], ['album', 'Album introduction', 'albums'],
     ['album2', 'Album images', 'albums'], ['count', 'Nombre d’images', 'number'], ['page_name', 'Page Facebook', 'pages'], ['page', 'Pays']],
   locators: [['name', 'Nom du repère'], ['platform', 'Plateforme', ['WhatsApp', 'Facebook', 'Instagram', 'TikTok']], ['xpath', 'Sélecteur XPath']],

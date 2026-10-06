@@ -12,8 +12,9 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
-    com.formafx.storyfx.agent.publication.PublicationStateStore {
+class EncryptedStore(private val context: Context) : QueueStore, AgentAuthStateStore,
+    com.formafx.storyfx.agent.publication.PublicationStateStore,
+    com.formafx.storyfx.agent.publication.UnlockState {
     private val prefs = context.getSharedPreferences("storyfx_private", Context.MODE_PRIVATE)
     private val alias = "storyfx_agent_local_v1"
 
@@ -72,6 +73,7 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
 
     fun eraseAssociation() {
         check(!org.json.JSONObject(publicationState()).has("pending"))
+        com.formafx.storyfx.agent.publication.BootUnlockStore(context).disable()
         check(prefs.edit().remove("server").remove("device_id").remove("token")
             .remove("outbox").remove("last_status").remove("account").remove("auth_pending")
             .remove("publication_profile").remove("unlock_credential").remove("unlock_attempted")
@@ -92,6 +94,7 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
     fun publicationProfile(): String = readSecret("publication_profile") ?: ""
     fun publicationEnabled(): Boolean = prefs.getBoolean("publication_enabled", false)
     fun savePublicationBinding(profile: String, enabled: Boolean) {
+        if (profile != publicationProfile()) com.formafx.storyfx.agent.publication.BootUnlockStore(context).disable()
         check(prefs.edit().putString("publication_profile", encrypt(profile))
             .putBoolean("publication_enabled", enabled).commit())
     }
@@ -99,19 +102,24 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
     fun saveUnlockPin(pin: String) {
         require(session() != null && publicationEnabled() && publicationProfile().isNotBlank())
         require(pin.matches(Regex("[0-9]{4,16}")))
+        // A changed PIN must never leave a stale boot credential armed.
+        com.formafx.storyfx.agent.publication.BootUnlockStore(context).disable()
         val value = org.json.JSONObject().put("profile", publicationProfile())
             .put("installation", installationId()).put("pin", pin)
         check(prefs.edit().putString("unlock_credential", encrypt(value.toString()))
             .remove("unlock_attempted").commit())
     }
-    fun unlockPin(): CharArray? = readSecret("unlock_credential")?.let {
+    override fun unlockPin(): CharArray? = readSecret("unlock_credential")?.let {
         val value = org.json.JSONObject(it)
         if (value.getString("profile") != publicationProfile() || value.getString("installation") != installationId()) null
         else value.getString("pin").takeIf { pin -> pin.matches(Regex("[0-9]{4,16}")) }?.toCharArray()
     }
-    fun disableUnlock() { check(prefs.edit().remove("unlock_credential").commit()); LocalUnlockTest.clear() }
+    fun disableUnlock() {
+        com.formafx.storyfx.agent.publication.BootUnlockStore(context).disable()
+        check(prefs.edit().remove("unlock_credential").commit()); LocalUnlockTest.clear()
+    }
     fun unlockResult(): String = KeyguardResult.read(prefs.getString("unlock_result", null)).label
-    fun saveUnlockResult(value: KeyguardResult) {
+    override fun saveUnlockResult(value: KeyguardResult) {
         val editor = prefs.edit().putString("unlock_result", value.name)
         if (value in setOf(KeyguardResult.WAKE_CONFIRMED, KeyguardResult.PIN_CONFIRMED))
             editor.remove("unlock_failure_stage").remove("unlock_failure_kind")
@@ -121,7 +129,7 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
     fun unlockFailure(): org.json.JSONObject = org.json.JSONObject()
         .put("stage", prefs.getString("unlock_failure_stage", "NONE"))
         .put("kind", prefs.getString("unlock_failure_kind", "NONE"))
-    fun saveUnlockFailure(stage: String, kind: String) {
+    override fun saveUnlockFailure(stage: String, kind: String) {
         require(stage in setOf("SHOW_CHALLENGE", "READ_KEYPAD", "PIN_KEYS", "PIN_ENTER", "VERIFY"))
         require(kind in setOf("UI_TIMEOUT", "SECURITY", "STATE_GUARD", "KEY_NOT_UNIQUE", "INTERRUPTED", "PLATFORM_ERROR"))
         check(prefs.edit().putString("unlock_failure_stage", stage).putString("unlock_failure_kind", kind).commit())
@@ -129,9 +137,10 @@ class EncryptedStore(context: Context) : QueueStore, AgentAuthStateStore,
     fun rememberLocalUnlockResult() {
         check(prefs.edit().putString("local_unlock_result", unlockResult()).commit())
     }
-    fun unlockAttempted() = prefs.getBoolean("unlock_attempted", false)
-    fun markUnlockAttempt() { check(prefs.edit().putBoolean("unlock_attempted", true).commit()) }
-    fun unlockSucceeded() { check(prefs.edit().remove("unlock_attempted").commit()); LocalUnlockTest.clear() }
+    override fun unlockAllowed() = publicationEnabled()
+    override fun unlockAttempted() = prefs.getBoolean("unlock_attempted", false)
+    override fun markUnlockAttempt() { check(prefs.edit().putBoolean("unlock_attempted", true).commit()) }
+    override fun unlockSucceeded() { check(prefs.edit().remove("unlock_attempted").commit()); LocalUnlockTest.clear() }
     fun requestUnlockTest() {
         require(unlockPin()?.also { it.fill('\u0000') } != null && !unlockAttempted())
         LocalUnlockTest.request(publicationProfile(), installationId())

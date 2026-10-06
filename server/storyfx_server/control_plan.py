@@ -19,6 +19,8 @@ def plan(catalog, now):
     day = local.replace(hour=0, minute=0, second=0, microsecond=0)
     result, seen = [], set()
     for row in values['matrix']:
+        if not row.get('enabled', True):
+            continue
         profile, system = profiles.get(row['device']), systems.get(row['system'])
         if not profile or not profile['enabled'] or not system:
             continue
