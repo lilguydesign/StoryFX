@@ -30,10 +30,13 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
         }
         return null
     }
-    private fun updateTargets() = if (!correctPackage) emptyList() else nodes.filter {
-        it.isVisibleToUser && PublicationScreenLabels.updates(text(it), description(it)) &&
-            WhatsAppHomeShape.navigation(top(it), bounds.height())
-    }.mapNotNull(::clickableParent).distinct()
+    private fun updateTargets(): List<AccessibilityNodeInfo> {
+        if (!correctPackage) return emptyList()
+        val visible = nodes.filter { it.isVisibleToUser && WhatsAppHomeShape.navigation(top(it), bounds.height()) }
+        val textTargets = visible.filter { PublicationScreenLabels.updates(text(it), "") }
+        val targets = textTargets.ifEmpty { visible.filter { PublicationScreenLabels.updates("", description(it)) } }
+        return targets.mapNotNull(::clickableParent).distinct()
+    }
     private fun unique(predicate: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo {
         check(correctPackage)
         val found = nodes.filter { it.isVisibleToUser && predicate(it) }
@@ -67,7 +70,9 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
             .put("own_status_text", visible.any { PublicationScreenLabels.own(text(it), "") })
             .put("own_avatar_description", visible.any { PublicationScreenLabels.own("", description(it)) })
             .put("send_control", visible.any { it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" })
-            .put("updates_navigation", hasUpdates())
+            .put("updates_navigation", hasUpdates()).put("updates_targets", updateTargets().size)
+            .put("updates_text_nodes", visible.count { PublicationScreenLabels.updates(text(it), "") &&
+                WhatsAppHomeShape.navigation(top(it), bounds.height()) })
     }
     fun hasNoOwnStatus(): Boolean {
         if (!correctPackage) return false
