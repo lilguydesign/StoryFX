@@ -33,13 +33,13 @@ class NativePublisher(
             authorize()
             progress.enter("updates_navigation_failed")
             ui {
-                if (!screen().hasUpdates()) {
+                if (!screen().hasNoOwnStatus() && !screen().hasUpdates()) {
                     check(screen().isOwnStatusList())
                     backToUpdates()
                 }
             }
             Thread.sleep(1000)
-            action { it.updates() }
+            action { if (!it.hasNoOwnStatus()) it.updates() }
             progress.enter("own_status_unavailable")
             action { it.openOwnStatus() }
             // A fresh own-status baseline must have no recent statuses to confuse with this job.

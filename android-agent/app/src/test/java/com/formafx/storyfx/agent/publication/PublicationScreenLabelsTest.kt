@@ -11,6 +11,13 @@ class PublicationScreenLabelsTest {
         assertFalse(PublicationScreenLabels.emptyOwn("Add status to a group", ""))
         assertFalse(PublicationScreenLabels.emptyOwn("My status", ""))
     }
+    @Test fun emptyTileRequiresTextEvenIfTheAvatarHasItsGenericOwnStatusDescription() {
+        assertTrue(PublicationScreenLabels.emptyOwn("Add status", ""))
+        assertFalse(PublicationScreenLabels.own("Add status", ""))
+        assertTrue(PublicationScreenLabels.own("", "My status"))
+        assertFalse(PublicationScreenLabels.emptyOwn("My status", ""))
+        assertFalse(PublicationScreenLabels.emptyOwn("", ""))
+    }
     @Test fun acceptsProviderTextAndAccessibilityDescriptions() {
         for (label in listOf("Updates", "Actus", "Mises à jour")) {
             assertTrue(PublicationScreenLabels.updates(label, ""))

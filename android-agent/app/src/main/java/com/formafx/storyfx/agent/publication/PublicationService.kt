@@ -67,7 +67,7 @@ class PublicationService : AccessibilityService() {
     }
     private fun contact(api: AgentApi): JSONObject {
         var empty = false
-        if (active && !closed && !locked()) runCatching { onUi { empty = WhatsAppScreen(rootInActiveWindow).hasNoOwnStatus() } }
+        if (active && !closed && !locked()) runCatching { onUi { empty = WhatsAppScreen(ProviderWindow.root(this)).hasNoOwnStatus() } }
         val body = JSONObject()
         .put("service_ready", active).put("media_ready", AlbumMedia.allowed(this)).put("screen_locked", locked()).put("own_status_empty", empty)
         .put("app_version", BuildConfig.VERSION_NAME).put("battery_percent", getSystemService(BatteryManager::class.java)
@@ -115,7 +115,7 @@ class PublicationService : AccessibilityService() {
             awake.acquire(240000)
             try {
                 val deadline = android.os.SystemClock.elapsedRealtime() + 210000
-                NativePublisher(this, ::onUi, { WhatsAppScreen(rootInActiveWindow) }, {
+                NativePublisher(this, ::onUi, { WhatsAppScreen(ProviderWindow.root(this)) }, {
                     check(performGlobalAction(GLOBAL_ACTION_BACK))
                 }, {
                     check(!closed && active && store.publicationEnabled() && !locked())
@@ -130,6 +130,24 @@ class PublicationService : AccessibilityService() {
             runCatching { EncryptedStore(this).saveStatus(if (failure is AgentRequestException && failure.status in listOf(401, 403))
                 "Accès refusé : vérifiez la connexion FormaFX." else "Pilotage Android en attente. Aucun geste de publication rejoué.") }
         }
+    }
+    override fun dump(fd: java.io.FileDescriptor?, writer: java.io.PrintWriter?, args: Array<out String>?) {
+        val root = rootInActiveWindow
+        val kind = when (root?.packageName?.toString()) {
+            PublicationPolicy.provider -> "provider"
+            KeyguardShape.system -> "system_ui"
+            null -> "unavailable"
+            else -> "other"
+        }
+        val result = JSONObject().put("app_version", BuildConfig.VERSION_NAME).put("service_ready", active)
+            .put("screen_locked", locked()).put("active_root_kind", kind)
+            .put("unlock_result", EncryptedStore(this).unlockResult())
+            .put("local_test_pending", EncryptedStore(this).unlockTestPending())
+            .put("unlock_credential_present", EncryptedStore(this).unlockPin()?.also { it.fill('\u0000') } != null)
+            .put("unlock_attempted", EncryptedStore(this).unlockAttempted())
+            .put("whatsapp", WhatsAppScreen(ProviderWindow.root(this)).homeEvidence())
+            .put("keyguard", KeyguardUnlock(this, ::keyguardUi).diagnostics())
+        writer?.println("storyfx_diagnostic=" + result.toString())
     }
     companion object { @Volatile var active = false; private set }
 }
