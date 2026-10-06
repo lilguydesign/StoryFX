@@ -58,7 +58,10 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?) {
     /** Closed structural flags only: no contact labels, captions or password contents. */
     fun homeEvidence(): JSONObject {
         val visible = nodes.filter { it.isVisibleToUser }
-        return JSONObject().put("provider_window", correctPackage)
+        return JSONObject().put("provider_window", correctPackage).put("provider_node_count", nodes.size)
+            .put("picker_header", visible.any { text(it) in setOf("Send to…", "Send to...", "Envoyer à…", "Envoyer à...") })
+            .put("picker_own_text_nodes", visible.count { PublicationScreenLabels.own(text(it), "") })
+            .put("picker_own_named_rows", visible.count { own(it) && it.viewIdResourceName == "${PublicationPolicy.provider}:id/contactpicker_row_name" })
             .put("portrait", WhatsAppHomeShape.portrait(bounds.width(), bounds.height()))
             .put("root_width", bounds.width()).put("root_height", bounds.height())
             .put("header", visible.any { PublicationScreenLabels.updates(text(it), "") &&

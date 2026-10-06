@@ -78,3 +78,9 @@ un texte My status ou un contrôle Send exclut toujours la preuve.
 Le résultat PIN_CONFIRMÉ est réservé au retour déverrouillé après une saisie sur le
 clavier numérique reconnu. RÉVEIL_CONFIRMÉ signifie que la saisie n’a pas été
 nécessaire. Les validations matérielles et publications restent à contrôler.
+
+## Vérification native 0.4.6
+
+Les éléments de disposition Android sont demandés dans les seules fenêtres WhatsApp et System UI déjà autorisées. Android permet ce réglage via `FLAG_INCLUDE_NOT_IMPORTANT_VIEWS` : https://developer.android.com/reference/android/accessibilityservice/AccessibilityServiceInfo#FLAG_INCLUDE_NOT_IMPORTANT_VIEWS. Aucun texte de discussion ni identifiant de contact n’est exporté.
+
+Une sélection de partage refusée avant la première flèche d’envoi peut être reprise uniquement sur demande explicite du propriétaire, après une nouvelle preuve native entièrement vide de Mon statut, postérieure à l’échec, fraîche de moins de 45 secondes, sur le même téléphone et avec la même programmation. Aucun résultat CONFIRMED, NEEDS_REVIEW ou refus de l’aperçu après la flèche ne devient rejouable. Les anciennes tâches restent immuables.

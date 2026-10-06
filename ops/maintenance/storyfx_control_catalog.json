@@ -1,6 +1,6 @@
 {
   "application": "StoryFX",
-  "function": "Private web scheduler, Windows bridge and opt-in native Android WhatsApp image pilot; explicit safe pre-send recovery and closed failure stages",
+  "function": "Private web scheduler, Windows bridge and opt-in Android WhatsApp image pilot; closed native diagnostics and owner-requested pre-send recovery with fresh empty-own-status proof",
   "maturity": "private_android_publication_pilot_physical_validation_pending",
   "probe": "storyfx_control_probe.py",
   "public_endpoint": "https://story.formafx.com/health",
@@ -23,11 +23,11 @@
     "Android service disabled or photo permission missing",
     "Screen off/locked, first unlock after reboot pending, no Internet, or Android force-stop",
     "Native pilot excludes videos, intro engines, Facebook pages and non-WhatsApp providers",
-    "Generic legacy failures, post-picker transitions, uncertain or confirmed results are never retried automatically"
+    "Confirmed or uncertain outcomes and failures after the provider send arrow never replay; pre-send selection failures require fresh native empty-own-status proof and an explicit owner retry"
   ],
   "symptom": "Invalid control or scheduler health contract, unavailable official latest APK, claimed publication without a result after 15 minutes",
   "diagnostic": "Public health contract and official release metadata; inspect private reports only with the active owner; never replay ambiguous publications",
-  "repair": "Restore HTTPS or the isolated control release; reconnect the known Windows executor; a configuration or owner-access change pauses scheduling; inspect private own-status evidence and preserve one-attempt journals; scheduler stop cancels its queued jobs, Stop cancels all queued jobs and denies the final provider action when still pending; Android: verify existing account/profile binding, photo permission, visible Accessibility opt-in, first unlock and Samsung background restrictions; inspect own-status evidence without automatic replay; eligible proven pre-send failures may be retried explicitly from Reports; retain the original audit and never replay generic or uncertain outcomes",
+  "repair": "Restore HTTPS or the isolated control release; reconnect the known Windows executor; a configuration or owner-access change pauses scheduling; inspect private own-status evidence and preserve one-attempt journals; scheduler stop cancels its queued jobs, Stop cancels all queued jobs and denies the final provider action when still pending; Android: verify existing account/profile binding, photo permission, visible Accessibility opt-in, first unlock and Samsung background restrictions; inspect own-status evidence without automatic replay; eligible proven pre-send failures may be retried explicitly from Reports; retain the original audit and never replay generic or uncertain outcomes Native 0.4.6 requests Android provider layout nodes to recognize the exact My status row; no approximate recipient or automatic replay is accepted.",
   "rollback": "Previous backend release and latest APK pointer; retain confirmed/uncertain publication reservations and Android encrypted association",
   "illustration": "https://apps.formafx.com/assets/images/app-icons/storyfx.svg",
   "illustrated_template": "Existing StoryFX maintenance alert; approval and delivery not revalidated by this milestone",
@@ -42,7 +42,9 @@
     "windows_secure_unlock": "CurrentUser DPAPI, trusted hardware only, bounded numeric keyguard attempt; six synthetic tests passed; JK657_S23+ physically locked then unlocked successfully on 2026-10-05; second phone not verified",
     "android_reboot": "implemented_system_rebind_and_boot_receiver_physical_reboot_not_verified",
     "manual_retry_contract": "HTTPS health flags checked by the executed control probe; synthetic ownership/plan/readiness/anti-replay tests; physical publication separately verified or unknown",
-    "private_native_failure_monitoring": "Not covered by the public hourly probe; owner-private results inspected during this task only"
+    "private_native_failure_monitoring": "Not covered by the public hourly probe; owner-private results inspected during this task only",
+    "native_provider_detection": "0.4.6 includes provider layout nodes; physical validation pending; closed native diagnostics export no messages, PIN or tokens",
+    "safe_selection_recovery": "Synthetic tests require post-completion empty-own-status proof, same owner/profile/node, current day/configuration, freshness under 45 s and no active provider job; after-send results remain excluded"
   },
   "notifications_sent_by_validation": false,
   "maintenance_timers_modified": false,
