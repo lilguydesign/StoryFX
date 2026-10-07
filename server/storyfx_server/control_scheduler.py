@@ -7,6 +7,7 @@ from .control_publications import reserve, supported
 from .store import DomainError, timestamp
 from .control_android import executors
 from .control_scheduler_waits import SchedulerWaits
+from .control_media_modes import requires_media_v2
 
 ZONE = ZoneInfo('Africa/Douala')
 
@@ -135,6 +136,7 @@ class Scheduler:
                 selected = [value for value in snapshot['schedule'] if value['device'] in scope['profiles']
                             and value['platform'] in scope['platforms'] and value['due'] and value['state'] == 'PLANNED'
                             and datetime.fromisoformat(value['due_at'].replace('Z','+00:00')).timestamp() >= row['from_at']
+                            and (not requires_media_v2(value) or datetime.fromisoformat(value['due_at'].replace('Z','+00:00')).timestamp() >= self.broker.android.media_enabled_from)
                             and supported(value)]
                 reserve(self.broker,user,snapshot,selected,strict=False,scheduler_id=row['generation'])
                 waiting = any(len(executors(snapshot, value)) != 1 for value in selected)

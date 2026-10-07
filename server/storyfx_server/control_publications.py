@@ -3,11 +3,11 @@ import json
 from uuid import uuid4
 from .store import DomainError
 from .control_android import executors
+from .control_media_modes import supported_media
 
 
 def supported(value):
-    return (value.get('enabled', True) and value['platform'] == 'WhatsApp' and value['engine'] == 'multi'
-            and 1 <= value['count'] <= 30 and not value.get('page_name') and not value.get('page'))
+    return supported_media(value)
 
 
 def reserve(broker, user, snapshot, selected, *, strict=True, scheduler_id=None):
@@ -19,6 +19,10 @@ def reserve(broker, user, snapshot, selected, *, strict=True, scheduler_id=None)
             if not state or not state['enabled'] or state['generation'] != scheduler_id:
                 return []
         for value in selected:
+            if not supported(value):
+                if strict:
+                    raise DomainError('ADAPTER_NOT_VALIDATED', 409)
+                continue
             if db.execute('SELECT 1 FROM control_jobs WHERE owner_id=? AND occurrence=?', (user['id'],value['id'])).fetchone():
                 if strict:
                     raise DomainError('OCCURRENCE_ALREADY_REQUESTED',409)

@@ -13,12 +13,11 @@ object PublicationPolicy {
         require(payload.getString("device") == profile)
         require(payload.getString("execution_origin") == "web_android_agent")
         require(payload.getBoolean("web_triggered"))
-        require(payload.getString("platform") == "WhatsApp" && payload.getString("engine") == "multi")
+        require(payload.getString("platform") == "WhatsApp")
         require(payload.getInt("count") in 1..30)
         require(optionalText(payload, "page").isBlank() && optionalText(payload, "page_name").isBlank())
         require(!Instant.parse(payload.getString("due_at")).isAfter(Instant.now()))
-        require(album(payload).isNotBlank())
-        require(!("${optionalText(payload, "system")}${album(payload)}").contains("video", ignoreCase = true))
+        MediaPlan.parts(payload)
         return payload
     }
 

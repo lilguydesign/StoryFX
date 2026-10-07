@@ -4,6 +4,7 @@ import secrets
 from .control_status_reviews import record
 from uuid import uuid4
 from .store import DomainError, digest
+from .control_media_modes import supported_media, requires_media_v2, capable_version
 
 
 class AndroidControl:
@@ -17,6 +18,10 @@ class AndroidControl:
               UNIQUE(owner_id,profile))''')
             db.execute('''CREATE TABLE IF NOT EXISTS control_status_reviews (
               node_id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, profile TEXT NOT NULL, observed REAL NOT NULL)''')
+            db.execute('CREATE TABLE IF NOT EXISTS control_android_media (device_id TEXT PRIMARY KEY, ready INTEGER NOT NULL)')
+            db.execute('CREATE TABLE IF NOT EXISTS control_media_rollout (name TEXT PRIMARY KEY, enabled_from REAL NOT NULL)')
+            db.execute('INSERT OR IGNORE INTO control_media_rollout VALUES (?,?)', ('media_v2', self.store.clock()))
+            self.media_enabled_from = db.execute('SELECT enabled_from FROM control_media_rollout WHERE name=?', ('media_v2',)).fetchone()[0]
 
     def principal(self, identity):
         if not self.broker.sessions or not identity.auth_session_hash:
@@ -72,8 +77,8 @@ class AndroidControl:
         self.principal(identity)
         with self.store.transaction() as db:
             self.store.authenticate_in_transaction(db, identity)
-            row = db.execute('SELECT n.*,a.enabled,a.ready,a.reason FROM control_nodes n JOIN control_android_links a '
-                             'ON a.node_id=n.id WHERE a.device_id=? AND a.owner_id=? AND n.revoked=0',
+            row = db.execute('SELECT n.*,a.enabled,a.ready,a.reason,COALESCE(m.ready,0) AS media_modes_ready FROM control_nodes n JOIN control_android_links a '
+                             'ON a.node_id=n.id LEFT JOIN control_android_media m ON m.device_id=a.device_id WHERE a.device_id=? AND a.owner_id=? AND n.revoked=0',
                              (identity.id, identity.owner_id)).fetchone()
         if not row or require_ready and (not row['enabled'] or not row['ready'] or row['last_seen'] is None
                                          or self.store.clock() - row['last_seen'] >= 45):
@@ -87,6 +92,9 @@ class AndroidControl:
         with self.store.transaction() as db:
             self.store.authenticate_in_transaction(db, identity)
             db.execute('UPDATE control_android_links SET ready=?,reason=? WHERE device_id=?', (int(not reason), reason, identity.id))
+            media_ready = body.media_modes_ready and body.media_ready and body.service_ready and capable_version(body.app_version)
+            db.execute('INSERT INTO control_android_media VALUES (?,?) ON CONFLICT(device_id) DO UPDATE SET ready=excluded.ready',
+                       (identity.id, int(media_ready)))
             record(db, node, body.own_status_empty, not reason, self.store.clock())
             db.execute('UPDATE control_nodes SET last_seen=?,auth_session=? WHERE id=?',
                        (self.store.clock() if not reason else None, identity.auth_session_hash, node['id']))
@@ -97,22 +105,24 @@ class AndroidControl:
 
     def enrich(self, nodes):
         with self.store.transaction() as db:
-            links = {row['node_id']: row for row in db.execute('SELECT a.*,d.revoked AS device_revoked FROM control_android_links a '
-                     'JOIN devices d ON d.id=a.device_id')}
+            links = {row['node_id']: row for row in db.execute('SELECT a.*,d.revoked AS device_revoked,COALESCE(m.ready,0) AS media_modes_ready FROM control_android_links a '
+                     'JOIN devices d ON d.id=a.device_id LEFT JOIN control_android_media m ON m.device_id=a.device_id')}
         for node in nodes:
             link = links.get(node['id'])
             node['executor'] = 'android_whatsapp_images_v1' if link else 'windows_bridge'
             if link:
                 node['connected'] = bool(node['connected'] and link['ready'] and link['enabled'] and not link['device_revoked'])
                 node['wait_reason'] = link['reason']
+                node['media_modes_ready'] = bool(link['media_modes_ready'])
         return nodes
 
 
 def executors(snapshot, value):
     nodes = [n for n in snapshot['nodes'] if n['connected'] and value['device'] in n['profiles']]
-    windows = [n for n in nodes if n.get('executor', 'windows_bridge') == 'windows_bridge']
-    images = (value['platform'] == 'WhatsApp' and value['engine'] == 'multi'
-              and 1 <= value['count'] <= 30 and not value.get('page') and not value.get('page_name')
-              and 'video' not in ''.join(value.get(key) or '' for key in ('system', 'album', 'album2')).casefold())
-    native = [n for n in nodes if n.get('executor') == 'android_whatsapp_images_v1'] if images else []
+    if not supported_media(value):
+        return []
+    # The Windows pilot implements only multi; never route a new mode to it.
+    windows = [n for n in nodes if n.get('executor', 'windows_bridge') == 'windows_bridge' and value['engine'] == 'multi']
+    native = [n for n in nodes if n.get('executor') == 'android_whatsapp_images_v1'
+              and (n.get('media_modes_ready', False) or not requires_media_v2(value))]
     return native if native else windows

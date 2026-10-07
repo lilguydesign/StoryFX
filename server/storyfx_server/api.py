@@ -136,6 +136,7 @@ def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | 
                              'account_auth_enabled': sessions is not None, 'version': '0.3.0',
                              'control_center_mode': 'windows_bridge', 'windows_publication_enabled': True,
                              'android_publication_enabled': True, 'android_executor':'whatsapp_images_pilot', 'scheduler_available':True,
+                             'android_media_modes': ['intro', 'multi', 'intro+multi'], 'android_media_modes_min_version': '0.4.13',
                              'manual_android_retry_available': True, 'publication_failure_stages': True,
                              'local_android_unlock_available': True, 'empty_status_review_available': True,
                              'scheduler_worker_ok':bool(recent_tick and heartbeat_state['healthy']),

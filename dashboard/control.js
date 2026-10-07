@@ -5,6 +5,7 @@ import { mountLauncher, renderLauncher } from './launch-panel.js';
 import { profilesTable, changeProfileSort } from './profile-editor.js';
 import { showAssociationLink } from './association-link.js';
 import { failureLabels, recoveryButton, mountRecovery } from './publication-recovery.js';
+import { mediaSummary } from './media-plan.js';
 
 let data = null, enabled = false, busy = false, editing = null, editRevision = null, selected = null;
 let profileFilter = '', platformFilter = '';
@@ -60,7 +61,7 @@ export function mountControl(notice) {
     if (launch) {
       selected = data.schedule.find(item => item.id === launch.dataset.publication);
       editRevision = data.revision;
-      find('#launch-preview').textContent = `${selected.device} · ${selected.platform} · ${selected.system} · ${selected.local_time} Douala · ${selected.count} image(s) · ${selected.album2 || selected.album}${selected.page_name ? ` · ${selected.page_name}` : ' · Statut personnel'}`;
+      find('#launch-preview').textContent = `${selected.device} · ${selected.platform} · ${selected.system} · ${selected.local_time} Douala · ${mediaSummary(selected)}${selected.page_name ? ` · ${selected.page_name}` : ' · Statut personnel'}`;
       find('#launch-dialog').showModal();
     }
     if (windows) find('#windows-dialog').showModal();
@@ -121,14 +122,14 @@ function render() {
   const filtered = (data?.schedule || []).filter(value => (!profileFilter || value.device === profileFilter) && (!platformFilter || value.platform === platformFilter));
   const rows = filtered.map(value => {
     const connected = data.nodes.filter(node => node.connected && node.profiles.includes(value.device)).length === 1;
-    return [escape(value.local_time), escape(value.device), escape(value.platform), escape(value.system), escape(value.album2 || value.album), escape(value.count),
+    return [escape(value.local_time), escape(value.device), escape(value.platform), escape(value.system), escape(mediaSummary(value)), escape(value.engine === 'intro' ? 1 : Number(value.count) + (value.engine === 'intro+multi' ? 1 : 0)),
       `<span class="badge ${value.state === 'NEEDS_REVIEW' ? 'error' : ''}">${escape(states[value.state] || value.state)}</span>`,
       `<button class="text-button" data-publication="${value.id}" ${active && connected && value.state === 'PLANNED' ? '' : 'disabled'}>Lancer</button>`];
   });
   const options = (values, current, label) => [['', label], ...values.map(value => [value, value])].map(([value, text]) => `<option value="${escape(value)}" ${value === current ? 'selected' : ''}>${escape(text)}</option>`).join('');
   const filters = `<div class="control-filters"><label>Profil<select data-profile-filter>${options((data?.collections.profiles || []).map(value => value.name), profileFilter, 'Tous les profils')}</select></label><label>Plateforme<select data-platform-filter>${options(['WhatsApp', 'Facebook', 'Instagram', 'TikTok'], platformFilter, 'Toutes les plateformes')}</select></label></div>`;
   for (const name of ['launch', 'programming']) find(`#control-${name}`).innerHTML =
-    `<p class="helper control-help">Africa/Douala · ${escape(filtered.length)} / ${escape(data?.schedule.length || 0)} occurrences aujourd’hui · ${data?.nodes.some(node => node.connected) ? 'Agent de publication prêt' : 'Aucun agent de publication prêt'}</p><button class="button secondary" data-windows ${active ? '' : 'disabled'}>Connecter Windows</button>` + filters + table(['Heure', 'Profil', 'Plateforme', 'Système', 'Album', 'Images', 'État', ''], rows);
+    `<p class="helper control-help">Africa/Douala · ${escape(filtered.length)} / ${escape(data?.schedule.length || 0)} occurrences aujourd’hui · ${data?.nodes.some(node => node.connected) ? 'Agent de publication prêt' : 'Aucun agent de publication prêt'}</p><button class="button secondary" data-windows ${active ? '' : 'disabled'}>Connecter Windows</button>` + filters + table(['Heure', 'Profil', 'Plateforme', 'Système', 'Mode et albums', 'Total médias', 'État', ''], rows);
   find('#control-reports').innerHTML = table(['Date', 'Profil', 'Plateforme', 'Système', 'Résultat', 'Origine', 'Preuve', 'Reprise'], (data?.reports || []).map(value => [
     escape(dateLabel(value.completed_at || value.created_at)), escape(value.publication.device), escape(value.publication.platform), escape(value.publication.system),
     escape(states[value.state] || value.state), value.publication.execution_origin === 'web_android_agent' ? 'Web → Android' : value.publication.web_triggered ? 'Web → Windows' : 'Moteur local', escape(evidenceLabels[value.evidence] || failureLabels[value.evidence] || 'En attente'),

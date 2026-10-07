@@ -12,7 +12,7 @@ export const definitions = {
   pages: [['name', 'Nom de la page Facebook'], ['country', 'Pays']],
   matrix: [['name', 'Nom de la matrice'], ['enabled', 'Activer cette ligne : désactive seulement ce canal et ces albums', 'checkbox'], ['device', 'Profil', 'profiles'], ['platform', 'Plateforme', ['WhatsApp', 'Facebook', 'Instagram', 'TikTok']],
     ['system', 'Système', 'systems'], ['engine', 'Moteur', ['intro', 'multi', 'intro+multi']], ['album', 'Album introduction', 'albums'],
-    ['album2', 'Album images', 'albums'], ['count', 'Nombre d’images', 'number'], ['page_name', 'Page Facebook', 'pages'], ['page', 'Pays']],
+    ['album2', 'Album du lot multiple', 'albums'], ['count', 'Médias du lot multiple (introduction supplémentaire)', 'number'], ['page_name', 'Page Facebook', 'pages'], ['page', 'Pays']],
   locators: [['name', 'Nom du repère'], ['platform', 'Plateforme', ['WhatsApp', 'Facebook', 'Instagram', 'TikTok']], ['xpath', 'Sélecteur XPath']],
 };
 export const descriptions = {
@@ -21,7 +21,7 @@ export const descriptions = {
   pages: 'Vos pages par pays, sélectionnées dans les matrices Facebook.',
   profiles: 'Les noms historiques sont conservés. L’identité USB et les réglages réseau restent sur Windows.',
   systems: 'Les heures de base de vos systèmes, avant le décalage propre à chaque profil.',
-  matrix: 'Une matrice relie un profil, une plateforme, un système, les albums et, pour Facebook, une page.',
+  matrix: 'Introduction : une vidéo de l’album introduction. Multi : le nombre prévu dans l’album du lot. Intro + multi : une vidéo, puis le lot complet, au maximum 30 médias au total. Android 0.4.13 et les autorisations photos/vidéos sont requis pour ces modes WhatsApp. Facebook conserve ses matrices mais son adaptateur natif reste à construire.',
   albums: 'Créez les références des albums présents sur les téléphones. Le transfert des images vers les galeries viendra dans le dernier chantier.',
   locators: 'Repères utilisés pour retrouver des éléments de l’interface Android. Leur modification demande une nouvelle validation du moteur.',
   reports: 'Résultats des publications et état des agents Windows et Android. Un résultat incertain demande une vérification ; il ne repart pas automatiquement.',

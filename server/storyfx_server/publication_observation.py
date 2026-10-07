@@ -6,6 +6,7 @@ import sqlite3
 from zoneinfo import ZoneInfo
 from .control_plan import plan
 from .control_publications import supported
+from .control_media_modes import media_count, requires_media_v2
 
 
 def read_snapshot(database, config, now):
@@ -26,10 +27,15 @@ def read_snapshot(database, config, now):
             if payload.get('retry_depth', 0) >= jobs.get(occurrence, {}).get('depth', -1):
                 jobs[occurrence] = {'state': row['state'], 'evidence': row['evidence'],
                                     'depth': payload.get('retry_depth', 0)}
-        devices = []
-        for row in db.execute('SELECT a.profile,a.enabled,a.ready,a.reason,d.last_seen,d.revoked,d.app_version '
+        tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        media_capabilities = dict(db.execute('SELECT device_id,ready FROM control_android_media')) if 'control_android_media' in tables else {}
+        rollout = db.execute("SELECT enabled_from FROM control_media_rollout WHERE name='media_v2'").fetchone() if 'control_media_rollout' in tables else None
+        devices, capable_profiles = [], set()
+        for row in db.execute('SELECT a.device_id,a.profile,a.enabled,a.ready,a.reason,d.last_seen,d.revoked,d.app_version '
                               'FROM control_android_links a JOIN devices d ON d.id=a.device_id WHERE a.owner_id=?', (owner,)):
             if row['profile'] in config['device_profiles']:
+                if media_capabilities.get(row['device_id'], False):
+                    capable_profiles.add(row['profile'])
                 devices.append({'profile': row['profile'], 'connected': not row['revoked'] and
                                 row['last_seen'] is not None and now - row['last_seen'] < 1200,
                                 'publication_enabled': bool(row['enabled']), 'ready': bool(row['ready']),
@@ -49,12 +55,13 @@ def read_snapshot(database, config, now):
                        'confirmed_legacy_unverified_count' if state == 'CONFIRMED' else
                        'uncertain' if state == 'NEEDS_REVIEW' else
                        'failed_before_send' if state == 'FAILED_BEFORE_PUBLICATION' else
-                       'adapter_not_validated' if not supported(value) or
-                       'video' in ''.join(value.get(k) or '' for k in ('system', 'album', 'album2')).casefold() else
+                       'adapter_not_validated' if not supported(value) or requires_media_v2(value) and value['device'] not in capable_profiles else
+                       'outside_media_rollout' if rollout and requires_media_v2(value) and due < rollout[0] else
                        'outside_active_scheduler' if value['device'] not in scope['profiles'] or value['platform'] not in scope['platforms'] else
                        'late' if now > due + 900 else 'waiting')
             rows.append({'occurrence': value['id'], 'profile': value['device'], 'platform': value['platform'],
                          'expected_count': value['count'], 'due_at': value['due_at'], 'state': state,
+                         'engine': value['engine'], 'expected_media_count': media_count(value),
                          'verdict': verdict, 'retry_depth': job['depth'],
                          'batch_count_verified': verdict == 'confirmed_agent' and value['platform'] == 'WhatsApp',
                          'facebook_page_and_batch_verified': False})

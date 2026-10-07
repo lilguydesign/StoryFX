@@ -75,3 +75,21 @@ def test_runner_idempotence_bounded_end_and_private_state(tmp_path):
     before = (tmp_path / 'observation-state.json').read_bytes()
     collect(tmp_path, config['end_unix'] + 3600)
     assert (tmp_path / 'observation-state.json').read_bytes() == before
+
+
+def test_combination_observation_counts_intro_and_retains_rollout_exclusion(tmp_path):
+    db, config, _ = fixture(tmp_path)
+    value = json.loads(db.execute("SELECT value FROM control_items WHERE collection='matrix'").fetchone()[0])
+    value['engine'] = 'intro+multi'
+    db.execute("UPDATE control_items SET value=? WHERE collection='matrix'", (json.dumps(value),))
+    db.executescript('CREATE TABLE control_android_media(device_id,ready); CREATE TABLE control_media_rollout(name,enabled_from);')
+    db.execute('INSERT INTO control_android_media VALUES (?,1)', ('device',))
+    db.execute('INSERT INTO control_media_rollout VALUES (?,?)', ('media_v2', config['start_unix'] + 3600))
+    db.commit()
+    result = read_snapshot(tmp_path / 'storyfx.db', config, config['start_unix'] + 3600)
+    assert result['rows'][0]['expected_count'] == 9
+    assert result['rows'][0]['expected_media_count'] == 10
+    assert result['rows'][0]['verdict'] == 'outside_media_rollout'
+    db.execute('UPDATE control_android_media SET ready=0'); db.commit(); db.close()
+    result = read_snapshot(tmp_path / 'storyfx.db', config, config['start_unix'] + 3600)
+    assert result['rows'][0]['verdict'] == 'adapter_not_validated'

@@ -26,7 +26,10 @@ def evaluate(value):
     unlock_keys = ('local_android_unlock_available', 'empty_status_review_available')
     unlock_verified = complete and all(value.get(key) is True for key in unlock_keys)
     unlock = complete and (not any(key in value for key in unlock_keys) or unlock_verified)
-    healthy = valid and android and recovery and unlock and value.get('status') == 'ok' and value.get('database_ok') is True
+    media_keys = ('android_media_modes', 'android_media_modes_min_version')
+    media_verified = complete and value.get('android_media_modes') == ['intro', 'multi', 'intro+multi'] and value.get('android_media_modes_min_version') == '0.4.13'
+    media = complete and (not any(key in value for key in media_keys) or media_verified)
+    healthy = valid and android and recovery and unlock and media and value.get('status') == 'ok' and value.get('database_ok') is True
     return {'id': 'storyfx_control_plane', 'application': 'StoryFX',
             'label': 'StoryFX — commandes web',
             'detail': 'Contrat HTTPS Windows et pilote Android ; disponibilité des téléphones et publication non observées.',
@@ -36,6 +39,7 @@ def evaluate(value):
                         'android_executor_observed': False, 'android_reboot_verified': False,
                         'manual_retry_contract_verified': bool(recovery_verified),
                         'local_unlock_contract_verified': bool(unlock_verified),
+                        'media_mode_contract_verified': bool(media_verified),
                         'publication_verified': False, 'phone_actions': False},
             'notifications_sent': False, 'business_mutations': False}
 

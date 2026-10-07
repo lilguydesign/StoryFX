@@ -7,6 +7,7 @@ from .store import DomainError, digest, timestamp
 from .control_terminal import Terminal
 from .control_publications import reserve
 from .control_status_reviews import empty_review
+from .control_media_modes import requires_media_v2
 
 
 class Broker:
@@ -192,5 +193,7 @@ class Broker:
                              (identity, node['id'], node['owner_id'])).fetchone()
             if not row or self.store.clock() - row['claimed'] > 900:
                 raise DomainError('JOB_AUTHORIZATION_EXPIRED', 409)
+            if 'media_modes_ready' in node and requires_media_v2(json.loads(row['payload'])) and not node['media_modes_ready']:
+                raise DomainError('ANDROID_MEDIA_PERMISSION_REQUIRED', 409)
             self.catalog.revision(db,node['owner_id'],json.loads(row['payload'])['catalog_revision'])
         return {'authorized': True}
