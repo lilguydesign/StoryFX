@@ -1,0 +1,14 @@
+[Unit]
+Description=StoryFX private read-only publication evidence
+Requires=docker.service
+After=docker.service
+ConditionPathExists=!/opt/formafx/storyfx/state/observation-complete
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/usr/bin/docker exec storyfx-api python -m storyfx_server.observation_runner /data
+TimeoutStartSec=60
+NoNewPrivileges=true
+PrivateTmp=true

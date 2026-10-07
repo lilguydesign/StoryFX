@@ -11,7 +11,7 @@ class BootUnlockCard(activity: Activity, ui: AgentUi) {
         addView(ui.label("Autorisation facultative : le PIN local chiffré devient disponible avant le premier " +
             "déverrouillage. StoryFX saisit ce PIN dans le clavier Android reconnu, une seule fois par démarrage. " +
             "Cela permet au téléphone de se déverrouiller sans votre présence. Le verrouillage et Play Protect restent actifs. " +
-            "Aucun PIN ou compte n’est envoyé au serveur. Une erreur attend un déverrouillage manuel."))
+            "Le démarrage utilise la copie locale, indépendamment de la sauvegarde Vault facultative. Une erreur attend un déverrouillage manuel."))
         addView(ui.label("L’Accessibilité StoryFX doit déjà être autorisée. Après le déverrouillage, les envois restent " +
             "soumis au compte, aux canaux, au scheduler et aux autorisations du serveur. Cette option n’active aucun canal."))
         addView(ui.button("Autoriser la reprise au démarrage", primary = true).apply {

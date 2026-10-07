@@ -24,7 +24,7 @@ class UnlockCard(private val activity: Activity, ui: AgentUi) {
         addView(ui.text("Déverrouillage local", 17f, ui.ink, true))
         addView(ui.label("Facultatif : StoryFX peut saisir votre PIN sur le clavier Android reconnu pour une tâche autorisée. " +
             "Le code reste chiffré sur ce téléphone, lié à son profil. Une seule tentative ; un échec attend votre déverrouillage manuel. " +
-            "Le code n’est jamais envoyé au serveur. La reprise au démarrage possède une autorisation distincte ci-dessous."))
+            "Une sauvegarde Supabase Vault facultative est proposée séparément. La reprise au démarrage possède une autorisation distincte ci-dessous."))
         addView(ui.label("Code PIN de ce téléphone")); addView(pin)
         addView(ui.button("Enregistrer le code sur ce téléphone", primary = true).apply {
             setOnClickListener {
