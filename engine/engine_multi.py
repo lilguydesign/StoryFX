@@ -3,17 +3,14 @@
 Multi-selection engine (codes 3,4,5,6,7 …)
 """
 
-from appium.webdriver.common.touch_action import TouchAction
 
 import time
-import random
 import math
-from pathlib import Path
 
 from ui.ui_paths_helpers import load_albums_dict
-from appium.webdriver.common.appiumby import AppiumBy
 
 from .platforms import pre_platform_setup, share_to_platform
+from .gallery_batch import BatchSelectionError, select_exact_batch, verify_shared_batch
 
 from .core import (
     log,
@@ -27,7 +24,6 @@ from .core import (
     reset_gallery_home,
     unlock_screen_if_needed,
     start_gallery,  # ⬅️ ajouter ceci
-    debug_dump_thumbnails,  # ✅ AJOUTER CETTE LIGNE
 )
 
 ALBUMS_CACHE = None
@@ -70,7 +66,7 @@ def run(
       - remet la Galerie dans un état propre (reset_gallery_home)
       - ouvre l’album demandé
       - active la sélection multiple (long press)
-      - sélectionne `count` images : 1 par "page", puis scroll
+      - vérifie la sélection réelle de `count` images avant le partage
       - partage vers la plateforme choisie :
           * WhatsApp Business (My status) si platform == "WhatsApp"
           * sinon Facebook / Instagram / TikTok via share_to_platform()
@@ -82,6 +78,7 @@ def run(
       5 : impossible de faire le long press sur la première vignette
       6 : pas assez d’images sélectionnées
       7 : bouton Share introuvable
+      8 : quantité reçue par le partage Android non confirmée
       0 : succès
     """
     platform_opts = platform_opts or {}
@@ -100,8 +97,12 @@ def run(
     # S’assurer que count est bien un int
     try:
         count = int(count)
-    except Exception:
-        count = 11
+    except (TypeError, ValueError):
+        log("[multi] Quantité invalide : aucune publication.")
+        return 1
+    if not 1 <= count <= 30:
+        log("[multi] Quantité hors limite : aucune publication.")
+        return 1
 
     # driver = make_driver(device_id, plat_ver)
     driver = make_driver(device_id, plat_ver, profile=profile)
@@ -135,120 +136,25 @@ def run(
             log("[multi] Impossible de faire le long press sur la première vignette.")
             return 5
 
-        # Scroll max dynamique en fonction de l'album (basé sur albums.json)
-        scroll_max   = compute_scroll_max_for_album(album_name)
-        album_total  = get_album_size(album_name)
-        log(f"[multi] scroll_max={scroll_max} pour l'album '{album_name}' (album_size={album_total}).")
-
-        # Par sécurité : ne jamais demander plus d'images que l'album n'en contient
-        if album_total and count > album_total:
-            count = album_total
-            log(f"[multi] count ajusté à {count} (taille réelle de l'album).")
-
-        # ------------------------------------------------------------------
-        # MODE 1 : petits albums (≤ 32 photos) → une seule page, aucun scroll
-        # ------------------------------------------------------------------
-        if album_total and album_total <= 32:
-            log("[multi] Mode 'small album' activé (≤ 32 photos) : aucune analyse de scroll.")
-
-            thumbs = driver.find_elements(
-                AppiumBy.XPATH,
-                "(//android.widget.FrameLayout[@resource-id="
-                "'com.sec.android.gallery3d:id/thumbnail_preview_layout'])",
-            )
-
-            if not thumbs:
-                log("[multi] ❌ Aucune vignette trouvée sur la page unique.")
-                # Debug spécial S23 pour voir ce que Samsung renvoie
-                debug_dump_thumbnails(driver)
-                return 6
-
-            idxs = list(range(len(thumbs)))
-            random.shuffle(idxs)
-
-            selected = 0
-            for i in idxs:
-                if selected >= count:
-                    break
-                try:
-                    thumbs[i].click()
-                    selected += 1
-                    log(f"[multi] Image sélectionnée (total={selected}/{count}).")
-                    time.sleep(0.2)
-                except Exception:
-                    continue
-
-            if selected < count:
-                log(f"[multi] Seulement {selected}/{count} images sélectionnées → code 6 (small album).")
-                return 6
-
-        # ------------------------------------------------------------------
-        # MODE 2 : grands albums (> 32 photos) → algo classique avec scroll
-        # ------------------------------------------------------------------
-        else:
-            # --- Sélection multi : 1 image puis scroll, comme ton ancien script ---
-            selected = 0
-            empty_loops = 0
-            max_empty_loops = 10
-
-            while selected < count and empty_loops < max_empty_loops:
-                thumbs = driver.find_elements(
-                    AppiumBy.XPATH,
-                    "(//android.widget.FrameLayout[@resource-id="
-                    "'com.sec.android.gallery3d:id/thumbnail_preview_layout'])",
-                )
-
-                if not thumbs:
-                    empty_loops += 1
-                    log(f"[multi] Aucune vignette trouvée (loop={empty_loops}), on scroll.")
-
-                    # 🔍 DEBUG SPÉCIAL S23 : voir ce que Samsung affiche réellement
-                    if empty_loops == 1:
-                        debug_dump_thumbnails(driver)
-
-                else:
-                    idxs = list(range(len(thumbs)))
-                    random.shuffle(idxs)
-
-                    clicked = False
-                    for i in idxs:
-                        if selected >= count:
-                            break
-                        try:
-                            thumbs[i].click()
-                            selected += 1
-                            clicked = True
-                            log(f"[multi] Image sélectionnée (total={selected}/{count}).")
-                            time.sleep(0.2)
-                            break
-                        except Exception:
-                            continue
-
-                    if not clicked:
-                        empty_loops += 1
-                        log(
-                            f"[multi] Impossible de sélectionner une image sur cette page "
-                            f"(loop={empty_loops})."
-                        )
-
-                # Scroll 1 → scroll_max fois selon la taille de l'album
-                size = driver.get_window_size()
-                start_x = size["width"] // 2
-                start_y = int(size["height"] * 0.75)
-                end_y   = int(size["height"] * 0.25)
-
-                scroll_times = random.randint(1, scroll_max)
-                for _ in range(scroll_times):
-                    driver.swipe(start_x, start_y, start_x, end_y, 900)
-                    time.sleep(0.4)
-
-            if selected < count:
-                log(f"[multi] Seulement {selected}/{count} images sélectionnées → code 6.")
-                return 6
+        # Verify the UI count, including a first thumbnail still selected after long press.
+        try:
+            selected = select_exact_batch(driver, count, album_total=get_album_size(album_name),
+                                          scroll_max=compute_scroll_max_for_album(album_name))
+        except BatchSelectionError:
+            log("[multi] Lot exact non confirmé : aucun partage autorisé.")
+            return 6
+        log(f"[multi] Sélection réelle confirmée : {selected}/{count}.")
 
         # Bouton Share
         if not tap_share_button(driver):
             return 7
+
+        # Refuse a provider handoff if Android received fewer images than configured.
+        try:
+            verify_shared_batch(driver, count)
+        except BatchSelectionError:
+            log("[multi] Quantité reçue par Android non confirmée : publication arrêtée.")
+            return 8
 
         # ⭐ ROUTAGE SELON LA PLATEFORME ⭐
         if platform == "WhatsApp":
@@ -269,19 +175,6 @@ def run(
 
         return 0
 
-
-        # # ⭐ ROUTAGE SELON LA PLATEFORME ⭐
-        # if platform == "WhatsApp":
-        #     # Feuille de partage → WhatsApp Business → My status
-        #     choose_whatsapp_business_if_needed(driver, profile_name)
-        #     share_to_my_status(driver)
-        #     log("✔ Multi selection posted (WhatsApp Status).")
-        # else:
-        #     # Facebook / Instagram / TikTok
-        #     share_to_platform(driver, platform, platform_opts)
-        #     log(f"✔ Multi selection posted on {platform}.")
-        #
-        # return 0
 
     finally:
         try:
