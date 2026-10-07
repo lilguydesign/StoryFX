@@ -31,6 +31,32 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
         it.packageName?.toString() == KeyguardShape.system &&
             it.viewIdResourceName == "${KeyguardShape.system}:id/pinEntry" && it.isPassword
     }
+    private fun keypadRecognized(): Boolean {
+        val values = nodes()
+        return KeyguardShape.accepts(entry(values)?.packageName?.toString().orEmpty(),
+            entry(values) != null && entry(values)?.text.isNullOrEmpty(),
+            values.mapNotNull { it.viewIdResourceName }.toSet())
+    }
+    private fun fullyUnlocked(store: UnlockState) = KeyguardOutcome.awake(manager.isDeviceLocked,
+        manager.isKeyguardLocked, interactive(), !store.firstUnlockPending())
+    fun bootChallengeReady(store: UnlockState): Boolean {
+        if (!BootChallengePolicy.canPrepare(!store.firstUnlockPending(), store.unlockAllowed(),
+                store.unlockAttempted())) return false
+        var recognized = false
+        ui { recognized = keypadRecognized() }
+        if (!recognized) {
+            // Preparation never reads the PIN or consumes its single persisted attempt.
+            ui { service.startActivity(Intent(service, UnlockActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            repeat(20) {
+                if (!recognized && store.firstUnlockPending()) {
+                    Thread.sleep(300)
+                    ui { recognized = keypadRecognized() }
+                }
+            }
+        }
+        return BootChallengePolicy.ready(!store.firstUnlockPending(), manager.isDeviceLocked,
+            manager.isKeyguardLocked, recognized)
+    }
     private fun click(target: AccessibilityNodeInfo) {
         var current: AccessibilityNodeInfo? = target
         repeat(4) {
@@ -55,7 +81,7 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
                 .filter { it.matches(Regex("com\\.android\\.systemui:id/key[0-9]")) }.distinct().size)
     }
     fun attempt(store: UnlockState, authorize: () -> Boolean): Boolean {
-        if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult(KeyguardResult.WAKE_CONFIRMED); return true }
+        if (fullyUnlocked(store)) { store.unlockSucceeded(); store.saveUnlockResult(KeyguardResult.WAKE_CONFIRMED); return true }
         if (store.unlockAttempted() || !store.unlockAllowed()) return false
         store.saveUnlockResult(KeyguardResult.AUTHORIZATION)
         if (!authorize()) { store.saveUnlockResult(KeyguardResult.AUTHORIZATION_REFUSED); return false }
@@ -65,7 +91,7 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
             store.saveUnlockResult(KeyguardResult.WAKE_REQUESTED)
             ui { service.startActivity(Intent(service, UnlockActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             Thread.sleep(300)
-            if (!locked() && interactive()) { store.unlockSucceeded(); store.saveUnlockResult(KeyguardResult.WAKE_CONFIRMED); return true }
+            if (fullyUnlocked(store)) { store.unlockSucceeded(); store.saveUnlockResult(KeyguardResult.WAKE_CONFIRMED); return true }
             var recognized = false
             phase = "READ_KEYPAD"
             repeat(20) {
@@ -105,8 +131,11 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
                 }
             }
             phase = "VERIFY"
-            Thread.sleep(1500)
-            if (locked()) { store.saveUnlockResult(KeyguardResult.NOT_CONFIRMED); return false }
+            var confirmed = false
+            repeat(20) {
+                if (!confirmed) { Thread.sleep(250); confirmed = fullyUnlocked(store) }
+            }
+            if (!confirmed) { store.saveUnlockResult(KeyguardResult.NOT_CONFIRMED); return false }
             store.unlockSucceeded(); store.saveUnlockResult(KeyguardResult.PIN_CONFIRMED)
             return true
         } catch (failure: Exception) {
@@ -116,7 +145,7 @@ class KeyguardUnlock(private val service: PublicationService, private val ui: ((
             val completed = runCatching {
                 Thread.sleep(1500)
                 KeyguardOutcome.confirmed(store.unlockAttempted(), manager.isDeviceLocked,
-                    manager.isKeyguardLocked, interactive())
+                    manager.isKeyguardLocked, interactive(), !store.firstUnlockPending())
             }.getOrDefault(false)
             if (completed) { store.unlockSucceeded(); store.saveUnlockResult(KeyguardResult.PIN_CONFIRMED); return true }
             store.saveUnlockFailure(phase, KeyguardFailure.kind(failure))

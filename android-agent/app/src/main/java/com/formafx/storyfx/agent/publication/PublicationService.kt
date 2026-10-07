@@ -94,9 +94,10 @@ class PublicationService : AccessibilityService() {
         val boot = BootUnlockStore(this)
         if (!boot.userUnlocked()) {
             runCatching {
-                if (boot.shouldInvoke() && active && !closed) {
+                val unlock = KeyguardUnlock(this, ::keyguardUi)
+                if (boot.shouldInvoke() && active && !closed && unlock.bootChallengeReady(boot)) {
                     boot.reserveInvocation()
-                    KeyguardUnlock(this, ::keyguardUi).attempt(boot) { boot.unlockAllowed() && active && !closed }
+                    unlock.attempt(boot) { boot.unlockAllowed() && active && !closed }
                 }
             }.onFailure { boot.saveUnlockResult(KeyguardResult.ERROR) }
             return
