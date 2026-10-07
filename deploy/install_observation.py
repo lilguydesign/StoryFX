@@ -29,6 +29,8 @@ def install(release, config):
     else:
         with destination.open('x') as output:
             os.chmod(destination, 0o600)
+            identity = (folder / 'storyfx.db').stat()
+            os.chown(destination, identity.st_uid, identity.st_gid)
             json.dump(config, output)
     for name in ('storyfx-observation.service', 'storyfx-observation.timer'):
         source, target = release / 'deploy' / name, Path('/etc/systemd/system') / name
