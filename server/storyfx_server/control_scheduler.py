@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from .control_publications import reserve, supported
 from .store import DomainError, timestamp
 from .control_android import executors
+from .control_scheduler_waits import SchedulerWaits
 
 ZONE = ZoneInfo('Africa/Douala')
 
@@ -19,6 +20,7 @@ class Scheduler:
               auth_session TEXT NOT NULL, revision INTEGER NOT NULL, scope TEXT NOT NULL,
               from_at REAL NOT NULL, mode TEXT NOT NULL, started REAL NOT NULL,
               wait_reason TEXT NOT NULL DEFAULT '')''')
+        self.waits = SchedulerWaits(broker)
 
     def status(self, user):
         with self.store.transaction() as db:
@@ -120,6 +122,8 @@ class Scheduler:
         with self.store.transaction() as db:
             rows = [dict(row) for row in db.execute('SELECT * FROM control_schedulers WHERE enabled=1')]
         for row in rows:
+            if not self.waits.due(row):
+                continue
             try:
                 user = self.sessions.require_hash(row['auth_session'])
                 if user['id'] != row['owner_id']:
@@ -137,5 +141,7 @@ class Scheduler:
                 with self.store.transaction() as db:
                     db.execute('UPDATE control_schedulers SET mode=\'auto\',wait_reason=? WHERE owner_id=? AND generation=? AND enabled=1',
                                ('WINDOWS_DISCONNECTED' if waiting else '',user['id'],row['generation']))
+                self.waits.clear(row)
             except DomainError as error:
-                self.pause(row,'OWNER_ACCESS_REQUIRED' if error.status in (401,403) else 'CONTROL_UNAVAILABLE')
+                if not self.waits.defer(row, error):
+                    self.pause(row,'OWNER_ACCESS_REQUIRED' if error.status in (401,403) else 'CONTROL_UNAVAILABLE')
