@@ -1,0 +1,20 @@
+{
+  "application": "StoryFX",
+  "function": "scheduler_transient_control_recovery",
+  "maturity": "tested_pending_production_validation",
+  "trigger": "AUTH_UNAVAILABLE 503 or RATE_LIMITED 429 during existing scheduler validation",
+  "calendar": "scheduler every 10 seconds; persisted rechecks after 30, 60, 120, 240, 300 seconds",
+  "timezone": "Africa/Douala",
+  "probe": "storyfx_scheduler_recovery_probe.py",
+  "expected_signal": "live owner validation succeeds before dispatch; closed wait reason clears",
+  "tolerance_seconds": 60,
+  "normal_exclusions": ["owner stop", "configuration change", "owner revocation", "unsupported native adapter"],
+  "symptom": "technical scheduler pause or stale transient-control recheck",
+  "repair": "restore identity dependency; explicitly restart an old permanent pause through domain guards",
+  "rollback": "previous verified StoryFX backend release and SQLite backup",
+  "illustrated_alert": "existing StoryFX control incident template, existing global two-hour notification quota",
+  "notifications_sent": false,
+  "publication_retry": "explicit only; preserve confirmed, uncertain, previously retried and original audit",
+  "usb_required": false,
+  "total_autonomy_verified": false
+}
