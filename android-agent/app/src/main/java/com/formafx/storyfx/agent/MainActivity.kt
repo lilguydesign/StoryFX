@@ -149,6 +149,7 @@ class MainActivity : Activity() {
         updates = com.formafx.storyfx.agent.update.UpdateCard(this, ui).also { root.addView(it.view) }
         publication = com.formafx.storyfx.agent.publication.PublicationCard(this, ui).also { root.addView(it.view) }
         root.addView(com.formafx.storyfx.agent.publication.UnlockCard(this, ui).view)
+        root.addView(com.formafx.storyfx.agent.publication.PinBackupCard(this, ui).view)
         root.addView(com.formafx.storyfx.agent.publication.BootUnlockCard(this, ui).view)
         root.addView(ui.text("Les diagnostics restent disponibles. Le pilotage Android est un pilote privé " +
             "pour les images WhatsApp Business, activé avec vos autorisations visibles.", 12f).apply {

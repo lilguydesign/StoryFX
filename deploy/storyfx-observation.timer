@@ -1,0 +1,11 @@
+[Unit]
+Description=StoryFX seven-day evidence every thirty minutes
+
+[Timer]
+OnCalendar=*-*-* *:00,30:00
+Persistent=true
+AccuracySec=30s
+Unit=storyfx-observation.service
+
+[Install]
+WantedBy=timers.target

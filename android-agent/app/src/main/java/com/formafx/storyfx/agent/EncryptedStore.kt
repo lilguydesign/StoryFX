@@ -100,7 +100,7 @@ class EncryptedStore(private val context: Context) : QueueStore, AgentAuthStateS
     }
 
     fun saveUnlockPin(pin: String) {
-        require(session() != null && publicationEnabled() && publicationProfile().isNotBlank())
+        require(session() != null && publicationProfile().isNotBlank())
         require(pin.matches(Regex("[0-9]{4,16}")))
         // A changed PIN must never leave a stale boot credential armed.
         com.formafx.storyfx.agent.publication.BootUnlockStore(context).disable()
