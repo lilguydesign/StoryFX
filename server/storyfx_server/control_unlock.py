@@ -2,6 +2,7 @@
 from datetime import datetime
 import json
 from .control_publications import supported
+from .control_media_modes import requires_media_v2
 
 
 def unlock_authorized(native, identity):
@@ -35,6 +36,7 @@ def unlock_authorized(native, identity):
     candidates = [row for row in snapshot['schedule'] if row['device'] == link['profile']
                   and (row['state'] == 'PLANNED' or row['state'] == 'QUEUED' and row['id'] in queued_roots)
                   and row['due'] and supported(row)
-                  and 'video' not in ''.join(row.get(k) or '' for k in ('system','album','album2')).casefold()
+                  and (not requires_media_v2(row) or node['media_modes_ready'] and
+                       datetime.fromisoformat(row['due_at'].replace('Z','+00:00')).timestamp() >= native.media_enabled_from)
                   and datetime.fromisoformat(row['due_at'].replace('Z','+00:00')).timestamp() >= scheduler['from_at']]
     return {'authorized': bool(candidates)}

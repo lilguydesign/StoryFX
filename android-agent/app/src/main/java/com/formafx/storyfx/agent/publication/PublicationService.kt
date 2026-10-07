@@ -75,10 +75,12 @@ class PublicationService : AccessibilityService() {
         .put("service_ready", active).put("media_ready", AlbumMedia.allowed(this)).put("screen_locked", locked()).put("own_status_empty", empty)
         .put("app_version", BuildConfig.VERSION_NAME).put("battery_percent", getSystemService(BatteryManager::class.java)
             .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY).takeIf { it in 0..100 } ?: JSONObject.NULL)
+        body.put("media_modes_ready", AlbumMedia.allowed(this) && AlbumMedia.videosAllowed(this))
         return try { api.post("/v1/control/android/heartbeat", body) } catch (failure: AgentRequestException) {
             if (failure.status != 422) throw failure
             // The optional proof is omitted on a backend rollback; no review is granted there.
             body.remove("own_status_empty")
+            body.remove("media_modes_ready")
             api.post("/v1/control/android/heartbeat", body)
         }
     }

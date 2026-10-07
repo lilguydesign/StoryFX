@@ -19,6 +19,7 @@ class NativeContact(Strict):
     media_ready: StrictBool
     screen_locked: StrictBool
     own_status_empty: StrictBool = False
+    media_modes_ready: StrictBool = False
     app_version: str = Field(pattern=r'^\d+\.\d+\.\d+$', max_length=32)
     battery_percent: int | None = Field(default=None, ge=0, le=100)
 

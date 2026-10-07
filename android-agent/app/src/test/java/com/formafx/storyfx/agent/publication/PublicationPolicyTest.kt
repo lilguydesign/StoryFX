@@ -13,14 +13,14 @@ class PublicationPolicyTest {
 
     @Test fun wrongPhoneOrProviderOrFutureCommandCannotStart() {
         for ((key, value) in listOf("device" to "Autre appareil", "platform" to "Facebook",
-            "engine" to "intro", "due_at" to "2999-01-01T00:00:00Z", "page_name" to "Autre destination",
+            "engine" to "unknown", "due_at" to "2999-01-01T00:00:00Z", "page_name" to "Autre destination",
             "web_triggered" to false, "execution_origin" to "web_windows_bridge")) {
             val input = job(); input.getJSONObject("payload").put(key, value)
             assertThrows(IllegalArgumentException::class.java) { PublicationPolicy.validate(input, "Validation technique") }
         }
     }
-    @Test fun videosAndOversizedBatchesAreExcluded() {
-        for ((key, value) in listOf("album2" to "Video", "system" to "video", "count" to 31, "count" to 0)) {
+    @Test fun oversizedBatchesAreExcluded() {
+        for ((key, value) in listOf("count" to 31, "count" to 0)) {
             val input = job(); input.getJSONObject("payload").put(key, value)
             assertThrows(IllegalArgumentException::class.java) { PublicationPolicy.validate(input, "Validation technique") }
         }

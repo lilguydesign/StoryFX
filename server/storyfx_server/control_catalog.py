@@ -93,6 +93,10 @@ class Catalog:
                         raise DomainError('SETTING_REFERENCE_MISSING', 422)
                 if not (clean['album'] if clean['engine'] == 'intro' else clean['album2'] or clean['album']):
                     raise DomainError('ALBUM_REQUIRED', 422)
+                if clean['engine'] == 'intro+multi' and not clean['album']:
+                    raise DomainError('INTRO_ALBUM_REQUIRED', 422)
+                if clean['platform'] == 'WhatsApp' and clean['engine'] == 'intro+multi' and clean['count'] >= 30:
+                    raise DomainError('MEDIA_BATCH_TOO_LARGE', 422)
             if not existing and db.execute('SELECT COUNT(*) FROM control_items WHERE owner_id=? AND collection=?',
                                            (user['id'], collection)).fetchone()[0] >= 500:
                 raise DomainError('SETTING_LIMIT', 409)

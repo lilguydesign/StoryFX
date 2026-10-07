@@ -31,7 +31,8 @@ def test_legacy_rows_default_enabled_and_disabled_payload_refused():
     from storyfx_server.control_models import Matrix
     from storyfx_server.control_publications import supported
     value = dict(name='Validation technique', device='Validation technique', platform='WhatsApp',
-                 system='Validation technique', engine='multi', count=3)
+                 system='Validation technique', engine='multi', album='Validation technique', count=3)
     assert Matrix.model_validate(value).enabled
     assert supported(value)
     assert not supported({**value, 'enabled': False})
+    assert not supported({**value, 'album': ''})

@@ -1,0 +1,19 @@
+{
+  "application": "StoryFX",
+  "function": "whatsapp_native_media_modes",
+  "minimum_agent_version": "0.4.13",
+  "modes": ["intro", "multi", "intro+multi"],
+  "timezone": "Africa/Douala",
+  "trigger": "existing_explicitly_started_scheduler",
+  "observation_interval_minutes": 30,
+  "delay_tolerance_seconds": 900,
+  "signals": ["agent_capability", "expected_media_count", "own_status_verified", "uncertain", "failed_before_send"],
+  "normal_exclusions": ["outside_media_rollout", "disabled_channel", "future_occurrence", "missing_video_permission", "unsupported_native_social_network"],
+  "diagnostic": "Read the existing server observation and the public capability contract; never dispatch from a probe.",
+  "repair": "Deliver and install the signed agent; grant photos/videos for StoryFX; preserve uncertain results.",
+  "rollback": "Restore the verified backend and APK pointer, retaining databases, phone data and notification quota.",
+  "alert_template": "Existing grouped StoryFX maintenance illustration and quota, no separate test notification.",
+  "real_publication_verified": false,
+  "facebook_tiktok_native_verified": false,
+  "natural_sleep_without_usb_verified": false
+}

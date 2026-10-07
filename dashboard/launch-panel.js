@@ -1,5 +1,6 @@
 import { request } from './api.js';
 import { escape, dateLabel } from './views.js';
+import { mediaSummary } from './media-plan.js';
 
 let draft = {mode:'auto',start_time:'05:00',end_time:'',profiles:[],platforms:['WhatsApp']};
 let preview = null, pending = null;
@@ -19,7 +20,7 @@ function body(snapshot) {
 
 function previewTable(value) {
   if (!value) return '<p class="helper">Prévisualisez le rattrapage avant de lancer.</p>';
-  return `<p class="helper">${dateLabel(value.from_at)} → ${dateLabel(value.until)} · ${value.eligible_count} prête(s).</p><div class="table-scroll"><table><thead><tr><th>Heure</th><th>Profil</th><th>Système</th><th>Images</th><th>Vérification</th></tr></thead><tbody>${value.rows.map(row=>`<tr><td>${escape(row.local_time)}</td><td>${escape(row.device)}</td><td>${escape(row.system)}</td><td>${escape(row.count)}</td><td>${escape(reasons[row.reason] || row.reason)}</td></tr>`).join('')}</tbody></table></div>`;
+  return `<p class="helper">${dateLabel(value.from_at)} → ${dateLabel(value.until)} · ${value.eligible_count} prête(s).</p><div class="table-scroll"><table><thead><tr><th>Heure</th><th>Profil</th><th>Système</th><th>Mode et médias</th><th>Vérification</th></tr></thead><tbody>${value.rows.map(row=>`<tr><td>${escape(row.local_time)}</td><td>${escape(row.device)}</td><td>${escape(row.system)}</td><td>${escape(mediaSummary(row))}</td><td>${escape(reasons[row.reason] || row.reason)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 export function mountLauncher({getSnapshot,perform,notice,redraw}) {

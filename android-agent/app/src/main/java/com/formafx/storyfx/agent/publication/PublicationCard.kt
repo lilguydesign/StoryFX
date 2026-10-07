@@ -27,15 +27,17 @@ class PublicationCard(private val activity: Activity, ui: AgentUi) {
         addView(profiles)
         addView(enabled)
         addView(ui.button("Enregistrer le profil Android", primary = true).apply { setOnClickListener { bind() } })
-        addView(ui.button("Autoriser les photos des albums").apply {
-            setOnClickListener { activity.requestPermissions(arrayOf(AlbumMedia.permission()), 410) }
+        addView(ui.button("Autoriser les photos et vidéos des albums").apply {
+            setOnClickListener { activity.requestPermissions(AlbumMedia.permissions(), 410) }
         })
         addView(ui.button("Configurer l’Accessibilité StoryFX").apply {
             setOnClickListener { activity.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
         })
         addView(ui.label("L’Accessibilité permet à StoryFX de lire les commandes visibles de WhatsApp Business " +
             "et d’agir pour publier uniquement dans Mon statut. Aucune lecture de vos discussions n’est envoyée au serveur. " +
-            "Les photos sont lues localement dans l’album demandé. Activez le service vous-même dans les paramètres Android."))
+            "Les photos et vidéos sont lues localement dans les albums demandés. Introduction : une vidéo. " +
+            "Multi : le nombre prévu. Intro + multi : une vidéo suivie du lot, sans doublon, au maximum 30 médias. " +
+            "Activez le service vous-même dans les paramètres Android."))
         addView(ui.label("Après redémarrage, la reprise facultative ci-dessous peut saisir votre PIN local. Sans cette autorisation, " +
             "déverrouillez Android une première fois. Le service reprend ensuite sans ouvrir cette page. Une tâche attend si Internet ou une autorisation manque. " +
             "Les gestes d’une tâche interrompue ne sont jamais rejoués automatiquement."))

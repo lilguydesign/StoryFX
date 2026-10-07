@@ -22,8 +22,8 @@ class NativePublisher(
     fun execute(payload: JSONObject) {
         val progress = PublicationProgress()
         try {
-            val count = payload.getInt("count")
-            val media = AlbumMedia.images(context, PublicationPolicy.album(payload), count)
+            val count = MediaPlan.total(payload)
+            val media = AlbumMedia.batch(context, payload)
             progress.enter("provider_not_ready")
             authorize()
             prepareProvider()
