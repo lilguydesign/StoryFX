@@ -134,6 +134,8 @@ class PublicationService : AccessibilityService() {
                 } }, {
                     check(performGlobalAction(GLOBAL_ACTION_BACK))
                 }, {
+                    onUi { ProviderPreparation.dismissShade(this) }
+                }, {
                     check(!closed && active && store.publicationEnabled() && !locked())
                     check(android.os.SystemClock.elapsedRealtime() < deadline)
                     check(contact(api).getBoolean("ready"))

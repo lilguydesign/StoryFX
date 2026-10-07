@@ -9,6 +9,7 @@ class NativePublisher(
     private val ui: (() -> Unit) -> Unit,
     private val screen: () -> WhatsAppScreen,
     private val backToUpdates: () -> Unit,
+    private val prepareProvider: () -> Unit,
     private val authorize: () -> Unit,
     private val journal: PublicationJournal
 ) {
@@ -25,6 +26,7 @@ class NativePublisher(
             val media = AlbumMedia.images(context, PublicationPolicy.album(payload), count)
             progress.enter("provider_not_ready")
             authorize()
+            prepareProvider()
             ui {
                 val intent = requireNotNull(context.packageManager.getLaunchIntentForPackage(PublicationPolicy.provider))
                 context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP))
