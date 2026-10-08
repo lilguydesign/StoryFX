@@ -1,8 +1,10 @@
 """Explicit retries preserve audits, owners, plans, readiness and uncertain-send guards."""
+from concurrent.futures import ThreadPoolExecutor
+from threading import Event
 import pytest
 from test_private_auth import private, login
 from test_control_android import setup, start
-from test_control_center import HEADERS
+from test_control_center import HEADERS, add, executor
 from storyfx_server.control_recovery import SAFE_FAILURES
 
 
@@ -102,3 +104,56 @@ def test_each_safe_failure_is_valid_but_never_a_confirmation(private):
     assert browser.post(path, headers=auth, json={'state':'FAILED_BEFORE_PUBLICATION',
                         'evidence':'album_media_unavailable'}).status_code == 200
     assert retry(browser, job).status_code == 200
+
+
+@pytest.mark.parametrize('rebind', [False, True])
+@pytest.mark.parametrize('windows_ready', [False, True])
+def test_retry_rechecks_binding_after_snapshot_without_consuming_parent(private, monkeypatch, rebind, windows_ready):
+    app, browser, _, _, auth, contact, parent = failed(private)
+    add(browser, 'profiles', name='Validation technique 2')
+    windows = executor(browser) if windows_ready else None
+    if windows:
+        assert browser.post('/v1/control/windows/heartbeat', headers=windows,
+                            json={'profiles': ['Validation technique']}).status_code == 200
+    snapshot = browser.get('/v1/control').json()
+    broker = app.state.control_scheduler.broker
+    with app.state.store.transaction() as db:
+        before = dict(db.execute('SELECT * FROM control_jobs WHERE id=?', (parent['id'],)).fetchone())
+    original, captured, proceed = broker.snapshot, Event(), Event()
+
+    def delayed(user):
+        value = original(user)
+        captured.set()
+        assert proceed.wait(10)
+        return value
+
+    monkeypatch.setattr(broker, 'snapshot', delayed)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        task = pool.submit(retry, browser, parent, revision=snapshot['revision'])
+        try:
+            assert captured.wait(10)
+            if rebind:
+                changed = browser.post('/v1/control/android/bind', headers=auth,
+                                       json={'profile': 'Validation technique 2', 'enabled': True})
+                assert changed.status_code == 200
+            assert browser.post('/v1/control/android/heartbeat', headers=auth, json=contact).json()['ready']
+        finally:
+            proceed.set()
+        response = task.result(10)
+    monkeypatch.setattr(broker, 'snapshot', original)
+    with app.state.store.transaction() as db:
+        assert dict(db.execute('SELECT * FROM control_jobs WHERE id=?', (parent['id'],)).fetchone()) == before
+    if rebind:
+        assert response.status_code == 409 and response.json()['error'] == 'ANDROID_EXECUTOR_NOT_READY'
+        assert len(browser.get('/v1/control').json()['reports']) == 2
+        assert browser.post('/v1/control/android/claim', headers=auth, json={}).json()['job'] is None
+    else:
+        assert response.status_code == 200
+        child = browser.post('/v1/control/android/claim', headers=auth, json={}).json()['job']
+        assert child['id'] == response.json()['job_id']
+        assert child['occurrence_id'] != parent['occurrence_id']
+        assert child['payload']['retry_parent'] == parent['id']
+        assert child['payload']['device'] == parent['payload']['device']
+        assert len(browser.get('/v1/control').json()['reports']) == 3
+    if windows:
+        assert browser.post('/v1/control/windows/claim', headers=windows, json={}).json()['job'] is None

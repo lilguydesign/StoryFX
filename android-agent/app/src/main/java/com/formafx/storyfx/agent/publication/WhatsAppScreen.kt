@@ -131,6 +131,8 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) 
             evidence.getBoolean("own_status_text"), evidence.getBoolean("send_control"))
     }
     fun isOwnStatusList() = correctPackage && !hasUpdates() && ownTargets().size == 1 &&
+        OwnStatusListShape.accepts(nodes.map { OwnStatusListShape.Node(
+            it.className?.toString().orEmpty(), it.viewIdResourceName.orEmpty(), it.isVisibleToUser) }) &&
         nodes.none { it.isVisibleToUser && it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" } &&
         nodes.any { it.isVisibleToUser && Regex("\\d+ (views?|vues?)", RegexOption.IGNORE_CASE).matches(text(it)) }
     fun ownStatus() { check(ownStatusReady()); click(ownTargets().single()) }

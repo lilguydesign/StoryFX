@@ -30,8 +30,10 @@ await context.route('**/*', async route => {
   if (path.startsWith('/v1/')) {
     const body = request.postDataJSON();
     if (request.method() === 'POST') posts.push({ path, body });
-    if (path === '/v1/auth/session') return json({ user: { id: owner, email: 'validation@example.invalid' } });
+    if (path === '/v1/auth/session') return json({ authenticated: true, access: 'formafx_active_owner', user: { id: owner, email: 'validation@example.invalid' } });
     if (path === '/v1/auth/logout') return json({});
+    if (path === '/v1/control/android/profile-bindings' && request.method() === 'GET') return json({revision: 3,
+      devices: [], primary_profile_ids: [], bindings: [], capabilities: {facebook: {ready: false, reason: 'ADAPTER_NOT_VALIDATED'}}});
     if (path === '/v1/dashboard') return json({ mode: 'diagnostic_only', devices: [], jobs: [], metrics: {} });
     if (path === '/v1/control') return json({ revision: 3, server_time: '2026-10-08T12:00:00Z', nodes: [], reports: [], terminal: [],
       scheduler: { enabled: false, dispatch_held: Boolean(recipe?.lock_held && owner === 'owner-one') },

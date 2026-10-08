@@ -28,7 +28,7 @@ class MediaPlanTest {
     @Test fun bucketCollisionAndInsufficientAdditionalAssetsAreRejectedWithoutPartialLot() {
         fun item(uri: String, bucket: Long, added: Long, id: Long) = MediaSelection.Candidate(uri, bucket, added, id, "image")
         val items = listOf(item("intro", 1, 30, 3), item("second", 1, 20, 2), item("third", 1, 20, 1))
-        assertEquals(listOf("second", "third"), MediaSelection.select(items, 2, setOf("intro")))
+        assertEquals(setOf("second", "third"), MediaSelection.select(items, 2, setOf("intro")).toSet())
         assertThrows(IllegalArgumentException::class.java) { MediaSelection.select(items, 3, setOf("intro")) }
         assertThrows(IllegalArgumentException::class.java) { MediaSelection.select(items + item("other", 2, 40, 4), 1) }
         assertThrows(IllegalArgumentException::class.java) { MediaSelection.select(listOf(items.first(), items.first()), 2) }

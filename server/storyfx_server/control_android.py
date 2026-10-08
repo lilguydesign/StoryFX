@@ -5,6 +5,7 @@ from .control_status_reviews import record
 from uuid import uuid4
 from .store import DomainError, digest
 from .control_media_modes import supported_media, requires_media_v2, capable_version
+from .control_android_profile_bindings import AndroidProfileBindings, capabilities, require_idle, secondary_profile_bound
 
 
 class AndroidControl:
@@ -22,6 +23,7 @@ class AndroidControl:
             db.execute('CREATE TABLE IF NOT EXISTS control_media_rollout (name TEXT PRIMARY KEY, enabled_from REAL NOT NULL)')
             db.execute('INSERT OR IGNORE INTO control_media_rollout VALUES (?,?)', ('media_v2', self.store.clock()))
             self.media_enabled_from = db.execute('SELECT enabled_from FROM control_media_rollout WHERE name=?', ('media_v2',)).fetchone()[0]
+        self.profile_bindings = AndroidProfileBindings(self)
 
     def principal(self, identity):
         if not self.broker.sessions or not identity.auth_session_hash:
@@ -38,26 +40,38 @@ class AndroidControl:
                     for row in catalog['collections']['profiles']]
         with self.store.transaction() as db:
             self.store.authenticate_in_transaction(db, identity)
-            link = db.execute('SELECT profile,enabled,reason FROM control_android_links WHERE device_id=? AND owner_id=?',
+            link = db.execute('SELECT a.*,n.last_seen,n.revoked FROM control_android_links a JOIN control_nodes n ON n.id=a.node_id '
+                              'WHERE a.device_id=? AND a.owner_id=?',
                               (identity.id, identity.owner_id)).fetchone()
-        return {'profiles': profiles, 'binding': dict(link) if link else None,
-                'executor': 'android_whatsapp_images_v1'}
+            authorized = self.profile_bindings.authorized(db, identity, link, self.store.clock())
+        return {'profiles': profiles, 'binding': {key: link[key] for key in ('profile', 'enabled', 'reason')} if link else None,
+                'executor': 'android_whatsapp_images_v1', 'authorized_profiles': authorized, 'capabilities': capabilities()}
 
     def bind(self, identity, body):
         user = self.principal(identity)
-        profiles = self.broker.catalog.read(user)['collections']['profiles']
-        if not any(p['name'] == body.profile and p.get('enabled', True) for p in profiles):
-            raise DomainError('PROFILE_NOT_FOUND', 422)
+        self.broker.catalog.ensure(user)
+        self._bind(identity, body)
+        return self.settings(identity)
+
+    def _bind(self, identity, body):
         with self.store.transaction() as db:
             self.store.authenticate_in_transaction(db, identity)
+            profile = db.execute("SELECT value FROM control_items WHERE owner_id=? AND collection='profiles' AND json_name=?",
+                                 (identity.owner_id, body.profile)).fetchone()
+            if not profile or not json.loads(profile['value']).get('enabled', True):
+                raise DomainError('PROFILE_NOT_FOUND', 422)
             old = db.execute('SELECT * FROM control_android_links WHERE device_id=?', (identity.id,)).fetchone()
             occupied = db.execute('SELECT device_id FROM control_android_links WHERE owner_id=? AND profile=?',
                                   (identity.owner_id, body.profile)).fetchone()
-            if occupied and occupied['device_id'] != identity.id:
+            if (occupied and occupied['device_id'] != identity.id) or secondary_profile_bound(db, identity.owner_id, body.profile):
                 raise DomainError('ANDROID_PROFILE_ALREADY_BOUND', 409)
+            unchanged = old and old['profile'] == body.profile and bool(old['enabled']) == body.enabled
+            if unchanged:
+                return
+            require_idle(db, identity.owner_id, identity.id)
             if old and old['profile'] != body.profile and db.execute(
-                    "SELECT 1 FROM control_jobs WHERE node_id=? AND state IN ('CLAIMED','CANCEL_REQUESTED')", (old['node_id'],)).fetchone():
-                raise DomainError('PUBLICATION_IN_PROGRESS', 409)
+                    'SELECT 1 FROM control_android_profiles WHERE device_id=? AND revoked IS NULL', (identity.id,)).fetchone():
+                raise DomainError('ANDROID_SECONDARY_BINDINGS_PRESENT', 409)
             node = old['node_id'] if old else str(uuid4())
             if not old:
                 db.execute('INSERT INTO control_nodes(id,owner_id,auth_session,credential,name) VALUES (?,?,?,?,?)',
@@ -68,10 +82,6 @@ class AndroidControl:
                        (identity.id, identity.owner_id, node, body.profile, int(body.enabled), 'WAITING_PERMISSIONS' if body.enabled else 'DISABLED'))
             db.execute('UPDATE control_nodes SET last_seen=NULL,profiles=?,auth_session=? WHERE id=?',
                        (json.dumps([body.profile]), identity.auth_session_hash, node))
-            if old:
-                db.execute("UPDATE control_jobs SET state='CANCELLED',completed=? WHERE node_id=? AND state='QUEUED'", (self.store.clock(), node))
-                db.execute("UPDATE control_jobs SET state='CANCEL_REQUESTED' WHERE node_id=? AND state='CLAIMED'", (node,))
-        return self.settings(identity)
 
     def node(self, identity, *, require_ready=True):
         self.principal(identity)

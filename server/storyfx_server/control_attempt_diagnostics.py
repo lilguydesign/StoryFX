@@ -16,6 +16,9 @@ class AttemptDiagnostics(Strict):
     expected_count: int = Field(strict=True, ge=1, le=30)
     selected_count: int | None = Field(default=None, strict=True, ge=0, le=30)
     verified_count: int | None = Field(default=None, strict=True, ge=0, le=30)
+    peak_verified_count: int | None = Field(default=None, strict=True, ge=0, le=30)
+    verification_observations: int | None = Field(default=None, strict=True, ge=0, le=3000)
+    verification_started: StrictBool | None = None
     elapsed_ms: int = Field(strict=True, ge=0, le=900000)
     service_ready: StrictBool
     network: Literal['unknown', 'offline', 'wifi', 'cellular', 'other'] = 'unknown'
@@ -25,6 +28,13 @@ class AttemptDiagnostics(Strict):
     navigation_state: Literal['unknown', 'provider_pending', 'updates_home',
                               'own_list', 'updates_tab', 'conversation'] = 'unknown'
     own_label_count: int = Field(default=0, strict=True, ge=0, le=2500)
+
+
+OBSERVATION_DEFAULTS = dict(peak_verified_count=None, verification_observations=None, verification_started=None)
+
+
+def with_observations(value, observations=None):
+    return {**OBSERVATION_DEFAULTS, **value, **(observations or {})}
 
 
 def quantified_batch(value, expected):
@@ -42,6 +52,9 @@ class AttemptEvidence:
             db.execute('''CREATE TABLE IF NOT EXISTS control_attempt_diagnostics (
               job_id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, recorded REAL NOT NULL,
               value TEXT NOT NULL)''')
+            # Keep the original JSON shape readable by a rolled-back structured backend.
+            db.execute('''CREATE TABLE IF NOT EXISTS control_attempt_observations (
+              job_id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, value TEXT NOT NULL)''')
 
     def save(self, db, row, state, evidence, diagnostics):
         if diagnostics is None:
@@ -54,21 +67,34 @@ class AttemptEvidence:
         prior = db.execute('SELECT value FROM control_attempt_diagnostics WHERE job_id=? AND owner_id=?',
                            (row['id'], row['owner_id'])).fetchone()
         if prior:
-            if json.loads(prior['value']) != value or row['state'] != state or row['evidence'] != evidence:
+            observations = db.execute('SELECT value FROM control_attempt_observations WHERE job_id=? AND owner_id=?',
+                                      (row['id'], row['owner_id'])).fetchone()
+            recorded = with_observations(json.loads(prior['value']), json.loads(observations['value']) if observations else None)
+            # A negotiated rollback may omit observations; omission never erases the original.
+            comparison = {**value, **{key: recorded[key] for key in OBSERVATION_DEFAULTS if value[key] is None}}
+            if recorded != comparison or row['state'] != state or row['evidence'] != evidence:
                 raise DomainError('PUBLICATION_RESULT_ALREADY_RECORDED', 409)
             return
         # Old final reports must not acquire later observations disguised as failure evidence.
         if row['completed'] is not None:
             raise DomainError('PUBLICATION_RESULT_ALREADY_RECORDED', 409)
         db.execute('INSERT INTO control_attempt_diagnostics VALUES (?,?,?,?)',
-                   (row['id'], row['owner_id'], self.store.clock(), json.dumps(value)))
+                   (row['id'], row['owner_id'], self.store.clock(), json.dumps(
+                       {key: item for key, item in value.items() if key not in OBSERVATION_DEFAULTS})))
+        observations = {key: value[key] for key in OBSERVATION_DEFAULTS}
+        if any(item is not None for item in observations.values()):
+            db.execute('INSERT INTO control_attempt_observations VALUES (?,?,?)',
+                       (row['id'], row['owner_id'], json.dumps(observations)))
 
     def attach(self, db, reports, owner):
         values = {row['job_id']: json.loads(row['value']) for row in db.execute(
             'SELECT job_id,value FROM control_attempt_diagnostics WHERE owner_id=?', (owner,))}
+        observations = {row['job_id']: json.loads(row['value']) for row in db.execute(
+            'SELECT job_id,value FROM control_attempt_observations WHERE owner_id=?', (owner,))}
         for report in reports:
             payload = report['publication']
-            diagnostics = values.get(report['id'])
+            value = values.get(report['id'])
+            diagnostics = with_observations(value, observations.get(report['id'])) if value else None
             expected = media_count(payload)
             report.update(diagnostics=diagnostics, scheduled_at=payload['due_at'],
                           timezone='Africa/Douala', expected_media_count=expected,

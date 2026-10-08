@@ -28,4 +28,20 @@ class AgentErrorPolicyTest {
         assertFalse(AgentErrorPolicy.invalidRequest(JSONObject().put("error", "COUNT_MISMATCH")))
         assertFalse(AgentErrorPolicy.invalidRequest(JSONObject()))
     }
+
+    @Test fun onlyKnownStructuredBackendWithoutMetricsPermitsTheNarrowFallback() {
+        val old = historical().put("structured_attempt_diagnostics", true)
+        assertEquals(CompletionCompatibility.WITHOUT_OBSERVATION_METRICS, AgentErrorPolicy.completionCompatibility(old))
+        assertEquals(CompletionCompatibility.WITHOUT_OBSERVATION_METRICS,
+            AgentErrorPolicy.completionCompatibility(old.put("verification_observation_diagnostics", false)))
+        for (value in listOf(true, "false", JSONObject.NULL)) {
+            assertEquals(CompletionCompatibility.FULL,
+                AgentErrorPolicy.completionCompatibility(old.put("verification_observation_diagnostics", value)))
+        }
+        assertEquals(CompletionCompatibility.FULL, AgentErrorPolicy.completionCompatibility(JSONObject()))
+        assertEquals(CompletionCompatibility.FULL,
+            AgentErrorPolicy.completionCompatibility(historical().put("verification_observation_diagnostics", true)))
+        assertEquals(CompletionCompatibility.FULL,
+            AgentErrorPolicy.completionCompatibility(historical().put("structured_attempt_diagnostics", true).put("status", "degraded")))
+    }
 }

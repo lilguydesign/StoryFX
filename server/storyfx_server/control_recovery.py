@@ -4,7 +4,7 @@ from hashlib import sha256
 import json
 from uuid import uuid4
 from zoneinfo import ZoneInfo
-from .control_android import executors
+from .control_executor_reservation import current_executors
 from .control_publications import supported
 from .store import DomainError
 from .control_status_reviews import empty_review
@@ -61,7 +61,7 @@ def _repeat(db, broker, user, identity, revision, snapshot):
     now = datetime.fromtimestamp(broker.store.clock(), ZoneInfo('Africa/Douala'))
     if due.timestamp() > broker.store.clock() or due.astimezone(now.tzinfo).date() != now.date():
         raise DomainError('RETRY_WINDOW_INVALID', 409)
-    nodes = executors(snapshot, value)
+    nodes = current_executors(db, user['id'], value, broker.store.clock())
     if len(nodes) != 1 or nodes[0].get('executor') != 'android_whatsapp_images_v1':
         raise DomainError('ANDROID_EXECUTOR_NOT_READY', 409)
     if reviewed_empty and nodes[0]['id'] != parent['node_id']:

@@ -1,6 +1,7 @@
 package com.formafx.storyfx.agent.publication
 
 import org.json.JSONObject
+import com.formafx.storyfx.agent.CompletionCompatibility
 
 interface PublicationStateStore {
     fun publicationState(): String
@@ -11,6 +12,21 @@ interface PublicationStateStore {
 class PublicationJournal(private val store: PublicationStateStore) {
     private fun state() = JSONObject(store.publicationState())
     fun pending(): JSONObject? = state().optJSONObject("pending")
+
+    fun receiptFormat(): CompletionCompatibility {
+        val value = pending()?.opt("receipt_format") ?: return CompletionCompatibility.FULL
+        require(value is String)
+        return CompletionCompatibility.valueOf(value)
+    }
+
+    /** Local transport metadata only; the complete result and occurrence remain unchanged. */
+    fun rememberReceiptFormat(format: CompletionCompatibility) {
+        require(format != CompletionCompatibility.FULL)
+        require(receiptFormat() in setOf(CompletionCompatibility.FULL, format))
+        val value = state()
+        value.getJSONObject("pending").put("receipt_format", format.name)
+        store.savePublicationState(value.toString())
+    }
 
     fun recordDiagnostics(diagnostics: JSONObject) {
         val value = state()

@@ -3,6 +3,7 @@ import { demoData } from "./demo.js";
 import { renderMetrics, renderDevices, renderJobs, renderImport, dateLabel } from "./views.js";
 import { mountControl, loadControl, enableControl } from './control.js';
 import { controlTitles } from './control-fields.js';
+import { mountProfileBindings } from './android-profile-bindings-panel.js';
 
 const state = { data: null, demo: false, authenticated: false, busy: false, session: 0 };
 const find = selector => document.querySelector(selector);
@@ -14,6 +15,7 @@ function notice(message, error = false) {
 }
 function operational() { return state.authenticated && !state.demo && !state.busy; }
 function render() {
+  profileBindings.render();
   renderMetrics(state.data);
   renderDevices(state.data, operational());
   renderJobs(state.data, operational());
@@ -49,12 +51,14 @@ function disconnect() {
   state.demo = false;
   state.data = null;
   enableControl(false);
+  profileBindings.session(null);
   find("#pair-code").textContent = "";
   find("#pair-dialog").close();
   find("#diagnostic-dialog").close();
   find("#revoke-dialog").close();
   find("#cancel-dialog").close();
   find("#import-result").textContent = "";
+  find("#session-help").textContent = "Connectez-vous avec votre compte propriétaire FormaFX.";
   render();
 }
 function failed(error) {
@@ -68,6 +72,7 @@ async function refresh() {
   if (data?.mode !== "diagnostic_only" || !Array.isArray(data.devices) || !Array.isArray(data.jobs)) throw new PilotError("forbidden");
   state.data = data;
   await loadControl();
+  if (session === state.session) await profileBindings.load();
 }
 async function action(work) {
   if (!operational()) return;
@@ -80,6 +85,8 @@ async function action(work) {
 }
 
 mountControl(notice);
+const profileBindings = mountProfileBindings({canOperate: operational,
+  invalidSession: () => { disconnect(); notice('La session a changé. Reconnectez-vous avant de modifier les associations.', true); }});
 find("#session-form").addEventListener("submit", event => {
   event.preventDefault(); location.assign("/login/");
 });
@@ -193,8 +200,13 @@ render();
 
 if (!state.demo) {
   state.busy = true;
+  const sessionEpoch = state.session;
   request("/v1/auth/session").then(async session => {
+    if (sessionEpoch !== state.session) return;
+    profileBindings.session(session.user.id);
     find("#session-help").textContent = `Connecté avec ${session.user.email}. Accès propriétaire FormaFX actif.`;
-    await refresh(); state.authenticated = true; enableControl(true, session.user.id);
+    await refresh();
+    if (sessionEpoch !== state.session) return;
+    state.authenticated = true; enableControl(true, session.user.id);
   }).catch(() => location.replace("/login/")).finally(() => { state.busy = false; render(); });
 }
