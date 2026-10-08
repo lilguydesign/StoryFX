@@ -137,7 +137,7 @@ class PublicationService : AccessibilityService() {
                     check(android.os.SystemClock.elapsedRealtime() < deadline)
                     check(contact(api).getBoolean("ready"))
                     check(api.post("/v1/control/android/jobs/${job.getString("id")}/ready", JSONObject()).getBoolean("authorized"))
-                }, journal).execute(payload)
+                }, journal, deadline).execute(payload)
             } finally { if (awake.isHeld) awake.release() }
             flush(api, journal)
             store.saveStatus("Résultat Android enregistré ; consultez les rapports du tableau de bord.")

@@ -1,4 +1,4 @@
-# StoryFX — agent Android 0.4.14
+# StoryFX — agent Android 0.4.15
 
 Application native Kotlin Android 8+, connexion FormaFX sécurisée, association
 chiffrée et mise à jour signée depuis la dernière version officielle.
@@ -10,6 +10,8 @@ conserve matrices et programmation ; le téléphone exécute les modes intro,
 multi et intro+multi dans Mon statut WhatsApp Business. Facebook et TikTok
 natifs restent non implémentés. Voir [le périmètre du pilote](docs/ANDROID_PUBLICATION_PILOT.md)
 et [les preuves et limites 0.4.14](docs/PUBLICATION_DIAGNOSTICS_0414.md).
+La [version 0.4.15](docs/PUBLICATION_VERIFICATION_0415.md) attend la fin du lot
+jusqu'à la limite de temps de la tentative, sans répéter l'envoi.
 
 Le déverrouillage local et Direct Boot disposent d'un consentement distinct,
 d'un stockage chiffré et d'un essai borné ; sans cette configuration, le premier

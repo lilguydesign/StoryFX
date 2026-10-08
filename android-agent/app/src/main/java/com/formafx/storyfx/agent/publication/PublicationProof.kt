@@ -12,11 +12,10 @@ object PublicationProof {
             label.startsWith("couldn't send") || label.startsWith("échec de l'envoi")
     }
 
-    fun verified(requested: Int, visible: Int, accumulatedRows: Set<Int>): String = when {
-        requested !in 1..30 -> "none"
-        visible > requested || accumulatedRows.size > requested -> "none"
-        visible == requested -> "recent_visible"
-        accumulatedRows.size == requested -> "recent_rows"
-        else -> "none"
+    /** Positions are not stable identities. Only one complete observation can confirm. */
+    fun verified(requested: Int, completed: List<Int?>): String {
+        val indexed = completed.filterNotNull()
+        return if (requested in 1..30 && completed.size == requested &&
+            indexed.all { it >= 0 } && indexed.size == indexed.distinct().size) "recent_visible" else "none"
     }
 }

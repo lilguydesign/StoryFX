@@ -13,14 +13,19 @@ class PublicationProofTest {
     }
 
     @Test fun exactRecentCompletedCountIsRequiredRegardlessOfCollectionGrowth() {
-        assertEquals("none", PublicationProof.verified(9, 0, emptySet()))
-        assertEquals("none", PublicationProof.verified(9, 8, (0..7).toSet()))
-        assertEquals("none", PublicationProof.verified(9, 10, (0..9).toSet()))
-        assertEquals("none", PublicationProof.verified(9, 9, (0..9).toSet()))
-        assertEquals("none", PublicationProof.verified(9, 10, (0..8).toSet()))
-        assertEquals("recent_visible", PublicationProof.verified(9, 9, emptySet()))
-        assertEquals("recent_rows", PublicationProof.verified(9, 4, (0..8).toSet()))
-        assertEquals("none", PublicationProof.verified(31, 31, emptySet()))
+        assertEquals("none", PublicationProof.verified(9, emptyList()))
+        assertEquals("none", PublicationProof.verified(9, (0..7).toList()))
+        assertEquals("none", PublicationProof.verified(9, (0..9).toList()))
+        assertEquals("recent_visible", PublicationProof.verified(9, (0..8).toList()))
+        assertEquals("recent_visible", PublicationProof.verified(3, listOf(null, null, null)))
+        assertEquals("none", PublicationProof.verified(31, (0..30).toList()))
+    }
+
+    @Test fun duplicateOrInvalidPositionsWithinOneObservationCannotConfirm() {
+        assertEquals("none", PublicationProof.verified(2, listOf(0, 0)))
+        assertEquals("none", PublicationProof.verified(3, listOf(0, null, 0)))
+        assertEquals("none", PublicationProof.verified(2, listOf(-1, 0)))
+        assertEquals("recent_visible", PublicationProof.verified(3, listOf(0, 1, 2)))
     }
 
     @Test fun pendingLabelsAreClosedAndDoNotSerializePrivateText() {

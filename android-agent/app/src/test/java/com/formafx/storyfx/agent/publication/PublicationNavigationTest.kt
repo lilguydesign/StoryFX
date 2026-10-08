@@ -43,4 +43,28 @@ class PublicationNavigationTest {
         assertThrows(IllegalStateException::class.java) { nav.openOwn() }
         assertEquals(1, updates)
     }
+
+    @Test fun postSendRenderingCanWaitBeyondTwentyPollsWithoutAnyExtraGesture() {
+        var time = 0L
+        var observations = 0
+        val nav = PublicationNavigation({
+            observations++
+            if (time < 15000) OwnScreen.UNKNOWN else OwnScreen.EMPTY_HOME
+        }, { error("unexpected updates") }, { error("unexpected own") }, {}, { time += it },
+            maxObservations = Int.MAX_VALUE, withinDeadline = { time < 210000 })
+        assertEquals(OwnScreen.EMPTY_HOME, nav.openOwn())
+        assertEquals(31, observations)
+        assertEquals(15000L, time)
+    }
+
+    @Test fun postSendRenderingRemainsBoundedByTheOriginalAttemptDeadline() {
+        var time = 209000L
+        var observations = 0
+        val nav = PublicationNavigation({ observations++; OwnScreen.UNKNOWN },
+            { error("unexpected updates") }, { error("unexpected own") }, {}, { time += it },
+            maxObservations = Int.MAX_VALUE, withinDeadline = { time < 210000 })
+        assertThrows(IllegalStateException::class.java) { nav.openOwn() }
+        assertEquals(2, observations)
+        assertEquals(210000L, time)
+    }
 }
