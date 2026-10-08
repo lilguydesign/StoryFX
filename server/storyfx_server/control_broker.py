@@ -34,6 +34,8 @@ class Broker:
         from .control_android import AndroidControl
         self.android = AndroidControl(self)
         self.attempt_evidence = AttemptEvidence(store)
+        from .control_recipes import Recipes
+        self.recipes = Recipes(self)
 
     def begin(self, name, proof):
         self.store.throttle('control_pair', maximum=10, period=60)

@@ -17,9 +17,13 @@ export class PilotError extends Error {
       CATCHUP_INTERVAL_INVALID:'Le début doit précéder la fin du rattrapage aujourd’hui.',
       CATCHUP_FUTURE_END:'La fin du rattrapage ne peut pas être dans le futur.',
       SCHEDULER_ALREADY_RUNNING:'Le scheduler est déjà actif. Arrêtez-le avant de changer son périmètre.',
+      MANUAL_RECIPE_ACTIVE:'Une recette manuelle suspend les nouveaux départs. Terminez-la avant un lancement ordinaire.',
+      RECIPE_VALIDATION_REQUIRED:'Une recette complète doit être validée avant la reprise de la programmation.',
+      RECIPE_SCOPE_NOT_VALIDATED:'Ce périmètre ou cette révision ne correspond pas aux lignes validées par la recette.',
     };
     super(controlMessages[code] || messages[kind] || messages.unavailable);
     this.kind = kind;
+    this.code = code;
   }
 }
 

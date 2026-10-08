@@ -67,6 +67,14 @@ class PublicationProbe(unittest.TestCase):
         value['observations'][-1]['scheduler_enabled'] = False
         self.assertEqual(evaluate(value, 1000)['status'], 'waiting')
 
+    def test_manual_recipe_hold_is_normal_but_does_not_hide_other_incidents(self):
+        self.assertEqual(evaluate(evidence(manual_recipe_hold=5), 1000)['status'], 'waiting')
+        for counts, reason in (({'late': 1}, 'STORYFX_PUBLICATION_LATE'),
+                               ({'uncertain': 1}, 'STORYFX_PUBLICATION_UNCERTAIN'),
+                               ({'failed_before_send': 1}, 'STORYFX_PUBLICATION_FAILED_BEFORE_SEND')):
+            with self.subTest(counts=counts):
+                self.assertEqual(evaluate(evidence(manual_recipe_hold=5, **counts), 1000)['reason_code'], reason)
+
     def test_completed_observation_retains_unresolved_incidents(self):
         value = evidence(uncertain=1)
         value['complete'] = True

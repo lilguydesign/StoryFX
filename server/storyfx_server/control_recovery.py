@@ -8,6 +8,7 @@ from .control_android import executors
 from .control_publications import supported
 from .store import DomainError
 from .control_status_reviews import empty_review
+from .control_recipe_state import assert_unlocked
 
 # Generic failures require fresh empty-own-status review; picker/send failures stay excluded.
 SAFE_FAILURES = frozenset({'album_media_unavailable', 'provider_not_ready',
@@ -31,6 +32,7 @@ def repeat_many(broker, user, identities, revision):
     if snapshot['revision'] != revision:
         raise DomainError('CONFIGURATION_CHANGED', 409)
     with broker.store.transaction() as db:
+        assert_unlocked(db, user['id'])
         broker.catalog.revision(db, user['id'], revision)
         jobs = [_repeat(db, broker, user, identity, revision, snapshot) for identity in identities]
     return {'jobs':jobs,'original_audit_preserved':True}
@@ -48,6 +50,8 @@ def _repeat(db, broker, user, identity, revision, snapshot):
                   (user['id'], identity)).fetchone():
         raise DomainError('RETRY_ALREADY_REQUESTED', 409)
     original = json.loads(parent['payload'])
+    if original.get('recipe_id'):
+        raise DomainError('PUBLICATION_REVIEW_REQUIRED', 409)
     root = original.get('original_occurrence', parent['occurrence'])
     planned = [v for v in snapshot['schedule'] if v['id'] == root]
     if len(planned) != 1 or not supported(planned[0]):

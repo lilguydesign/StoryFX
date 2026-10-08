@@ -7,10 +7,13 @@ import { showAssociationLink } from './association-link.js';
 import { mountRecovery } from './publication-recovery.js';
 import { mediaSummary } from './media-plan.js';
 import { renderPublicationReports } from './publication-reports.js';
+import { mountRecipes, loadRecipes, recipeSession, renderRecipes, recipeHasLock } from './recipe-panel.js';
 
-let data = null, enabled = false, busy = false, editing = null, editRevision = null, selected = null;
+let data = null, enabled = false, busy = false, editing = null, editRevision = null, selected = null, controlEpoch = 0;
 let profileFilter = '', platformFilter = '';
 const find = selector => document.querySelector(selector);
+const dispatchHeld = () => Boolean(data?.scheduler?.dispatch_held || recipeHasLock());
+const launcherSnapshot = () => data ? {...data,scheduler:{...data.scheduler,dispatch_held:dispatchHeld()}} : null;
 const states = { PLANNED: 'Programmée', QUEUED: 'En attente', CLAIMED: 'En cours', CONFIRMED: 'Confirmation de l’agent', NEEDS_REVIEW: 'Incertaine · à vérifier', FAILED_BEFORE_PUBLICATION: 'Échec avant envoi', CANCELLED:'Annulée', CANCEL_REQUESTED:'Arrêt demandé' };
 
 export function mountControl(notice) {
@@ -81,6 +84,7 @@ export function mountControl(notice) {
     find('#setting-dialog').close();
   }));
   find('#launch-confirm').addEventListener('click', () => action(async () => {
+    if (dispatchHeld()) throw Error('Une recette manuelle bloque les lancements ordinaires.');
     await request('/v1/control/launch', { method: 'POST', body: { occurrence_id: selected.id, revision: editRevision } });
     find('#launch-dialog').close();
   }));
@@ -90,7 +94,8 @@ export function mountControl(notice) {
       find('#windows-dialog').close();
     });
   });
-  mountLauncher({getSnapshot:()=>data,perform:action,notice,redraw:render});
+  mountLauncher({getSnapshot:launcherSnapshot,perform:action,notice,redraw:render});
+  mountRecipes({notify:notice,redraw:render,reload:loadControl});
   mountRecovery({snapshot:()=>data,perform:action});
   render();
   document.addEventListener('change', event => {
@@ -102,8 +107,17 @@ export function mountControl(notice) {
   });
 }
 
-export async function loadControl() { data = await request('/v1/control'); render(); }
-export function enableControl(value) { enabled = value; if (!value) data = null; render(); }
+export async function loadControl() {
+  const generation = controlEpoch, value = await request('/v1/control');
+  if (generation !== controlEpoch) return;
+  data = value; await loadRecipes();
+  if (generation === controlEpoch) render();
+}
+export function enableControl(value, owner = null) {
+  enabled = value; if (!value) { data = null; controlEpoch++; }
+  recipeSession(value ? owner : null); render();
+  if (value) loadRecipes();
+}
 function table(headers, rows) {
   return rows.length ? `<table><thead><tr>${headers.map(text => `<th>${escape(text)}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '<div class="empty-state">Aucune donnée enregistrée.</div>';
 }
@@ -124,13 +138,15 @@ function render() {
     const connected = value.availability === 'READY';
     return [escape(value.local_time), escape(value.device), escape(value.platform), escape(value.system), escape(mediaSummary(value)), escape(value.engine === 'intro' ? 1 : Number(value.count) + (value.engine === 'intro+multi' ? 1 : 0)),
       `<span class="badge ${value.state === 'NEEDS_REVIEW' ? 'error' : ''}">${escape(value.availability === 'NOT_SUPPORTED' ? 'Non pris en charge' : states[value.state] || value.state)}</span>`,
-      `<button class="text-button" data-publication="${value.id}" ${active && connected && value.state === 'PLANNED' ? '' : 'disabled'}>Lancer</button>`];
+      `<button class="text-button" data-publication="${value.id}" ${active && !dispatchHeld() && connected && value.state === 'PLANNED' ? '' : 'disabled'}>Lancer</button>`];
   });
   const options = (values, current, label) => [['', label], ...values.map(value => [value, value])].map(([value, text]) => `<option value="${escape(value)}" ${value === current ? 'selected' : ''}>${escape(text)}</option>`).join('');
   const filters = `<div class="control-filters"><label>Profil<select data-profile-filter>${options((data?.collections.profiles || []).map(value => value.name), profileFilter, 'Tous les profils')}</select></label><label>Plateforme<select data-platform-filter>${options(['WhatsApp', 'Facebook', 'Instagram', 'TikTok'], platformFilter, 'Toutes les plateformes')}</select></label></div>`;
   for (const name of ['launch', 'programming']) find(`#control-${name}`).innerHTML =
     `<p class="helper control-help">Africa/Douala · ${escape(filtered.length)} / ${escape(data?.schedule.length || 0)} occurrences aujourd’hui · ${data?.nodes.some(node => node.connected) ? 'Agent de publication prêt' : 'Aucun agent de publication prêt'}</p><button class="button secondary" data-windows ${active ? '' : 'disabled'}>Connecter Windows</button>` + filters + table(['Heure', 'Profil', 'Plateforme', 'Système', 'Mode et albums', 'Total médias', 'État', ''], rows);
-  find('#control-reports').innerHTML = renderPublicationReports(data, active);
-  renderLauncher(data,active);
+  find('#control-reports').innerHTML = renderPublicationReports(data, active && !dispatchHeld());
+  renderLauncher(launcherSnapshot(),active);
+  find('#launch-confirm').disabled = !active || dispatchHeld();
+  renderRecipes(data,active);
   showAssociationLink(active);
 }

@@ -195,6 +195,6 @@ if (!state.demo) {
   state.busy = true;
   request("/v1/auth/session").then(async session => {
     find("#session-help").textContent = `Connecté avec ${session.user.email}. Accès propriétaire FormaFX actif.`;
-    await refresh(); state.authenticated = true; enableControl(true);
+    await refresh(); state.authenticated = true; enableControl(true, session.user.id);
   }).catch(() => location.replace("/login/")).finally(() => { state.busy = false; render(); });
 }

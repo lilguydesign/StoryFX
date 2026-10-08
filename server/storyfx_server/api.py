@@ -141,6 +141,7 @@ def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | 
                              'native_platforms_supported': ['WhatsApp'],
                              'total_autonomy_verified': False, 'publication_verified_by_health': False,
                              'structured_attempt_diagnostics': True,
+                             'manual_validation_recipes': True,
                              'manual_android_retry_available': True, 'publication_failure_stages': True,
                              'local_android_unlock_available': True, 'empty_status_review_available': True,
                              'scheduler_worker_ok':bool(recent_tick and heartbeat_state['healthy']),
