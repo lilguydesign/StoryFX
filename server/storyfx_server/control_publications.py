@@ -4,6 +4,7 @@ from uuid import uuid4
 from .store import DomainError
 from .control_android import executors
 from .control_media_modes import supported_media
+from .control_recipe_state import active_recipe, assert_unlocked
 
 
 def supported(value):
@@ -13,6 +14,10 @@ def supported(value):
 def reserve(broker, user, snapshot, selected, *, strict=True, scheduler_id=None):
     accepted = []
     with broker.store.transaction() as db:
+        if active_recipe(db, user['id']):
+            if not strict:
+                return []
+            assert_unlocked(db, user['id'])
         broker.catalog.revision(db, user['id'], snapshot['revision'])
         if scheduler_id is not None:
             state = db.execute('SELECT enabled,generation FROM control_schedulers WHERE owner_id=?', (user['id'],)).fetchone()

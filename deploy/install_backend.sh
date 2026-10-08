@@ -3,7 +3,9 @@ set -Eeuo pipefail
 ROOT=/opt/formafx/storyfx
 BUNDLE="${1:?versioned bundle required}"
 COMMIT="${2:?verified commit required}"
+PREBUILT_IMAGE_ID="${3:-}"
 [[ "$COMMIT" =~ ^[a-f0-9]{40}$ ]] || exit 20
+[[ -z "$PREBUILT_IMAGE_ID" || "$PREBUILT_IMAGE_ID" =~ ^sha256:[a-f0-9]{64}$ ]] || exit 25
 [[ "$BUNDLE" == /tmp/storyfx-release-* ]] || exit 21
 test -f "$BUNDLE/deploy/Dockerfile"
 test "$(hostname)" = formafx-prod-db-02
@@ -40,7 +42,11 @@ if [[ ! -d "$RELEASE" ]]; then
   mkdir "$RELEASE"
   cp -a "$BUNDLE/." "$RELEASE/"
 fi
-docker build --pull -t "formafx/storyfx:$COMMIT" -f "$RELEASE/deploy/Dockerfile" "$RELEASE"
+if [[ -n "$PREBUILT_IMAGE_ID" ]]; then
+  [[ "$(docker image inspect --format '{{.Id}}' "formafx/storyfx:$COMMIT")" == "$PREBUILT_IMAGE_ID" ]]
+else
+  docker build --pull -t "formafx/storyfx:$COMMIT" -f "$RELEASE/deploy/Dockerfile" "$RELEASE"
+fi
 if [[ -n "$PREVIOUS" ]]; then
   docker stop storyfx-api >/dev/null
 fi
@@ -48,9 +54,9 @@ python3 "$RELEASE/deploy/backup_state.py" "$BACKUP"
 python3 "$RELEASE/deploy/private_state.py"
 STORYFX_IMAGE="formafx/storyfx:$COMMIT" docker compose -f "$RELEASE/deploy/compose.yaml" config --quiet
 STORYFX_IMAGE="formafx/storyfx:$COMMIT" docker compose -f "$RELEASE/deploy/compose.yaml" up -d
-for attempt in $(seq 1 30); do
-  if curl -fsS --max-time 5 http://127.0.0.1:18451/health > "$BACKUP/health.json"; then break; fi
-  sleep 2
+for attempt in $(seq 1 15); do
+  if curl -fsS --max-time 3 http://127.0.0.1:18451/health > "$BACKUP/health.json"; then break; fi
+  sleep 1
 done
 python3 - "$BACKUP/health.json" <<'PY'
 import json, sys

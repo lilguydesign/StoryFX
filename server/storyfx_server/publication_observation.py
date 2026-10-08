@@ -29,6 +29,9 @@ def read_snapshot(database, config, now):
                 jobs[occurrence] = {'state': row['state'], 'evidence': row['evidence'],
                                     'depth': payload.get('retry_depth', 0), 'id': row['id']}
         tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        from .control_recipe_observation import manual_validation, held_intervals
+        recipe_status = manual_validation(db, owner, now, tables)
+        recipe_intervals = held_intervals(db, owner, now, tables)
         diagnostics = {row['job_id']: json.loads(row['value']) for row in db.execute(
             'SELECT job_id,value FROM control_attempt_diagnostics WHERE owner_id=?', (owner,))
             } if 'control_attempt_diagnostics' in tables else {}
@@ -63,6 +66,7 @@ def read_snapshot(database, config, now):
                        'adapter_not_validated' if not supported(value) or requires_media_v2(value) and value['device'] not in capable_profiles else
                        'outside_media_rollout' if rollout and requires_media_v2(value) and due < rollout[0] else
                        'outside_active_scheduler' if value['device'] not in scope['profiles'] or value['platform'] not in scope['platforms'] else
+                       'manual_recipe_hold' if state == 'PLANNED' and any(start <= due <= end for start, end in recipe_intervals) else
                        'late' if now > due + 900 else 'waiting')
             rows.append({'occurrence': value['id'], 'profile': value['device'], 'platform': value['platform'],
                          'expected_count': value['count'], 'due_at': value['due_at'], 'state': state,
@@ -78,6 +82,7 @@ def read_snapshot(database, config, now):
     forbidden = sum(bool(r.get('enabled', True)) and r.get('platform') == 'WhatsApp' and
                     r.get('device') in config['whatsapp_forbidden_profiles'] for r in matrix)
     return {'observed_unix': int(now), 'scheduler_enabled': bool(scheduler and scheduler['enabled']),
+            **({'manual_validation': recipe_status} if recipe_status is not None else {}),
             'scheduler_wait_reason': scheduler['wait_reason'] if scheduler else 'NOT_STARTED',
             'devices': devices, 'rows': rows, 'totals': dict(Counter(r['verdict'] for r in rows)),
             'whatsapp_scope_violation': bool(forbidden), 'read_only': True,

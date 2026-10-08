@@ -48,6 +48,8 @@ jobs:
           done
       - name: Validate publication reports with synthetic data
         run: node --experimental-default-type=module tests/test_publication_reports.mjs
+      - name: Validate manual recipe guards with synthetic data
+        run: node --experimental-default-type=module tests/test_manual_recipes.mjs
       - name: Parse deployment sources
         run: |
           python -m compileall -q deploy

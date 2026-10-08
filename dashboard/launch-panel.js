@@ -78,6 +78,7 @@ export function mountLauncher({getSnapshot,perform,notice,redraw}) {
   });
   find('#scheduler-confirm').addEventListener('click',()=> {
     if (!pending) return;
+    if (getSnapshot()?.scheduler?.dispatch_held) {notice('La recette manuelle bloque les lancements ordinaires.',true);return;}
     const command=pending; pending=null;
     perform(async()=> {await request(command.path,{method:'POST',body:command.body});find('#scheduler-dialog').close();preview=null;});
   });
@@ -88,6 +89,7 @@ export function renderLauncher(snapshot, active) {
   const profiles=snapshot?.collections.profiles || [];
   if (!profilesInitialized && profiles.length) {draft.profiles=profiles.filter(value=>['JK650_S23','JK657_S23+'].includes(value.name)).map(value=>value.name);profilesInitialized=true;}
   const status=snapshot?.scheduler || {enabled:false};
+  const dispatchActive=active && !status.dispatch_held;
   const disabled=active ? '' : 'disabled';
   const choices=(name,values,selected)=>values.map(value=>`<label class="choice"><input type="checkbox" name="${name}" value="${escape(value)}" ${selected.includes(value) ? 'checked' : ''} ${disabled}>${escape(value)}</label>`).join('');
   find('#launch-controls').innerHTML=`<div class="terminal-heading"><h2>Pilotage de la programmation</h2><span class="badge ${status.enabled ? 'success' : ''}">${status.enabled ? 'Scheduler actif' : 'Scheduler arrêté'}</span></div>
@@ -96,9 +98,11 @@ export function renderLauncher(snapshot, active) {
     <fieldset><legend>Plateformes</legend><div class="profile-choices">${choices('scheduler-platform',['WhatsApp','Facebook','Instagram','TikTok'],draft.platforms)}</div></fieldset>
     <div class="control-filters"><label>Temps scheduler<select name="mode" ${disabled}><option value="auto" ${draft.mode === 'auto' ? 'selected' : ''}>Auto · heure actuelle</option><option value="manual" ${draft.mode === 'manual' ? 'selected' : ''}>Manuel · rattrapage puis automatique</option></select><small class="field-help">Le mode manuel reprend les heures passées à partir de l’heure choisie, puis suit les prochaines échéances.</small></label>
     <label>Début du rattrapage<input type="time" name="start_time" value="${escape(draft.start_time)}" ${disabled}></label><label>Fin du rattrapage<input type="time" name="end_time" value="${escape(draft.end_time)}" ${disabled}><small class="field-help">Laissez vide pour utiliser l’heure actuelle. Une heure future est refusée.</small></label></div>
-    <div class="scheduler-actions"><button class="button primary" data-scheduler-action="start" ${active && !status.enabled ? '' : 'disabled'}>▷ Démarrer scheduler</button><button class="button danger" data-scheduler-action="stop" ${active && status.enabled ? '' : 'disabled'}>■ Arrêter scheduler</button><button class="button secondary" data-scheduler-action="preview" ${disabled}>Prévisualiser le rattrapage</button><button class="button secondary" data-scheduler-action="catchup" ${disabled}>▷ Lancer le rattrapage</button><button class="button danger" data-scheduler-action="stop-jobs" ${disabled}>■ Stopper les tâches</button></div>
+    <div class="scheduler-actions"><button class="button primary" data-scheduler-action="start" ${dispatchActive && !status.enabled ? '' : 'disabled'}>▷ Démarrer scheduler</button><button class="button danger" data-scheduler-action="stop" ${active && status.enabled ? '' : 'disabled'}>■ Arrêter scheduler</button><button class="button secondary" data-scheduler-action="preview" ${disabled}>Prévisualiser le rattrapage</button><button class="button secondary" data-scheduler-action="catchup" ${dispatchActive ? '' : 'disabled'}>▷ Lancer le rattrapage</button><button class="button danger" data-scheduler-action="stop-jobs" ${disabled}>■ Stopper les tâches</button></div>
+    ${status.dispatch_held ? '<p class="recipe-warning">Recette manuelle active : les lancements ordinaires et le scheduler sont verrouillés.</p>' : ''}
     <p class="helper">Arrêter le scheduler bloque ses prochains départs et annule sa file en attente. Stopper annule aussi les demandes manuelles en attente ; une action déjà envoyée à l’application sociale peut se terminer. Appium n’est pas interrompu.</p>${status.enabled ? `<p class="helper">Profils actifs : ${escape((status.profiles || []).join(', '))}. ${status.wait_reason ? escape(schedulerWait(status)) : ''}</p>` : ''}<div id="catchup-preview">${previewTable(preview)}</div>`;
   const terminal=(snapshot?.terminal || []).map(row=>`[${clock(row.time)}] ${labels[row.kind] || 'Événement'}${row.profile ? ' · '+row.profile : ''}${row.system ? ' · '+row.system : ''}`).join('\n');
   find('#control-terminal').textContent=terminal || 'Aucune activité enregistrée.';
   document.querySelectorAll('[data-terminal-clear],[data-terminal-copy]').forEach(button=>{button.disabled=!active;});
+  if (status.dispatch_held) find('#scheduler-confirm').disabled=true;
 }

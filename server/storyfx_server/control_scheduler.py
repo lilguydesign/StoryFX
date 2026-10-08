@@ -8,6 +8,8 @@ from .store import DomainError, timestamp
 from .control_executor_status import executor_wait_reason, scheduler_wait_reason
 from .control_scheduler_waits import SchedulerWaits
 from .control_media_modes import requires_media_v2
+from .control_recipe_state import (assert_unlocked, boundary, scheduler_hold,
+                                  assert_validated_scope, active_recipe)
 
 ZONE = ZoneInfo('Africa/Douala')
 
@@ -26,11 +28,13 @@ class Scheduler:
     def status(self, user):
         with self.store.transaction() as db:
             row = db.execute('SELECT * FROM control_schedulers WHERE owner_id=?',(user['id'],)).fetchone()
+            hold = scheduler_hold(db, user['id'])
         if not row:
-            return {'enabled':False,'mode':'auto','profiles':[],'platforms':[],'wait_reason':''}
+            return {'enabled':False,'mode':'auto','profiles':[],'platforms':[],'wait_reason':hold,
+                    'dispatch_held':bool(hold)}
         return {'enabled':bool(row['enabled']), 'mode':row['mode'], **json.loads(row['scope']),
                 'from_at':timestamp(row['from_at']),'started_at':timestamp(row['started']),
-                'wait_reason':row['wait_reason']}
+                'wait_reason':hold or row['wait_reason'],'dispatch_held':bool(hold)}
 
     def window(self, user, body):
         snapshot = self.broker.snapshot(user)
@@ -65,6 +69,8 @@ class Scheduler:
         return self.window(user,body)[1]
 
     def catchup(self, user, body):
+        with self.store.transaction() as db:
+            assert_unlocked(db, user['id'])
         snapshot, result = self.window(user,body)
         accepted = reserve(self.broker,user,snapshot,[row for row in result['rows'] if row['eligible']],strict=False)
         return {'jobs':accepted,'queued':len(accepted),'excluded':len(result['rows'])-len(accepted)}
@@ -79,6 +85,17 @@ class Scheduler:
         start = datetime.fromisoformat(result['from_at']).timestamp() if body.mode == 'manual' else self.store.clock() // 60 * 60
         session = self.sessions.delegate(user)
         with self.store.transaction() as db:
+            hold = scheduler_hold(db, user['id'])
+            if hold:
+                raise DomainError(hold,409)
+            limit = boundary(db, user['id'])
+            if limit:
+                if body.mode != 'auto':
+                    raise DomainError('RECIPE_FUTURE_AUTO_REQUIRED',409)
+                start = max(self.store.clock(), limit['not_before'])
+                assert_validated_scope(db, user['id'], body.revision,
+                                       {value['row_id'] for value in snapshot['schedule']
+                                        if value['device'] in body.profiles and value['platform'] in body.platforms})
             self.broker.catalog.revision(db,user['id'],body.revision)
             current = db.execute('SELECT enabled FROM control_schedulers WHERE owner_id=?',(user['id'],)).fetchone()
             if current and current['enabled']:
@@ -111,6 +128,8 @@ class Scheduler:
 
     def pause(self, row, reason):
         with self.store.transaction() as db:
+            if active_recipe(db, row['owner_id']):
+                return
             changed = db.execute('UPDATE control_schedulers SET enabled=0,wait_reason=? WHERE owner_id=? AND generation=? AND enabled=1',
                                  (reason,row['owner_id'],row['generation'])).rowcount
             if changed:
@@ -122,6 +141,10 @@ class Scheduler:
         with self.store.transaction() as db:
             rows = [dict(row) for row in db.execute('SELECT * FROM control_schedulers WHERE enabled=1')]
         for row in rows:
+            with self.store.transaction() as db:
+                if scheduler_hold(db, row['owner_id']):
+                    continue
+                limit = boundary(db, row['owner_id'])
             if not self.waits.due(row):
                 continue
             try:
@@ -132,9 +155,14 @@ class Scheduler:
                 if snapshot['revision'] != row['revision']:
                     self.pause(row,'CONFIGURATION_CHANGED'); continue
                 scope = json.loads(row['scope'])
+                with self.store.transaction() as db:
+                    assert_validated_scope(db, user['id'], snapshot['revision'],
+                                           {value['row_id'] for value in snapshot['schedule']
+                                            if value['device'] in scope['profiles'] and value['platform'] in scope['platforms']})
                 selected = [value for value in snapshot['schedule'] if value['device'] in scope['profiles']
                             and value['platform'] in scope['platforms'] and value['due'] and value['state'] == 'PLANNED'
                             and datetime.fromisoformat(value['due_at'].replace('Z','+00:00')).timestamp() >= row['from_at']
+                            and (not limit or datetime.fromisoformat(value['due_at'].replace('Z','+00:00')).timestamp() > limit['not_before'])
                             and (not requires_media_v2(value) or datetime.fromisoformat(value['due_at'].replace('Z','+00:00')).timestamp() >= self.broker.android.media_enabled_from)
                             and supported(value)]
                 reserve(self.broker,user,snapshot,selected,strict=False,scheduler_id=row['generation'])

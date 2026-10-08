@@ -9,7 +9,7 @@ MAX_STATE_BYTES = 128 * 1024 * 1024
 VERDICTS = (
     'confirmed_agent', 'confirmed_legacy_unverified_count', 'uncertain',
     'failed_before_send', 'adapter_not_validated', 'outside_media_rollout',
-    'outside_active_scheduler', 'late', 'waiting',
+    'outside_active_scheduler', 'manual_recipe_hold', 'late', 'waiting',
 )
 
 
@@ -76,7 +76,7 @@ def evaluate(state, now):
     if counts['waiting']:
         return result('waiting', 'STORYFX_PUBLICATION_WAITING', metrics)
     excluded = sum(counts[key] for key in (
-        'adapter_not_validated', 'outside_media_rollout', 'outside_active_scheduler'))
+        'adapter_not_validated', 'outside_media_rollout', 'outside_active_scheduler', 'manual_recipe_hold'))
     if excluded:
         return result('waiting', 'STORYFX_PUBLICATION_EXCLUSIONS_PRESENT', metrics)
     return result('ok', 'STORYFX_NO_PUBLICATION_INCIDENT_OBSERVED', metrics)
