@@ -165,14 +165,18 @@ class PublicationService : AccessibilityService() {
             .put("screen_locked", locked()).put("active_root_kind", kind)
             .put("provider_layout_nodes_enabled", serviceInfo.flags and AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS != 0)
             .put("provider_tap_capable", serviceInfo.capabilities and AccessibilityServiceInfo.CAPABILITY_CAN_PERFORM_GESTURES != 0)
-        if (boot.userUnlocked()) result.put("unlock_result", EncryptedStore(this).unlockResult())
+        if (boot.userUnlocked()) {
+            val providerRoot = ProviderWindow.root(this)
+            result.put("unlock_result", EncryptedStore(this).unlockResult())
             .put("local_unlock_result", EncryptedStore(this).localUnlockResult())
             .put("unlock_failure", EncryptedStore(this).unlockFailure())
             .put("local_test_pending", EncryptedStore(this).unlockTestPending())
             .put("unlock_credential_present", EncryptedStore(this).unlockPin()?.also { it.fill('\u0000') } != null)
             .put("unlock_attempted", EncryptedStore(this).unlockAttempted())
-            .put("whatsapp", WhatsAppScreen(ProviderWindow.root(this)).homeEvidence())
+            .put("whatsapp", WhatsAppScreen(providerRoot).homeEvidence())
+            .put("whatsapp_native_observation", NativeStatusObservation.capture(providerRoot))
             .put("keyguard", KeyguardUnlock(this, ::keyguardUi).diagnostics())
+        }
         writer?.println("storyfx_diagnostic=" + result.toString())
     }
     companion object { @Volatile var active = false; private set }
