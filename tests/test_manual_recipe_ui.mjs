@@ -15,6 +15,7 @@ const row = { id: '10000000-0000-4000-8000-000000000001', name: 'Validation tech
 const recipeId = '20000000-0000-4000-8000-000000000002', stepId = '30000000-0000-4000-8000-000000000003';
 const secondStep = '30000000-0000-4000-8000-000000000004';
 const secondRow = { ...row, id: '10000000-0000-4000-8000-000000000005' };
+const extraRows = [6, 7, 8].map(index => ({ ...row, id: `10000000-0000-4000-8000-00000000000${index}` }));
 let owner = 'owner-one', recipe = null, job = null, loseLaunch = true, loseDraft = true;
 const posts = [], errors = [];
 await mkdir(output, { recursive: true });
@@ -38,7 +39,7 @@ await context.route('**/*', async route => {
     if (path === '/v1/control') return json({ revision: 3, server_time: '2026-10-08T12:00:00Z', nodes: [], reports: [], terminal: [],
       scheduler: { enabled: false, dispatch_held: Boolean(recipe?.lock_held && owner === 'owner-one') },
       collections: { profiles: owner === 'owner-one' ? [{ id: row.id, name: row.device, enabled: true }] : [],
-        matrix: owner === 'owner-one' ? [row, secondRow, { ...row, id: 'facebook-row', platform: 'Facebook' }] : [],
+        matrix: owner === 'owner-one' ? [row, secondRow, ...extraRows, { ...row, id: 'facebook-row', platform: 'Facebook' }] : [],
         pages: [], systems: [], albums: [], locators: [] },
       schedule: [{ ...row, id: 'scheduled-occurrence', local_time: '13:00', state: 'PLANNED', availability: 'READY' }] });
     if (path === '/v1/control/recipes' && request.method() === 'GET')
@@ -81,7 +82,7 @@ try {
   await waitEnabled('[data-recipe-row]');
   const menuCount = await page.locator('.nav-item').count();
   assert.equal(menuCount, 14, 'All five existing overview menus and nine control menus remain');
-  assert.equal(await page.locator('[data-recipe-row]').count(), 2, 'No Facebook native choice');
+  assert.equal(await page.locator('[data-recipe-row]').count(), 5, 'No Facebook native choice');
   assert.equal(posts.length, 0, 'Loading cannot start any action');
   await page.locator(`[data-recipe-row="${row.id}"]`).check();
   await page.locator(`[data-recipe-row="${secondRow.id}"]`).check();
@@ -144,6 +145,39 @@ try {
   assert.match(await page.locator('#recipe-dialog-description').innerText(), /laisse la programmation arrêtée/);
   await page.locator('#recipe-confirm').click();
   await page.waitForFunction(() => document.querySelector('#manual-recipes').textContent.includes('Recette clôturée'));
+  const preparation = page.locator('#manual-recipes details');
+  const summary = preparation.locator('summary');
+  if (!await preparation.evaluate(element => element.open)) await summary.click();
+  const beforeSelection = posts.length;
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+  for (const value of [row, secondRow, ...extraRows]) {
+    const choice = page.locator(`[data-recipe-row="${value.id}"]`);
+    await choice.check();
+    assert.equal(await preparation.evaluate(element => element.open), true, 'Choosing a row must keep the form open');
+    assert.equal(await choice.evaluate(element => document.activeElement === element), true, 'Checkbox focus survives its redraw');
+    await page.clock.runFor(30_000);
+    await page.waitForFunction(() => !document.querySelector('#refresh-button').disabled);
+    assert.equal(await preparation.evaluate(element => element.open), true, 'Server polling must keep the form open');
+    assert.equal(await choice.isChecked(), true);
+    assert.equal(await choice.evaluate(element => document.activeElement === element), true, 'Polling preserves the same row focus');
+  }
+  assert.equal(await page.locator('[data-recipe-row]:checked').count(), 5);
+  assert.equal(posts.length, beforeSelection, 'Selecting five rows and polling never POSTs');
+  await summary.click();
+  await page.clock.runFor(30_000);
+  await page.waitForFunction(() => !document.querySelector('#refresh-button').disabled);
+  assert.equal(await preparation.evaluate(element => element.open), false, 'An intentionally closed form stays closed');
+  assert.equal(await summary.evaluate(element => document.activeElement === element), true);
+  await page.locator('#theme-toggle').focus();
+  await page.clock.runFor(30_000);
+  await page.waitForFunction(() => !document.querySelector('#refresh-button').disabled);
+  assert.equal(await page.locator('#theme-toggle').evaluate(element => document.activeElement === element), true, 'Polling does not steal focus outside the form');
+  await page.evaluate(async () => {
+    const { enableControl } = await import('/control.js'); enableControl(false);
+  });
+  assert.equal(await preparation.evaluate(element => element.open), true, 'Session reset restores the empty form default');
+  assert.equal(await page.locator('[data-recipe-row]:checked').count(), 0);
+  await page.clock.resume();
   await page.locator('#logout-button').click();
   await page.waitForURL('**/login/');
   owner = 'owner-two'; await page.goto(origin);
@@ -153,5 +187,5 @@ try {
   assert.doesNotMatch(await page.locator('#manual-recipes').innerText(), /Introduction synthétique|Publication en cours/);
   assert.equal(posts.filter(value => value.path.endsWith('/launch')).length, 2);
   assert.deepEqual(errors, []);
-  console.log('Edge synthetic recipe UI: review, lost receipt, reload, no auto-send, themes/mobile and account isolation passed');
+  console.log('Edge synthetic recipe UI: review, lost receipt, reload, no auto-send, themes/mobile, form polling/focus and account isolation passed');
 } finally { await context.close(); }

@@ -6,18 +6,31 @@ import { publicationSummary, renderRecipeView } from './recipe-view.js';
 let client = null, owner = null, epoch = 0, readSequence = 0, recipes = [], selectedId = '', selectedRows = [];
 let snapshot = null, active = false, busy = false, error = '', pending = null, notice = () => {};
 let redrawControl = () => {}, reloadControl = async () => {};
+let renderedEpoch = -1, resetPreparation = false;
 const find = selector => document.querySelector(selector);
 const selectedRecipe = () => recipes.find(recipe => recipe.id === selectedId);
 export const recipeHasLock = () => recipes.some(recipe => recipe.lock_held);
 const message = failure => recipeReasons[failure.code] || failure.message || 'Recette indisponible.';
 
 function draw() {
-  if (!find('#manual-recipes')) return;
+  const panel = find('#manual-recipes');
+  if (!panel) return;
+  const preserve = renderedEpoch === epoch && !resetPreparation;
+  const open = preserve ? panel.querySelector('details')?.open : undefined;
+  const focused = preserve && panel.contains(document.activeElement) ? document.activeElement : null;
+  const focusKey = ['data-recipe-row', 'data-recipe-action', 'data-recipe-select']
+    .find(attribute => focused?.hasAttribute(attribute));
   let journal = {};
   try { if (client) journal = client.journal(); }
   catch { error = 'Le navigateur ne peut pas conserver la clé de reprise. Aucune publication n’est autorisée.'; }
-  find('#manual-recipes').innerHTML = renderRecipeView({ snapshot: client ? snapshot : null, recipes, selectedId, selectedRows,
+  panel.innerHTML = renderRecipeView({ snapshot: client ? snapshot : null, recipes, selectedId, selectedRows,
     active: active && Boolean(client), busy, error, journal });
+  if (open !== undefined) panel.querySelector('details').open = open;
+  const replacement = focusKey ? [...panel.querySelectorAll(`[${focusKey}]`)]
+    .find(element => element.getAttribute(focusKey) === focused.getAttribute(focusKey)) :
+    focused?.matches('summary') ? panel.querySelector('summary') : null;
+  if (replacement && !replacement.disabled) replacement.focus({ preventScroll: true });
+  renderedEpoch = epoch; resetPreparation = false;
   find('#recipe-confirm').disabled = !active || busy || Boolean(error) || !pending || (pending.action === 'start' && !find('#recipe-pause-ack').checked);
 }
 
@@ -129,7 +142,7 @@ export function mountRecipes({ notify, redraw, reload }) {
       const revision = snapshot?.revision, rows = [...selectedRows];
       perform(async api => {
         const result = await api.create(revision, rows);
-        if (api === client) { selectedId = result.id; selectedRows = []; }
+        if (api === client) { selectedId = result.id; selectedRows = []; resetPreparation = true; }
       });
       return;
     }
