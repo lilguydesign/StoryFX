@@ -13,6 +13,19 @@ class PublicationDiagnostics(private val now: () -> Long = System::nanoTime) {
     var ownLabels = 0
     var provider = false
     var verification = "none"
+    private var verificationStarted = false
+    private var verificationObservations = 0
+    private var peakVerified: Int? = null
+
+    fun beginVerification() { verificationStarted = true }
+
+    fun observeVerification(evidence: PublicationVerification.Evidence) {
+        verified = evidence.count
+        verification = evidence.method
+        // This is a maximum of individual views, never a sum or an identity-based proof.
+        peakVerified = maxOf(peakVerified ?: 0, evidence.count)
+        verificationObservations = (verificationObservations + 1).coerceAtMost(3000)
+    }
 
     fun snapshot(runtime: JSONObject): JSONObject = JSONObject(runtime.toString())
         .put("expected_count", expected).put("selected_count", selected)
@@ -20,5 +33,7 @@ class PublicationDiagnostics(private val now: () -> Long = System::nanoTime) {
         .put("navigation_state", navigation).put("own_label_count", ownLabels.coerceIn(0, 2500))
         .put("provider_package", if (provider) "whatsapp_business" else "unknown")
         .put("account_verified", false).put("verification_method", verification)
+        .put("verification_started", verificationStarted).put("verification_observations", verificationObservations)
+        .put("peak_verified_count", peakVerified)
         .put("elapsed_ms", ((now() - started) / 1_000_000).coerceIn(0, 900000))
 }

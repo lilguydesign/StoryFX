@@ -1,0 +1,24 @@
+.android-profile-bindings{margin-top:24px;padding:24px;overflow:hidden}
+.apb-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.apb-heading .eyebrow{display:block;margin-bottom:7px}
+.apb-capability{margin:18px 0;padding:12px 15px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);color:var(--gold)}
+.apb-capability span{margin-right:8px}
+.apb-forms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:20px}
+.apb-forms form{min-width:0;padding:20px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}
+.apb-forms h3,.apb-history h3{font-size:15px;margin:0 0 16px}
+.apb-forms select{width:100%;min-width:0;text-overflow:ellipsis}
+.apb-forms label{display:block;margin:12px 0 8px;font-size:12px;font-weight:600}
+.apb-forms .helper{font-size:12px;margin:10px 0 16px}
+.apb-forms .button{min-height:44px;white-space:normal;text-align:center}
+.apb-forms .apb-confirm{display:flex;align-items:flex-start;gap:10px;font-weight:400;line-height:1.6}
+.apb-confirm input{flex:0 0 18px;width:18px;height:18px;margin:3px 0 0;accent-color:var(--cyan)}
+.apb-history{margin-top:26px}
+.apb-history table{min-width:610px;width:100%}
+.apb-history td{max-width:230px;overflow-wrap:anywhere}
+.apb-status,.apb-error,.apb-pending{padding:14px;border:1px solid var(--border);border-radius:10px}
+.apb-status,.apb-pending{color:var(--gold);background:var(--surface-2)}
+.apb-error{color:var(--danger)}
+.apb-pending .button{margin:4px 8px 0 0}
+.apb-pending p{margin:7px 0}
+@media(max-width:760px){.apb-forms{grid-template-columns:1fr;gap:16px}.android-profile-bindings{padding:17px}.apb-heading h2{font-size:16px}}
+@media(max-width:440px){.apb-forms form{padding:15px}.apb-forms .button{width:100%}}

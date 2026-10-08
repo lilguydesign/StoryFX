@@ -1,3 +1,4 @@
+@import url('./android-profile-bindings.css');
 :root{font-family:"Century Gothic","Segoe UI",sans-serif;color-scheme:dark;--bg:#080d18;--surface:#0e1625;--surface-2:#121e30;--text:#f0f4fa;--muted:#8e9bb0;--border:#233044;--cyan:#65dce8;--gold:#edc879;--green:#8ad3b3;--danger:#e994a4;--shadow:0 15px 40px #0002}
 :root[data-theme="light"]{color-scheme:light;--bg:#edf2f7;--surface:#fff;--surface-2:#f4f7fa;--text:#17283e;--muted:#5d6d83;--border:#dce4ee;--cyan:#147c90;--gold:#8f6721;--green:#287a58;--danger:#a43251;--shadow:0 15px 40px #23304408}
 *{box-sizing:border-box}

@@ -119,6 +119,8 @@ class NativePublisher(
             action { check(it.contactsPreview()); it.send() }
             stage("own_status_verification")
             Thread.sleep(7000)
+            diagnostics.beginVerification()
+            journal.recordDiagnostics(diagnostics.snapshot(PublicationRuntime.snapshot(context)))
             PublicationVerification(deadlineMillis, android.os.SystemClock::elapsedRealtime, authorize).verify(count,
                 restart = { openOwn(waitForUpload = true) },
                 observe = {
@@ -129,10 +131,7 @@ class NativePublisher(
                     var moved = false
                     inspect { moved = it.scrollStatuses() }
                     moved
-                }, record = { evidence ->
-                    diagnostics.verification = evidence.method
-                    diagnostics.verified = evidence.count
-                })
+                }, record = diagnostics::observeVerification)
             finish("CONFIRMED", "own_status_verified")
         } catch (_: Exception) {
             val (state, evidence) = progress.failure()

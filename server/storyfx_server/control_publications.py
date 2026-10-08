@@ -2,7 +2,7 @@
 import json
 from uuid import uuid4
 from .store import DomainError
-from .control_android import executors
+from .control_executor_reservation import current_executors
 from .control_media_modes import supported_media
 from .control_recipe_state import active_recipe, assert_unlocked
 
@@ -32,13 +32,8 @@ def reserve(broker, user, snapshot, selected, *, strict=True, scheduler_id=None)
                 if strict:
                     raise DomainError('OCCURRENCE_ALREADY_REQUESTED',409)
                 continue
-            nodes = executors(snapshot, value)
+            nodes = current_executors(db, user['id'], value, broker.store.clock())
             if len(nodes) != 1:
-                if strict:
-                    raise DomainError('WINDOWS_EXECUTOR_UNAVAILABLE',409)
-                continue
-            node = db.execute('SELECT last_seen,revoked FROM control_nodes WHERE id=? AND owner_id=?', (nodes[0]['id'],user['id'])).fetchone()
-            if not node or node['revoked'] or node['last_seen'] is None or broker.store.clock()-node['last_seen'] >= 45:
                 if strict:
                     raise DomainError('WINDOWS_EXECUTOR_UNAVAILABLE',409)
                 continue

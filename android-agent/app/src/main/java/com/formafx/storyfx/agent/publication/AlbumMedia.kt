@@ -22,13 +22,14 @@ object AlbumMedia {
         val base = if (video) MediaStore.Video.Media.EXTERNAL_CONTENT_URI else MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.BUCKET_ID)
         val result = mutableListOf<MediaSelection.Candidate<Uri>>()
-        context.contentResolver.query(base, projection + MediaStore.Images.Media.DATE_ADDED,
+        context.contentResolver.query(base, projection + arrayOf(MediaStore.Images.Media.DATE_ADDED, MediaStore.Images.Media.DATE_TAKEN),
             "${MediaStore.Images.Media.BUCKET_DISPLAY_NAME} = ?", arrayOf(album),
             "${MediaStore.Images.Media.DATE_ADDED} DESC, ${MediaStore.Images.Media._ID} DESC")?.use { cursor ->
             while (cursor.moveToNext()) {
                 check(result.size < 20000)
                 result.add(MediaSelection.Candidate(ContentUris.withAppendedId(base, cursor.getLong(0)),
-                    cursor.getLong(1), cursor.getLong(2), cursor.getLong(0), if (video) "video" else "image"))
+                    cursor.getLong(1), cursor.getLong(2), cursor.getLong(0), if (video) "video" else "image",
+                    if (cursor.isNull(3)) null else cursor.getLong(3)))
             }
         }
         return result

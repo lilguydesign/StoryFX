@@ -206,7 +206,7 @@ class MainActivity : Activity() {
         val email = runCatching { store.accountEmail() }.getOrDefault("")
         account.text = email.ifBlank { if (connected) "Association de validation active" else "Compte propriétaire FormaFX" }
         if (!busy) status.text = store.status()
-        if (!busy && connected) publication?.refresh()
+        if (!busy) publication?.refresh()
     }
 
     override fun onDestroy() { updates?.close(); publication?.close(); executor.shutdown(); super.onDestroy() }

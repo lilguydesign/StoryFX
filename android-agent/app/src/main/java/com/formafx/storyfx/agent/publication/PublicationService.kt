@@ -86,7 +86,7 @@ class PublicationService : AccessibilityService() {
     }
 
     private fun flush(api: AgentApi, journal: PublicationJournal) {
-        PublicationReceipt(api, api::legacyCompletionContract).flush(journal)
+        PublicationReceipt(api, api::completionCompatibility).flush(journal)
     }
 
     private fun synchronize() {
@@ -117,9 +117,11 @@ class PublicationService : AccessibilityService() {
                 store.saveStatus(if (store.unlockAttempted()) "Déverrouillage non confirmé : déverrouillez manuellement. Aucun nouvel essai automatique."
                     else PublicationLabels.reason(state.optString("reason"))); return
             }
+            val profiles = PublicationProfiles.read(api.post("/v1/control/android/settings", JSONObject()))
+            profiles.requirePrimary(store.publicationProfile())
             val job = api.post("/v1/control/android/claim", JSONObject()).optJSONObject("job") ?: return
             if (!journal.reserve(job)) { flush(api, journal); return }
-            val payload = try { PublicationPolicy.validate(job, store.publicationProfile()) } catch (_: Exception) {
+            val payload = try { PublicationProviders.validate(job, profiles, store.publicationProfile()) } catch (_: Exception) {
                 journal.finish("FAILED_BEFORE_PUBLICATION", "preflight_refused"); flush(api, journal); return
             }
             val power = getSystemService(PowerManager::class.java)

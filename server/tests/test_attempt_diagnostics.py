@@ -28,7 +28,8 @@ def test_quantified_receipt_and_no_claim_of_independent_account_or_autonomy(priv
     assert browser.post(path, headers=auth, json=body).status_code == 200
     snapshot = browser.get('/v1/control').json()
     report = next(row for row in snapshot['reports'] if row['id'] == job['id'])
-    assert report['diagnostics'] == body['diagnostics']
+    assert report['diagnostics'] == {**body['diagnostics'], 'peak_verified_count': None,
+                                     'verification_observations': None, 'verification_started': None}
     assert report['expected_media_count'] == 3 and report['batch_count_verified']
     assert report['scheduled_at'] == job['payload']['due_at']
     assert report['timezone'] == 'Africa/Douala'

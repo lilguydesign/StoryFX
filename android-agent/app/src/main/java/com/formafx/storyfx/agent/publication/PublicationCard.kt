@@ -16,14 +16,15 @@ import java.util.concurrent.Executors
 class PublicationCard(private val activity: Activity, ui: AgentUi) {
     private val worker = Executors.newSingleThreadExecutor()
     private val status: TextView = ui.text("Connexion FormaFX requise", 13f)
+    private val authorized: TextView = ui.text("Profils autorisés : connexion requise", 13f)
     private val profiles = Spinner(activity)
     private val enabled = CheckBox(activity).apply {
         text = "Activer le pilotage Android de ce téléphone"; setTextColor(ui.ink)
     }
     private var names = listOf<String>()
     val view = ui.card().apply {
-        addView(ui.text("Publication autonome · pilote WhatsApp", 17f, ui.ink, true))
-        addView(ui.label("Sélectionnez le profil déjà enregistré pour ce téléphone. Le serveur garde vos horaires et albums."))
+        addView(ui.text("Publication Android · pilote WhatsApp", 17f, ui.ink, true))
+        addView(ui.label("Sélectionnez le profil principal WhatsApp déjà enregistré pour ce téléphone. Le serveur garde vos horaires et albums."))
         addView(profiles)
         addView(enabled)
         addView(ui.button("Enregistrer le profil Android", primary = true).apply { setOnClickListener { bind() } })
@@ -42,28 +43,49 @@ class PublicationCard(private val activity: Activity, ui: AgentUi) {
             "déverrouillez Android une première fois. Le service reprend ensuite sans ouvrir cette page. Une tâche attend si Internet ou une autorisation manque. " +
             "Les gestes d’une tâche interrompue ne sont jamais rejoués automatiquement."))
         addView(status)
+        addView(authorized)
+        addView(ui.label("Les profils supplémentaires sont associés explicitement par le propriétaire. " +
+            "Facebook reste indisponible dans cet agent. Une association ne valide ni la destination, ni une publication, ni l’autonomie."))
     }
     fun refresh() {
         val store = EncryptedStore(activity)
-        val session = runCatching { store.session() }.getOrNull() ?: return
+        val session = runCatching { store.session() }.getOrNull()
+        authorized.text = "Profils autorisés : vérification en cours"
+        if (session == null) {
+            names = emptyList(); profiles.adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item, names)
+            enabled.isChecked = false; status.text = "Connexion FormaFX requise"
+            authorized.text = "Profils autorisés : connexion requise"; return
+        }
         worker.execute {
-            val response = runCatching { AgentApi(session.server, session.token).post("/v1/control/android/settings", JSONObject()) }
+            val response = runCatching {
+                val data = AgentApi(session.server, session.token).post("/v1/control/android/settings", JSONObject())
+                data to PublicationProfiles.read(data)
+            }
             activity.runOnUiThread {
                 if (activity.isDestroyed) return@runOnUiThread
-                response.onSuccess { data ->
+                val current = runCatching { store.session() }.getOrNull()
+                if (current?.server != session.server || current.deviceId != session.deviceId || current.token != session.token)
+                    return@runOnUiThread
+                response.onSuccess { (data, grants) ->
                     val list = data.getJSONArray("profiles")
+                    val secondary = grants.authorized.filter { !it.primary }.map { it.profile }.toSet()
                     names = (0 until list.length()).map { list.getJSONObject(it) }
-                        .filter { it.optBoolean("enabled", true) }.map { it.getString("name") }
+                        .filter { it.optBoolean("enabled", true) }.map { it.getString("name") }.filterNot { it in secondary }
                     profiles.adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item, names)
                     val binding = data.optJSONObject("binding")
                     val profile = binding?.optString("profile").orEmpty()
                     enabled.isChecked = binding?.optInt("enabled", 0) == 1
                     if (profile in names) profiles.setSelection(names.indexOf(profile))
                     if (profile.isNotBlank()) store.savePublicationBinding(profile, enabled.isChecked)
+                    authorized.text = if (grants.authorized.isEmpty()) "Aucun profil associé à cet appareil."
+                        else grants.authorized.joinToString("\n") { "${it.profile} : ${PublicationProviders.description(it)}" }
                     status.text = "Service : ${if (PublicationService.active) "actif" else "à autoriser"} · Photos : " +
                         "${if (AlbumMedia.allowed(activity)) "autorisées" else "à autoriser"} · " +
                         PublicationLabels.reason(binding?.optString("reason") ?: "WAITING_PERMISSIONS")
-                }.onFailure { status.text = "Pilotage Android indisponible. Association et tâches conservées." }
+                }.onFailure {
+                    status.text = "Pilotage Android indisponible. Association et tâches conservées."
+                    authorized.text = "Profils autorisés indisponibles ; aucune capacité supplémentaire activée."
+                }
             }
         }
     }
@@ -76,9 +98,12 @@ class PublicationCard(private val activity: Activity, ui: AgentUi) {
         worker.execute {
             val response = runCatching { AgentApi(session.server, session.token).post("/v1/control/android/bind",
                 JSONObject().put("profile", profile).put("enabled", requested)) }
-            if (response.isSuccess) store.savePublicationBinding(profile, requested)
             activity.runOnUiThread {
-                if (!activity.isDestroyed) { status.text = if (response.isSuccess) "Profil enregistré." else "Association du profil refusée."; refresh() }
+                val current = runCatching { store.session() }.getOrNull()
+                if (activity.isDestroyed || current?.server != session.server || current.deviceId != session.deviceId ||
+                    current.token != session.token) return@runOnUiThread
+                if (response.isSuccess) store.savePublicationBinding(profile, requested)
+                status.text = if (response.isSuccess) "Profil enregistré." else "Association du profil refusée."; refresh()
             }
         }
     }

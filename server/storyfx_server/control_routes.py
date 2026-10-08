@@ -144,6 +144,8 @@ def build_control_router(store, sessions, owner, credential, agent):
 
     from .control_android_routes import mount_android
     mount_android(router, broker, agent, Completion)
+    from .control_android_profile_routes import mount_profile_bindings
+    mount_profile_bindings(router, broker, owner)
     from .control_recipe_routes import mount_recipes
     mount_recipes(router, broker, owner)
     from .control_pin_backup import mount_pin_backups
