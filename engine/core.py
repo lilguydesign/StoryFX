@@ -524,7 +524,7 @@ def unlock_screen_if_needed(driver):
     Stratégie :
       1) Réveille l'écran
       2) Fait plusieurs swipes bas → haut (lockscreen simple / vidéo "Swipe to open")
-      3) Si l'écran est encore verrouillé → saisit le code PIN 233623
+      3) Si l'écran est encore verrouillé → saisit le code PIN [confidentiel]
     """
     PASSWORD = "233623"
 
@@ -585,7 +585,7 @@ def unlock_screen_if_needed(driver):
                 pass
 
             # 4) Si toujours verrouillé → tenter le code PIN 233623
-            log("[Screen] Toujours verrouillé après swipe → tentative PIN 233623...")
+            log("[Screen] Toujours verrouillé après swipe → tentative PIN [confidentiel]...")
             try:
                 # Sur beaucoup d'appareils, la touche MENU 82 réveille / affiche le PIN si besoin
                 try:
