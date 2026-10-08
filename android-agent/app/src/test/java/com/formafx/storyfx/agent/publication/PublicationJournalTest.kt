@@ -40,4 +40,18 @@ class PublicationJournalTest {
         assertThrows(IllegalStateException::class.java) { journal.reserve(job().put("occurrence_id", "b".repeat(64))) }
         assertEquals(saved, memory.value)
     }
+
+    @Test fun closedDiagnosticsSurviveCrashWithoutChangingTheUncertainReservation() {
+        val memory = Memory()
+        val journal = PublicationJournal(memory)
+        journal.reserve(job())
+        journal.recordDiagnostics(JSONObject().put("stage", "own_status_verification").put("selected_count", 9))
+        val pending = PublicationJournal(memory).pending()!!
+        assertEquals("NEEDS_REVIEW", pending.getString("state"))
+        assertEquals(9, pending.getJSONObject("diagnostics").getInt("selected_count"))
+        journal.finish("CONFIRMED", "own_status_verified", JSONObject().put("verified_count", 9))
+        journal.acknowledged()
+        assertFalse(journal.reserve(job()))
+        assertEquals(9, journal.pending()!!.getJSONObject("diagnostics").getInt("verified_count"))
+    }
 }

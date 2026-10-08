@@ -6,8 +6,8 @@ android {
         applicationId = "com.formafx.storyfx.agent"
         minSdk = 26
         targetSdk = 35
-        versionCode = 18
-        versionName = "0.4.13"
+        versionCode = 19
+        versionName = "0.4.14"
     }
     buildFeatures { buildConfig = true }
     compileOptions {

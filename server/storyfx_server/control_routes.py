@@ -11,6 +11,7 @@ from .control_scheduler import Scheduler
 from .control_scheduler_models import Window, Schedule, Stop
 from .control_result_proofs import Evidence
 from .control_recovery import repeat, repeat_many
+from .control_attempt_diagnostics import AttemptDiagnostics
 
 
 class PairStart(Strict):
@@ -34,6 +35,7 @@ class Contact(Strict):
 class Completion(Strict):
     state: Literal['CONFIRMED', 'NEEDS_REVIEW', 'FAILED_BEFORE_PUBLICATION']
     evidence: Evidence
+    diagnostics: AttemptDiagnostics | None = None
 
 
 class Retry(Strict):
@@ -134,7 +136,7 @@ def build_control_router(store, sessions, owner, credential, agent):
 
     @router.post('/windows/jobs/{job_id}/complete')
     def complete(job_id: UUID, body: Completion, executor=Depends(node)):
-        return broker.complete(executor, str(job_id), body.state, body.evidence)
+        return broker.complete(executor, str(job_id), body.state, body.evidence, body.diagnostics)
 
     @router.post('/windows/jobs/{job_id}/ready')
     def ready(job_id: UUID, _body: Empty, executor=Depends(node)):

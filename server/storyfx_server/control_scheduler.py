@@ -5,7 +5,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 from .control_publications import reserve, supported
 from .store import DomainError, timestamp
-from .control_android import executors
+from .control_executor_status import executor_wait_reason, scheduler_wait_reason
 from .control_scheduler_waits import SchedulerWaits
 from .control_media_modes import requires_media_v2
 
@@ -56,8 +56,7 @@ class Scheduler:
                     datetime.fromisoformat(value['due_at'].replace('Z','+00:00')).timestamp() <= end.timestamp()]
         rows = []
         for value in selected:
-            connected = len(executors(snapshot, value)) == 1
-            reason = 'ALREADY_REQUESTED' if value['state'] != 'PLANNED' else 'ADAPTER_NOT_VALIDATED' if not supported(value) else 'WINDOWS_DISCONNECTED' if not connected else 'READY'
+            reason = 'ALREADY_REQUESTED' if value['state'] != 'PLANNED' else executor_wait_reason(snapshot, value)
             rows.append({**value,'eligible':reason == 'READY','reason':reason})
         return snapshot, {'from_at':timestamp(start.timestamp()),'until':timestamp(end.timestamp()),
                           'timezone':'Africa/Douala','rows':rows,'eligible_count':sum(row['eligible'] for row in rows)}
@@ -139,10 +138,10 @@ class Scheduler:
                             and (not requires_media_v2(value) or datetime.fromisoformat(value['due_at'].replace('Z','+00:00')).timestamp() >= self.broker.android.media_enabled_from)
                             and supported(value)]
                 reserve(self.broker,user,snapshot,selected,strict=False,scheduler_id=row['generation'])
-                waiting = any(len(executors(snapshot, value)) != 1 for value in selected)
+                waiting = scheduler_wait_reason(snapshot, selected)
                 with self.store.transaction() as db:
                     db.execute('UPDATE control_schedulers SET mode=\'auto\',wait_reason=? WHERE owner_id=? AND generation=? AND enabled=1',
-                               ('WINDOWS_DISCONNECTED' if waiting else '',user['id'],row['generation']))
+                               (waiting,user['id'],row['generation']))
                 self.waits.clear(row)
             except DomainError as error:
                 if not self.waits.defer(row, error):

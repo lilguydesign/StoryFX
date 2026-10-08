@@ -8,6 +8,7 @@ from .control_terminal import Terminal
 from .control_publications import reserve
 from .control_status_reviews import empty_review
 from .control_media_modes import requires_media_v2
+from .control_attempt_diagnostics import AttemptEvidence, schedule_status
 
 
 class Broker:
@@ -32,6 +33,7 @@ class Broker:
             ''')
         from .control_android import AndroidControl
         self.android = AndroidControl(self)
+        self.attempt_evidence = AttemptEvidence(store)
 
     def begin(self, name, proof):
         self.store.throttle('control_pair', maximum=10, period=60)
@@ -87,6 +89,7 @@ class Broker:
             nodes = [dict(row) for row in db.execute('SELECT id,name,last_seen,profiles,revoked FROM control_nodes WHERE owner_id=?', (user['id'],))]
             reports = [{**self.report(row), 'empty_status_review_available':empty_review(db, row, self.store.clock())}
                        for row in db.execute('SELECT * FROM control_jobs WHERE owner_id=? ORDER BY created DESC LIMIT 200', (user['id'],))]
+            self.attempt_evidence.attach(db, reports, user['id'])
             attempts = list(db.execute('SELECT occurrence,state,payload FROM control_jobs WHERE owner_id=? ORDER BY created,id', (user['id'],)))
             states = {}
             depths = {}
@@ -104,8 +107,12 @@ class Broker:
         schedules = plan(catalog, self.store.clock())
         for value in schedules:
             value['state'] = states.get(value['id'], 'PLANNED')
+            value.update(schedule_status(value, {'nodes': nodes}))
+            source = next(row for row in catalog['collections']['matrix'] if row['id'] == value['row_id'])
+            value['page_reference'] = source.get('page') or None
         return {**catalog, 'nodes': nodes, 'schedule': schedules, 'reports': reports,
-                'execution_mode': 'windows_and_android', 'autonomous_android_publication': True,
+                'execution_mode': 'windows_and_android', 'autonomous_android_publication': False,
+                'android_publication_capability': True, 'total_autonomy_verified': False,
                 'scheduler':self.scheduler.status(user) if self.scheduler else {'enabled':False},
                 'terminal':self.terminal.read(user)}
 
@@ -174,13 +181,16 @@ class Broker:
             self.terminal.emit(db,node['owner_id'],'CLAIMED',payload['device'],payload['system'])
         return {'job': {'id': row['id'], 'occurrence_id': row['occurrence'], 'payload': json.loads(row['payload'])}}
 
-    def complete(self, node, identity, state, evidence):
+    def complete(self, node, identity, state, evidence, diagnostics=None):
         with self.store.transaction() as db:
             row = db.execute('SELECT * FROM control_jobs WHERE id=? AND node_id=? AND owner_id=?',
                              (identity, node['id'], node['owner_id'])).fetchone()
             if not row or row['state'] not in {'CLAIMED', 'CANCEL_REQUESTED', 'NEEDS_REVIEW', state}:
                 raise DomainError('JOB_STATE_INVALID', 409)
-            if row['state'] in {'CLAIMED', 'CANCEL_REQUESTED', 'NEEDS_REVIEW'}:
+            if row['completed'] is not None and (row['state'] != state or row['evidence'] != evidence):
+                raise DomainError('PUBLICATION_RESULT_ALREADY_RECORDED', 409)
+            self.attempt_evidence.save(db, row, state, evidence, diagnostics)
+            if row['completed'] is None and row['state'] in {'CLAIMED', 'CANCEL_REQUESTED', 'NEEDS_REVIEW'}:
                 db.execute('UPDATE control_jobs SET state=?,completed=?,evidence=? WHERE id=?',
                            (state, self.store.clock(), evidence, identity))
                 payload = json.loads(row['payload'])

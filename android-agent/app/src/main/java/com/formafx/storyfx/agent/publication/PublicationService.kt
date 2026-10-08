@@ -86,10 +86,7 @@ class PublicationService : AccessibilityService() {
     }
 
     private fun flush(api: AgentApi, journal: PublicationJournal) {
-        val pending = journal.pending() ?: return
-        api.post("/v1/control/android/jobs/${pending.getString("job_id")}/complete", JSONObject()
-            .put("state", pending.getString("state")).put("evidence", pending.getString("evidence")))
-        journal.acknowledged()
+        PublicationReceipt(api, api::legacyCompletionContract).flush(journal)
     }
 
     private fun synchronize() {
@@ -134,8 +131,6 @@ class PublicationService : AccessibilityService() {
                 NativePublisher(this, ::onUi, { WhatsAppScreen(ProviderWindow.root(this)) { x, y ->
                     ProviderTap.perform(this, x, y)
                 } }, {
-                    check(performGlobalAction(GLOBAL_ACTION_BACK))
-                }, {
                     onUi { ProviderPreparation.dismissShade(this) }
                 }, {
                     check(!closed && active && store.publicationEnabled() && !locked())

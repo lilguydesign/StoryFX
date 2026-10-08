@@ -1,17 +1,17 @@
 import { request } from './api.js';
-import { escape, dateLabel } from './views.js';
+import { escape } from './views.js';
 import { controlTitles, definitions, descriptions, fields, readFields } from './control-fields.js';
 import { mountLauncher, renderLauncher } from './launch-panel.js';
 import { profilesTable, changeProfileSort } from './profile-editor.js';
 import { showAssociationLink } from './association-link.js';
-import { failureLabels, recoveryButton, mountRecovery } from './publication-recovery.js';
+import { mountRecovery } from './publication-recovery.js';
 import { mediaSummary } from './media-plan.js';
+import { renderPublicationReports } from './publication-reports.js';
 
 let data = null, enabled = false, busy = false, editing = null, editRevision = null, selected = null;
 let profileFilter = '', platformFilter = '';
 const find = selector => document.querySelector(selector);
-const states = { PLANNED: 'Programmée', QUEUED: 'En attente', CLAIMED: 'En cours', CONFIRMED: 'Publication confirmée', NEEDS_REVIEW: 'À vérifier', FAILED_BEFORE_PUBLICATION: 'Refusée avant publication', CANCELLED:'Annulée', CANCEL_REQUESTED:'Arrêt demandé' };
-const evidenceLabels = { own_status_three_just_now: '3 images confirmées dans Mon statut', own_status_verified: 'Mon statut vérifié', provider_ui_verified: 'Publication vérifiée', result_uncertain: 'Résultat à vérifier', preflight_refused: 'Vérification préalable refusée' };
+const states = { PLANNED: 'Programmée', QUEUED: 'En attente', CLAIMED: 'En cours', CONFIRMED: 'Confirmation de l’agent', NEEDS_REVIEW: 'Incertaine · à vérifier', FAILED_BEFORE_PUBLICATION: 'Échec avant envoi', CANCELLED:'Annulée', CANCEL_REQUESTED:'Arrêt demandé' };
 
 export function mountControl(notice) {
   const nav = find('.nav-list');
@@ -121,20 +121,16 @@ function render() {
   }
   const filtered = (data?.schedule || []).filter(value => (!profileFilter || value.device === profileFilter) && (!platformFilter || value.platform === platformFilter));
   const rows = filtered.map(value => {
-    const connected = data.nodes.filter(node => node.connected && node.profiles.includes(value.device)).length === 1;
+    const connected = value.availability === 'READY';
     return [escape(value.local_time), escape(value.device), escape(value.platform), escape(value.system), escape(mediaSummary(value)), escape(value.engine === 'intro' ? 1 : Number(value.count) + (value.engine === 'intro+multi' ? 1 : 0)),
-      `<span class="badge ${value.state === 'NEEDS_REVIEW' ? 'error' : ''}">${escape(states[value.state] || value.state)}</span>`,
+      `<span class="badge ${value.state === 'NEEDS_REVIEW' ? 'error' : ''}">${escape(value.availability === 'NOT_SUPPORTED' ? 'Non pris en charge' : states[value.state] || value.state)}</span>`,
       `<button class="text-button" data-publication="${value.id}" ${active && connected && value.state === 'PLANNED' ? '' : 'disabled'}>Lancer</button>`];
   });
   const options = (values, current, label) => [['', label], ...values.map(value => [value, value])].map(([value, text]) => `<option value="${escape(value)}" ${value === current ? 'selected' : ''}>${escape(text)}</option>`).join('');
   const filters = `<div class="control-filters"><label>Profil<select data-profile-filter>${options((data?.collections.profiles || []).map(value => value.name), profileFilter, 'Tous les profils')}</select></label><label>Plateforme<select data-platform-filter>${options(['WhatsApp', 'Facebook', 'Instagram', 'TikTok'], platformFilter, 'Toutes les plateformes')}</select></label></div>`;
   for (const name of ['launch', 'programming']) find(`#control-${name}`).innerHTML =
     `<p class="helper control-help">Africa/Douala · ${escape(filtered.length)} / ${escape(data?.schedule.length || 0)} occurrences aujourd’hui · ${data?.nodes.some(node => node.connected) ? 'Agent de publication prêt' : 'Aucun agent de publication prêt'}</p><button class="button secondary" data-windows ${active ? '' : 'disabled'}>Connecter Windows</button>` + filters + table(['Heure', 'Profil', 'Plateforme', 'Système', 'Mode et albums', 'Total médias', 'État', ''], rows);
-  find('#control-reports').innerHTML = table(['Date', 'Profil', 'Plateforme', 'Système', 'Résultat', 'Origine', 'Preuve', 'Reprise'], (data?.reports || []).map(value => [
-    escape(dateLabel(value.completed_at || value.created_at)), escape(value.publication.device), escape(value.publication.platform), escape(value.publication.system),
-    escape(states[value.state] || value.state), value.publication.execution_origin === 'web_android_agent' ? 'Web → Android' : value.publication.web_triggered ? 'Web → Windows' : 'Moteur local', escape(evidenceLabels[value.evidence] || failureLabels[value.evidence] || 'En attente'),
-    recoveryButton(value, data.reports, active),
-  ]));
+  find('#control-reports').innerHTML = renderPublicationReports(data, active);
   renderLauncher(data,active);
   showAssociationLink(active);
 }

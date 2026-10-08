@@ -46,6 +46,8 @@ jobs:
           for source in dashboard/*.js dashboard/login/*.js; do
             node --input-type=module --check < "$source"
           done
+      - name: Validate publication reports with synthetic data
+        run: node --experimental-default-type=module tests/test_publication_reports.mjs
       - name: Parse deployment sources
         run: |
           python -m compileall -q deploy
