@@ -1,18 +1,21 @@
-# StoryFX — agent Android 0.4.1
+# StoryFX — agent Android 0.4.14
 
 Application native Kotlin Android 8+, connexion FormaFX sécurisée, association
 chiffrée et mise à jour signée depuis la dernière version officielle.
 
 Le pilote de publication fonctionne dans un service Accessibilité activé
 explicitement par le propriétaire. Choisir le profil historique dans
-StoryFX, autoriser les photos et activer le service Android. Le serveur
-conserve matrices et programmation ; le téléphone exécute les images
-WhatsApp Business dans Mon statut. Voir [le périmètre du pilote](docs/ANDROID_PUBLICATION_PILOT.md).
+StoryFX, autoriser les photos/vidéos et activer le service Android. Le serveur
+conserve matrices et programmation ; le téléphone exécute les modes intro,
+multi et intro+multi dans Mon statut WhatsApp Business. Facebook et TikTok
+natifs restent non implémentés. Voir [le périmètre du pilote](docs/ANDROID_PUBLICATION_PILOT.md)
+et [les preuves et limites 0.4.14](docs/PUBLICATION_DIAGNOSTICS_0414.md).
 
-Après redémarrage, effectuer le premier déverrouillage Android. Le service
-reprend sans rouvrir l’application. Un écran éteint/verrouillé, une absence
-d’Internet ou une permission manquante met les tâches en attente. Aucun code
-de verrouillage n’est stocké ou transmis par l’agent Android.
+Le déverrouillage local et Direct Boot disposent d'un consentement distinct,
+d'un stockage chiffré et d'un essai borné ; sans cette configuration, le premier
+déverrouillage Android reste manuel. La sauvegarde privée du PIN est une fonction
+séparée. Un écran verrouillé, une absence d’Internet ou une permission manquante
+met les tâches en attente. Aucun secret n'est inclus dans les diagnostics.
 
 Une tâche interrompue ne rejoue jamais les gestes de publication. Le journal
 AES-GCM conserve le résultat confirmé ou incertain avant son accusé serveur.

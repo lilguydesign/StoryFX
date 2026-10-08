@@ -12,6 +12,13 @@ class PublicationJournal(private val store: PublicationStateStore) {
     private fun state() = JSONObject(store.publicationState())
     fun pending(): JSONObject? = state().optJSONObject("pending")
 
+    fun recordDiagnostics(diagnostics: JSONObject) {
+        val value = state()
+        val pending = value.getJSONObject("pending").put("diagnostics", diagnostics)
+        value.getJSONObject("history").getJSONObject(pending.getString("occurrence_id")).put("diagnostics", diagnostics)
+        store.savePublicationState(value.toString())
+    }
+
     fun reserve(job: JSONObject): Boolean {
         val value = state()
         check(!value.has("pending"))
@@ -28,12 +35,15 @@ class PublicationJournal(private val store: PublicationStateStore) {
         return prior == null
     }
 
-    fun finish(state: String, evidence: String) {
+    fun finish(state: String, evidence: String, diagnostics: JSONObject? = null) {
         val value = state()
         val pending = value.getJSONObject("pending")
         pending.put("state", state).put("evidence", evidence)
+        if (diagnostics != null) pending.put("diagnostics", diagnostics)
         value.getJSONObject("history").put(pending.getString("occurrence_id"),
-            JSONObject().put("state", state).put("evidence", evidence))
+            JSONObject().put("state", state).put("evidence", evidence).apply {
+                if (diagnostics != null) put("diagnostics", diagnostics)
+            })
         store.savePublicationState(value.toString())
     }
 

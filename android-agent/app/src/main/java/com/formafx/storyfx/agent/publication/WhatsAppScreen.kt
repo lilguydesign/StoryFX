@@ -22,6 +22,19 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) 
     private fun text(node: AccessibilityNodeInfo) = node.text?.toString().orEmpty()
     private fun description(node: AccessibilityNodeInfo) = node.contentDescription?.toString().orEmpty()
     private fun own(node: AccessibilityNodeInfo) = PublicationScreenLabels.own(text(node), description(node))
+    private fun ownTargets() = OwnStatusTargets.resolve(nodes.filter { it.isVisibleToUser }, ::text, ::description) { label, avatar ->
+        fun controls(node: AccessibilityNodeInfo): Set<AccessibilityNodeInfo> {
+            val result = mutableSetOf<AccessibilityNodeInfo>()
+            var current: AccessibilityNodeInfo? = node
+            repeat(8) {
+                current?.let { if (acceptsClick(it, false)) result.add(it) }
+                current = current?.parent
+            }
+            return result
+        }
+        controls(label).intersect(controls(avatar)).isNotEmpty()
+    }
+    fun ownLabelCount() = nodes.count { it.isVisibleToUser && own(it) }
     private fun acceptsClick(node: AccessibilityNodeInfo, navigation: Boolean): Boolean {
         val area = position(node)
         return node.packageName?.toString() == PublicationPolicy.provider &&
@@ -76,7 +89,7 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) 
         val evidence = homeEvidence()
         return correctPackage && evidence.getBoolean("portrait") && evidence.getBoolean("header") &&
             evidence.getBoolean("section") && !evidence.getBoolean("send_control") &&
-            nodes.count { it.isVisibleToUser && own(it) } == 1
+            ownTargets().size == 1
     }
     /** Closed structural flags only: no contact labels, captions or password contents. */
     fun homeEvidence(): JSONObject {
@@ -117,10 +130,18 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) 
             evidence.getBoolean("section"), evidence.getBoolean("empty_tile_text"),
             evidence.getBoolean("own_status_text"), evidence.getBoolean("send_control"))
     }
-    fun isOwnStatusList() = correctPackage && !hasUpdates() && nodes.count { it.isVisibleToUser && own(it) } == 1 &&
+    fun isOwnStatusList() = correctPackage && !hasUpdates() && ownTargets().size == 1 &&
         nodes.none { it.isVisibleToUser && it.viewIdResourceName == "${PublicationPolicy.provider}:id/send" } &&
         nodes.any { it.isVisibleToUser && Regex("\\d+ (views?|vues?)", RegexOption.IGNORE_CASE).matches(text(it)) }
-    fun ownStatus() = click(unique { own(it) })
+    fun ownStatus() { check(ownStatusReady()); click(ownTargets().single()) }
+    fun navigationState(): OwnScreen = when {
+        !correctPackage -> OwnScreen.UNKNOWN
+        isOwnStatusList() -> OwnScreen.OWN_LIST
+        hasNoOwnStatus() -> OwnScreen.EMPTY_HOME
+        ownStatusReady() -> OwnScreen.OWN_HOME
+        hasUpdates() -> OwnScreen.UPDATES_TAB
+        else -> OwnScreen.UNKNOWN
+    }
     fun statusCount(): Int? {
         if (!isOwnStatusList()) return null
         return nodes.filter { it.isVisibleToUser && it.isScrollable &&
@@ -132,10 +153,41 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) 
     fun selectOwnStatus() = click(unique {
         it.viewIdResourceName == "${PublicationPolicy.provider}:id/contactpicker_row_name" && own(it)
     })
+    fun ownPickerReady() = correctPackage && nodes.count { it.isVisibleToUser && own(it) &&
+        it.viewIdResourceName == "${PublicationPolicy.provider}:id/contactpicker_row_name" } == 1
     fun recentCount(): Int {
         if (hasNoOwnStatus()) return 0
-        unique { own(it) }
+        check(isOwnStatusList())
         return nodes.count { it.isVisibleToUser && text(it) in setOf("Just now", "À l’instant", "À l'instant") }
+    }
+    /** Count only recent rows with a provider views indicator, never queued/uploading rows. */
+    fun verifiedRecentRows(): List<Int?> {
+        if (!isOwnStatusList()) return emptyList()
+        val recent = nodes.filter { it.isVisibleToUser && text(it) in setOf("Just now", "À l’instant", "À l'instant") }
+        return recent.mapNotNull { stamp ->
+            var row: AccessibilityNodeInfo? = stamp
+            val ancestors = mutableListOf<PublicationRowEvidence.Ancestor>()
+            repeat(6) {
+                val current = row
+                if (current != null) {
+                    val children = mutableListOf<AccessibilityNodeInfo>()
+                    var complete = true
+                    fun walk(node: AccessibilityNodeInfo) {
+                        if (children.size >= 500) { complete = false; return }
+                        if (node.isVisibleToUser) children.add(node)
+                        for (index in 0 until node.childCount) node.getChild(index)?.let(::walk)
+                    }
+                    walk(current)
+                    val stamps = children.count { text(it) in setOf("Just now", "À l’instant", "À l'instant") }
+                    val views = children.count { Regex("\\d+ (views?|vues?)", RegexOption.IGNORE_CASE).matches(text(it)) }
+                    val pending = children.any { PublicationProof.pending(text(it), description(it)) }
+                    ancestors.add(PublicationRowEvidence.Ancestor(stamps, views, pending,
+                        current.collectionItemInfo?.rowIndex?.takeIf { it >= 0 }, complete))
+                }
+                row = current?.parent
+            }
+            PublicationRowEvidence.completed(ancestors)
+        }.map { it.rowIndex }
     }
     fun recentRows(): Set<Int>? {
         val recent = nodes.filter { it.isVisibleToUser && text(it) in setOf("Just now", "À l’instant", "À l'instant") }
@@ -154,6 +206,19 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) 
         it.isScrollable && (it.className?.toString()?.endsWith("RecyclerView") == true ||
             it.className?.toString()?.endsWith("ListView") == true)
     }.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+    fun scrollStatusesBack(): Boolean {
+        check(isOwnStatusList())
+        val containers = nodes.filter { it.isVisibleToUser &&
+            (it.className?.toString()?.endsWith("RecyclerView") == true ||
+                it.className?.toString()?.endsWith("ListView") == true) }
+        val container = containers.single()
+        if (nodes.any { it.isVisibleToUser && it.collectionItemInfo?.rowIndex == 0 }) return false
+        // Providers advertise only currently available directions. An attempted failed
+        // gesture is not a proof of reaching the beginning of the list.
+        if (container.actionList.none { it.id == AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD }) return false
+        check(container.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD))
+        return true
+    }
     fun selectionIsOwnOnly(): Boolean = correctPackage && nodes.count {
         it.isVisibleToUser && text(it) in setOf("1 selected", "1 sélectionné", "1 sélectionnée")
     } == 1

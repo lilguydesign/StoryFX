@@ -25,7 +25,23 @@ class AgentApi(server: String, private val token: String? = null) : AgentGateway
             token?.let { connection.setRequestProperty("Authorization", "Bearer $it") }
             connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
             val status = connection.responseCode
-            if (status !in 200..299) throw AgentRequestException(status)
+            if (status !in 200..299) {
+                val invalid = if (status == 422 && body.has("diagnostics")) runCatching {
+                    val raw = connection.errorStream?.bufferedReader(Charsets.UTF_8)?.use { reader ->
+                        val buffer = CharArray(65537)
+                        var count = 0
+                        while (count < buffer.size) {
+                            val read = reader.read(buffer, count, buffer.size - count)
+                            if (read == -1) break
+                            count += read
+                        }
+                        check(count <= 65536)
+                        String(buffer, 0, count)
+                    } ?: return@runCatching false
+                    AgentErrorPolicy.invalidRequest(JSONObject(raw))
+                }.getOrDefault(false) else false
+                throw AgentRequestException(status, invalid)
+            }
             val raw = connection.inputStream.bufferedReader(Charsets.UTF_8).use {
                 val buffer = CharArray(131073)
                 var count = 0
@@ -42,6 +58,31 @@ class AgentApi(server: String, private val token: String? = null) : AgentGateway
             connection.disconnect()
         }
     }
+
+    fun legacyCompletionContract(): Boolean = runCatching {
+        val connection = URL(base + "/health").openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+            connection.instanceFollowRedirects = false
+            connection.setRequestProperty("Accept", "application/json")
+            if (connection.responseCode != 200) return@runCatching false
+            val raw = connection.inputStream.bufferedReader(Charsets.UTF_8).use { reader ->
+                val buffer = CharArray(65537)
+                var count = 0
+                while (count < buffer.size) {
+                    val read = reader.read(buffer, count, buffer.size - count)
+                    if (read == -1) break
+                    count += read
+                }
+                check(count <= 65536)
+                String(buffer, 0, count)
+            }
+            AgentErrorPolicy.legacyCompletionContract(JSONObject(raw))
+        } finally { connection.disconnect() }
+    }.getOrDefault(false)
 }
 
-class AgentRequestException(val status: Int) : Exception("Requête refusée (HTTP $status).")
+class AgentRequestException(val status: Int, val invalidRequest: Boolean = false) :
+    Exception("Requête refusée (HTTP $status).")

@@ -30,3 +30,17 @@
 #setting-dialog { max-height:calc(100dvh - 32px); overflow:auto; }
 .button.danger { background:color-mix(in srgb,var(--danger) 12%,var(--surface)); border:1px solid color-mix(in srgb,var(--danger) 55%,transparent); color:var(--danger); }
 @media(max-width:620px) { .launch-controls,.terminal-panel { padding:16px; } .scheduler-actions .button { flex:1 1 100%; } }
+.report-line{display:block;white-space:normal;max-width:25rem;overflow-wrap:break-word}
+.report-line + .report-line{margin-top:.35rem;font-size:.85em;color:var(--text-muted,var(--muted,#7c879b))}
+.publication-reports{min-width:1980px;table-layout:auto}
+.publication-reports :is(th,td){vertical-align:top;white-space:normal;word-break:normal}
+.publication-reports :is(th,td):nth-child(1){min-width:200px}
+.publication-reports :is(th,td):nth-child(2){min-width:220px}
+.publication-reports :is(th,td):nth-child(3){min-width:180px;overflow-wrap:break-word}
+.publication-reports :is(th,td):nth-child(4){min-width:280px}
+.publication-reports :is(th,td):nth-child(5){min-width:140px;white-space:nowrap}
+.publication-reports :is(th,td):nth-child(6){min-width:190px}
+.publication-reports :is(th,td):nth-child(7){min-width:240px}
+.publication-reports :is(th,td):nth-child(8){min-width:150px}
+.publication-reports :is(th,td):nth-child(9){min-width:360px}
+.publication-reports tr:target{outline:2px solid var(--accent,#5d8eff);outline-offset:-2px}

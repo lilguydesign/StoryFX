@@ -55,4 +55,4 @@ def mount_android(router, broker, agent, completion):
     def complete(job_id: UUID, body: completion, identity=Depends(agent)):
         if not native_proof(body.state, body.evidence):
             raise DomainError('ANDROID_RESULT_INVALID', 422)
-        return broker.complete(native.node(identity, require_ready=False), str(job_id), body.state, body.evidence)
+        return broker.complete(native.node(identity, require_ready=False), str(job_id), body.state, body.evidence, body.diagnostics)

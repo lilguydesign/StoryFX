@@ -48,6 +48,7 @@ def test_no_usb_and_no_database_mutation(tmp_path):
     result = read_snapshot(tmp_path / 'storyfx.db', config, config['start_unix'] + 3600)
     assert result['totals'] == {'confirmed_agent': 1}
     assert result['rows'][0]['expected_count'] == 9 and result['rows'][0]['retry_depth'] == 1
+    assert not result['rows'][0]['batch_count_verified'] and not result['rows'][0]['diagnostics_available']
     assert not result['devices'][0]['publication_enabled']
     assert before == hashlib.sha256((tmp_path / 'storyfx.db').read_bytes()).hexdigest()
 
@@ -93,3 +94,23 @@ def test_combination_observation_counts_intro_and_retains_rollout_exclusion(tmp_
     db.execute('UPDATE control_android_media SET ready=0'); db.commit(); db.close()
     result = read_snapshot(tmp_path / 'storyfx.db', config, config['start_unix'] + 3600)
     assert result['rows'][0]['verdict'] == 'adapter_not_validated'
+
+
+def test_quantities_require_matching_owner_attempt_and_explicit_counters(tmp_path):
+    db, config, values = fixture(tmp_path)
+    occurrence = plan({'collections': values}, config['start_unix'])[0]['id']
+    db.execute('INSERT INTO control_jobs VALUES (?,?,?,?,?,?,?)',
+               ('attempt', 'owner-a', occurrence, 'CONFIRMED', '{}', 'own_status_verified', 1))
+    db.execute('CREATE TABLE control_attempt_diagnostics(job_id,owner_id,recorded,value)')
+    proof = dict(expected_count=9, selected_count=9, verified_count=9,
+                 provider_package='whatsapp_business', verification_method='recent_rows', account_verified=False)
+    db.execute('INSERT INTO control_attempt_diagnostics VALUES (?,?,?,?)',
+               ('attempt', 'owner-b', 1, json.dumps(proof)))
+    db.commit()
+    observed = lambda: read_snapshot(tmp_path / 'storyfx.db', config, config['start_unix'] + 3600)['rows'][0]
+    assert not observed()['batch_count_verified']
+    db.execute("UPDATE control_attempt_diagnostics SET owner_id='owner-a'"); db.commit()
+    assert observed()['batch_count_verified'] and not observed()['account_verified']
+    db.execute('UPDATE control_attempt_diagnostics SET value=?', (json.dumps({**proof, 'verified_count': 1}),))
+    db.commit(); db.close()
+    assert not observed()['batch_count_verified']

@@ -9,8 +9,12 @@ const find = selector => document.querySelector(selector);
 const labels = {QUEUED:'Publication mise en attente',CLAIMED:'Publication en cours',CONFIRMED:'Publication confirmée',NEEDS_REVIEW:'Résultat à vérifier',
   FAILED_BEFORE_PUBLICATION:'Refusée avant publication',SCHEDULER_STARTED:'Scheduler démarré',SCHEDULER_STOPPED:'Scheduler arrêté',
   SCHEDULER_PAUSED:'Scheduler suspendu : compte ou configuration à vérifier',STOP_REQUESTED:'Arrêt demandé ; tâches en attente annulées'};
-const reasons = {READY:'Prête',ALREADY_REQUESTED:'Déjà demandée / confirmée : ignorée',ADAPTER_NOT_VALIDATED:'Moteur non validé : exclue',WINDOWS_DISCONNECTED:'Téléphone ou agent compatible indisponible'};
-const schedulerWait = status => ({AUTH_UNAVAILABLE:'Le contrôle FormaFX est temporairement indisponible. Nouvelle vérification automatique, sans publication tant que l’accès n’est pas validé.',RATE_LIMITED:'Le contrôle FormaFX limite momentanément les requêtes. Nouvelle vérification automatique dans cinq minutes au maximum.'}[status.wait_reason] || 'En attente du moteur ou des téléphones.');
+const reasons = {READY:'Prête',ALREADY_REQUESTED:'Déjà demandée / confirmée : ignorée',ADAPTER_NOT_VALIDATED:'Plateforme ou mode non pris en charge',WINDOWS_DISCONNECTED:'Pont Windows indisponible',
+  ANDROID_DISCONNECTED:'Agent Android indisponible',ANDROID_MEDIA_CAPABILITY_REQUIRED:'Mise à jour Android ou autorisation des vidéos requise',
+  ANDROID_EXECUTOR_DISABLED:'Publication Android désactivée',SCREEN_LOCKED:'Écran Android verrouillé',ACCESSIBILITY_REQUIRED:'Service Accessibilité requis',
+  MEDIA_PERMISSION_REQUIRED:'Accès aux médias requis',WAITING_PERMISSIONS:'Autorisations Android en attente',EXECUTOR_CONFLICT:'Plusieurs moteurs éligibles : publication bloquée',
+  MULTIPLE_EXECUTOR_WAITS:'Plusieurs motifs d’attente : consultez les lignes de programmation'};
+const schedulerWait = status => ({AUTH_UNAVAILABLE:'Le contrôle FormaFX est temporairement indisponible. Nouvelle vérification automatique, sans publication tant que l’accès n’est pas validé.',RATE_LIMITED:'Le contrôle FormaFX limite momentanément les requêtes. Nouvelle vérification automatique dans cinq minutes au maximum.'}[status.wait_reason] || reasons[status.wait_reason] || 'En attente du moteur ou des téléphones.');
 const clock = value => new Intl.DateTimeFormat('fr-FR',{timeZone:'Africa/Douala',hour:'2-digit',minute:'2-digit',hour12:false}).format(value ? new Date(value) : new Date());
 
 function body(snapshot) {

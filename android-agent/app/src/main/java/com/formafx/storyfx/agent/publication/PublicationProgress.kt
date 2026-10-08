@@ -21,6 +21,6 @@ class PublicationProgress {
     private companion object {
         val stages = setOf("album_media_unavailable", "provider_not_ready",
             "updates_navigation_failed", "own_status_unavailable",
-            "share_selection_refused", "contacts_preview_refused")
+            "share_selection_refused", "contacts_preview_refused", "own_status_verification")
     }
 }

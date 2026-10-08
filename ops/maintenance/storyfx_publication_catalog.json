@@ -1,0 +1,23 @@
+{
+  "application": "StoryFX",
+  "function": "publication_outcome_observation",
+  "maturity": "synthetic_tests_pending_deployment",
+  "probe": "storyfx_publication_probe.py",
+  "source": "/opt/formafx/storyfx/state/observation-state.json",
+  "execution": "canonical collector integration prepared; production execution not verified",
+  "trigger": "existing FX Maintenance collection; existing StoryFX observation every 30 minutes",
+  "timezone": "Africa/Douala",
+  "freshness_tolerance_seconds": 2400,
+  "publication_grace_seconds": 900,
+  "expected_signal": "bounded fresh observer evidence with no uncertain, failed-before-send or overdue supported occurrence",
+  "normal_exclusions": ["no due task", "future task", "disabled channel", "unsupported native adapter", "outside media rollout", "outside active scheduler"],
+  "symptom": "uncertain outcome, failed-before-send, late supported occurrence, stale proof or channel-scope violation",
+  "diagnostic": "closed verdict totals only; agent confirmation does not prove delivered full batch, page or autonomy",
+  "repair": "scoped technical correction; real validation only after Jerry confirms Windows/USB pause and concurrent-executor absence is checked",
+  "replay": "never replay uncertain, confirmed or previously retried publication",
+  "rollback": "previous maintenance release and exact collector preimage; preserve observation, scheduler, tasks and quota",
+  "illustrated_template": "existing StoryFX logo/template; one global WhatsApp maximum per two hours, silent resolution",
+  "notification_policy_modified": false,
+  "real_send_triggered": false,
+  "total_autonomy_verified": false
+}

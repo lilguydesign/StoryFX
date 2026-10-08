@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 from .control_plan import plan
 from .control_publications import supported
 from .control_media_modes import media_count, requires_media_v2
+from .control_attempt_diagnostics import quantified_batch
 
 
 def read_snapshot(database, config, now):
@@ -21,13 +22,16 @@ def read_snapshot(database, config, now):
         scheduler = db.execute('SELECT enabled,scope,wait_reason FROM control_schedulers WHERE owner_id=?', (owner,)).fetchone()
         scope = json.loads(scheduler['scope']) if scheduler else {'profiles': [], 'platforms': []}
         jobs = {}
-        for row in db.execute('SELECT occurrence,state,payload,evidence FROM control_jobs WHERE owner_id=? ORDER BY created,id', (owner,)):
+        for row in db.execute('SELECT id,occurrence,state,payload,evidence FROM control_jobs WHERE owner_id=? ORDER BY created,id', (owner,)):
             payload = json.loads(row['payload'])
             occurrence = payload.get('original_occurrence', row['occurrence'])
             if payload.get('retry_depth', 0) >= jobs.get(occurrence, {}).get('depth', -1):
                 jobs[occurrence] = {'state': row['state'], 'evidence': row['evidence'],
-                                    'depth': payload.get('retry_depth', 0)}
+                                    'depth': payload.get('retry_depth', 0), 'id': row['id']}
         tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        diagnostics = {row['job_id']: json.loads(row['value']) for row in db.execute(
+            'SELECT job_id,value FROM control_attempt_diagnostics WHERE owner_id=?', (owner,))
+            } if 'control_attempt_diagnostics' in tables else {}
         media_capabilities = dict(db.execute('SELECT device_id,ready FROM control_android_media')) if 'control_android_media' in tables else {}
         rollout = db.execute("SELECT enabled_from FROM control_media_rollout WHERE name='media_v2'").fetchone() if 'control_media_rollout' in tables else None
         devices, capable_profiles = [], set()
@@ -50,6 +54,7 @@ def read_snapshot(database, config, now):
             if value['device'] not in config['schedule_profiles'] or not config['start_unix'] <= due <= final:
                 continue
             job = jobs.get(value['id'], {'state': 'PLANNED', 'evidence': '', 'depth': 0})
+            proof = diagnostics.get(job.get('id'))
             state = job['state']
             verdict = ('confirmed_agent' if state == 'CONFIRMED' and job['evidence'] == 'own_status_verified' else
                        'confirmed_legacy_unverified_count' if state == 'CONFIRMED' else
@@ -63,7 +68,10 @@ def read_snapshot(database, config, now):
                          'expected_count': value['count'], 'due_at': value['due_at'], 'state': state,
                          'engine': value['engine'], 'expected_media_count': media_count(value),
                          'verdict': verdict, 'retry_depth': job['depth'],
-                         'batch_count_verified': verdict == 'confirmed_agent' and value['platform'] == 'WhatsApp',
+                         'batch_count_verified': verdict == 'confirmed_agent' and value['platform'] == 'WhatsApp'
+                         and quantified_batch(proof, media_count(value)),
+                         'diagnostics_available': proof is not None,
+                         'account_verified': bool(proof and proof.get('account_verified')),
                          'facebook_page_and_batch_verified': False})
         day += timedelta(days=1)
     matrix = catalog['collections']['matrix']
