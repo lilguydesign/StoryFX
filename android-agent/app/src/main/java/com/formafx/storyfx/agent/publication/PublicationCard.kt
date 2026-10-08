@@ -21,12 +21,19 @@ class PublicationCard(private val activity: Activity, ui: AgentUi) {
     private val enabled = CheckBox(activity).apply {
         text = "Activer le pilotage Android de ce téléphone"; setTextColor(ui.ink)
     }
+    private val whatsApp = CheckBox(activity).apply {
+        text = "Autoriser les tâches WhatsApp du profil principal"; setTextColor(ui.ink)
+    }
     private var names = listOf<String>()
+    private var bindingGeneration = 0
     val view = ui.card().apply {
         addView(ui.text("Publication Android · pilote WhatsApp", 17f, ui.ink, true))
         addView(ui.label("Sélectionnez le profil principal WhatsApp déjà enregistré pour ce téléphone. Le serveur garde vos horaires et albums."))
         addView(profiles)
         addView(enabled)
+        addView(whatsApp)
+        addView(ui.label("L’arrêt du pilotage bloque tous les gestes. Désactiver WhatsApp ne change pas cet arrêt global. " +
+            "Facebook reste indisponible ; cette option ne l’active pas."))
         addView(ui.button("Enregistrer le profil Android", primary = true).apply { setOnClickListener { bind() } })
         addView(ui.button("Autoriser les photos et vidéos des albums").apply {
             setOnClickListener { activity.requestPermissions(AlbumMedia.permissions(), 410) }
@@ -53,7 +60,7 @@ class PublicationCard(private val activity: Activity, ui: AgentUi) {
         authorized.text = "Profils autorisés : vérification en cours"
         if (session == null) {
             names = emptyList(); profiles.adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item, names)
-            enabled.isChecked = false; status.text = "Connexion FormaFX requise"
+            enabled.isChecked = false; whatsApp.isChecked = false; status.text = "Connexion FormaFX requise"
             authorized.text = "Profils autorisés : connexion requise"; return
         }
         worker.execute {
@@ -74,9 +81,10 @@ class PublicationCard(private val activity: Activity, ui: AgentUi) {
                     profiles.adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item, names)
                     val binding = data.optJSONObject("binding")
                     val profile = binding?.optString("profile").orEmpty()
-                    enabled.isChecked = binding?.optInt("enabled", 0) == 1
+                    whatsApp.isChecked = binding?.optInt("enabled", 0) == 1
                     if (profile in names) profiles.setSelection(names.indexOf(profile))
-                    if (profile.isNotBlank()) store.savePublicationBinding(profile, enabled.isChecked)
+                    if (profile.isNotBlank()) store.savePublicationBinding(profile, whatsApp.isChecked)
+                    enabled.isChecked = store.publicationEnabled()
                     authorized.text = if (grants.authorized.isEmpty()) "Aucun profil associé à cet appareil."
                         else grants.authorized.joinToString("\n") { "${it.profile} : ${PublicationProviders.description(it)}" }
                     status.text = "Service : ${if (PublicationService.active) "actif" else "à autoriser"} · Photos : " +
@@ -95,14 +103,20 @@ class PublicationCard(private val activity: Activity, ui: AgentUi) {
         val profile = profiles.selectedItem?.toString() ?: return
         if (profile !in names) return
         val requested = enabled.isChecked
+        val requestedWhatsApp = whatsApp.isChecked
+        val generation = ++bindingGeneration
+        if (!requested) store.setPublicationEnabled(false) // Stop locally even if the subsequent server update fails.
         worker.execute {
             val response = runCatching { AgentApi(session.server, session.token).post("/v1/control/android/bind",
-                JSONObject().put("profile", profile).put("enabled", requested)) }
+                JSONObject().put("profile", profile).put("enabled", requestedWhatsApp)) }
             activity.runOnUiThread {
                 val current = runCatching { store.session() }.getOrNull()
-                if (activity.isDestroyed || current?.server != session.server || current.deviceId != session.deviceId ||
+                if (generation != bindingGeneration || activity.isDestroyed || current?.server != session.server || current.deviceId != session.deviceId ||
                     current.token != session.token) return@runOnUiThread
-                if (response.isSuccess) store.savePublicationBinding(profile, requested)
+                if (response.isSuccess) {
+                    store.savePublicationBinding(profile, requestedWhatsApp)
+                    store.setPublicationEnabled(requested)
+                }
                 status.text = if (response.isSuccess) "Profil enregistré." else "Association du profil refusée."; refresh()
             }
         }

@@ -12,7 +12,8 @@ class NativePublisher(
     private val authorize: () -> Unit,
     private val journal: PublicationJournal,
     private val deadlineMillis: Long
-) {
+) : NativePublicationAdapter {
+    override val provider = PublicationProvider.WHATSAPP_BUSINESS
     private val diagnostics = PublicationDiagnostics()
     private fun inspect(operation: (WhatsAppScreen) -> Unit) = ui {
         val current = screen()
@@ -67,7 +68,7 @@ class NativePublisher(
         }, if (waitForUpload) ::verificationGuard else authorize)
     }
 
-    fun execute(payload: JSONObject) {
+    override fun execute(payload: JSONObject) {
         val progress = PublicationProgress()
         fun stage(value: String) {
             progress.enter(value); diagnostics.stage = value

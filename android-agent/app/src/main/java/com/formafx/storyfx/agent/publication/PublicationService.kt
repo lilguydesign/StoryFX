@@ -38,7 +38,9 @@ class PublicationService : AccessibilityService() {
 
     private fun onUi(operation: () -> Unit) {
         check(!closed)
-        val task = FutureTask { check(!closed && active && !locked()); operation() }
+        val task = FutureTask {
+            check(!closed && active && !locked() && EncryptedStore(this).publicationEnabled()); operation()
+        }
         main.post(task)
         try { task.get(8, TimeUnit.SECONDS) } catch (failure: Exception) { task.cancel(false); throw failure }
     }
@@ -68,21 +70,18 @@ class PublicationService : AccessibilityService() {
         return try { KeyguardUnlock(this, ::keyguardUi).attempt(store, ::authorized) }
             finally { if (localTest) store.rememberLocalUnlockResult() }
     }
-    private fun contact(api: AgentApi): JSONObject {
+    private fun contact(api: AgentApi, store: EncryptedStore): JSONObject {
+        val physical = PublicationRuntime.physical(this, store.publicationEnabled(), active && !closed, !locked())
         var empty = false
-        if (active && !closed && !locked()) runCatching { onUi { empty = WhatsAppScreen(ProviderWindow.root(this)).hasNoOwnStatus() } }
+        if (physical.globalEnabled && store.whatsAppPublicationEnabled() && physical.serviceReady && physical.screenUnlocked)
+            runCatching { onUi { empty = WhatsAppScreen(ProviderWindow.root(this)).hasNoOwnStatus() } }
         val body = JSONObject()
-        .put("service_ready", active).put("media_ready", AlbumMedia.allowed(this)).put("screen_locked", locked()).put("own_status_empty", empty)
+        .put("service_ready", physical.serviceReady).put("media_ready", physical.mediaPermission)
+        .put("screen_locked", !physical.screenUnlocked).put("own_status_empty", empty).put("native_runtime", physical.toJson())
         .put("app_version", BuildConfig.VERSION_NAME).put("battery_percent", getSystemService(BatteryManager::class.java)
             .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY).takeIf { it in 0..100 } ?: JSONObject.NULL)
         body.put("media_modes_ready", AlbumMedia.allowed(this) && AlbumMedia.videosAllowed(this))
-        return try { api.post("/v1/control/android/heartbeat", body) } catch (failure: AgentRequestException) {
-            if (failure.status != 422) throw failure
-            // The optional proof is omitted on a backend rollback; no review is granted there.
-            body.remove("own_status_empty")
-            body.remove("media_modes_ready")
-            api.post("/v1/control/android/heartbeat", body)
-        }
+        return PublicationHeartbeat(api, api::nativeRuntimeSupported).send(body)
     }
 
     private fun flush(api: AgentApi, journal: PublicationJournal) {
@@ -102,17 +101,19 @@ class PublicationService : AccessibilityService() {
             return
         }
         try {
+            boot.restorePublicationPermissionAfterUnlock()
             val store = EncryptedStore(this)
             val session = store.session() ?: return
             val api = AgentApi(session.server, session.token)
             val journal = PublicationJournal(store)
             // A reboot acknowledges the reserved uncertain result; it never resumes provider gestures.
             flush(api, journal)
-            if (!store.publicationEnabled()) return
+            // Availability can be reported while WhatsApp is off; the local global stop still forbids all gestures.
+            var state = contact(api, store)
+            if (!store.publicationEnabled() || !store.whatsAppPublicationEnabled()) return
             if (!locked() && store.unlockAttempted()) store.unlockSucceeded()
-            var state = contact(api)
             if (!state.getBoolean("ready") && state.optString("reason") == "SCREEN_LOCKED" &&
-                attemptUnlock(api, store)) state = contact(api)
+                attemptUnlock(api, store)) state = contact(api, store)
             if (!state.getBoolean("ready")) {
                 store.saveStatus(if (store.unlockAttempted()) "Déverrouillage non confirmé : déverrouillez manuellement. Aucun nouvel essai automatique."
                     else PublicationLabels.reason(state.optString("reason"))); return
@@ -130,16 +131,18 @@ class PublicationService : AccessibilityService() {
             awake.acquire(240000)
             try {
                 val deadline = android.os.SystemClock.elapsedRealtime() + 210000
-                NativePublisher(this, ::onUi, { WhatsAppScreen(ProviderWindow.root(this)) { x, y ->
+                NativePublicationRouter.execute(PublicationProvider.fromPlatform(payload.getString("platform")), payload) {
+                    NativePublisher(this, ::onUi, { WhatsAppScreen(ProviderWindow.root(this)) { x, y ->
                     ProviderTap.perform(this, x, y)
                 } }, {
                     onUi { ProviderPreparation.dismissShade(this) }
                 }, {
-                    check(!closed && active && store.publicationEnabled() && !locked())
+                    check(!closed && active && store.publicationEnabled() && store.whatsAppPublicationEnabled() && !locked())
                     check(android.os.SystemClock.elapsedRealtime() < deadline)
-                    check(contact(api).getBoolean("ready"))
+                    check(contact(api, store).getBoolean("ready"))
                     check(api.post("/v1/control/android/jobs/${job.getString("id")}/ready", JSONObject()).getBoolean("authorized"))
-                }, journal, deadline).execute(payload)
+                }, journal, deadline)
+                }
             } finally { if (awake.isHeld) awake.release() }
             flush(api, journal)
             store.saveStatus("Résultat Android enregistré ; consultez les rapports du tableau de bord.")

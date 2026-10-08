@@ -19,6 +19,13 @@ object AgentErrorPolicy {
     fun legacyCompletionContract(health: JSONObject): Boolean = knownContract(health) &&
             (!health.has("structured_attempt_diagnostics") || health.opt("structured_attempt_diagnostics") == false)
 
+    fun nativeRuntimeSupported(health: JSONObject): Boolean? = when {
+        health.has("native_runtime_contract_version") ->
+            if (health.opt("native_runtime_contract_version") is Int && health.getInt("native_runtime_contract_version") == 1) true else null
+        knownContract(health) -> false
+        else -> null
+    }
+
     fun completionCompatibility(health: JSONObject): CompletionCompatibility = when {
         health.has("verification_observation_diagnostics") && health.opt("verification_observation_diagnostics") != false ->
             CompletionCompatibility.FULL

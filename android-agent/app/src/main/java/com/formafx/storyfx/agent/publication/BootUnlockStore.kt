@@ -26,7 +26,7 @@ class BootUnlockStore(private val context: Context) : UnlockState {
     fun enable() {
         check(userUnlocked())
         val ordinary = EncryptedStore(context)
-        check(ordinary.session() != null && ordinary.publicationProfile().isNotBlank())
+        check(ordinary.session() != null && ordinary.publicationProfile().isNotBlank() && ordinary.publicationEnabled())
         val pin = requireNotNull(ordinary.unlockPin())
         try {
             val payload = JSONObject().put("pin", String(pin)).put("installation", ordinary.installationId())
@@ -39,12 +39,24 @@ class BootUnlockStore(private val context: Context) : UnlockState {
     fun disable() {
         check(prefs.edit().remove("credential").putBoolean("consent", false).commit())
     }
+    fun setPublicationEnabled(value: Boolean) = synchronized(publicationLock) {
+        check(prefs.edit().putBoolean("publication_allowed", value).commit())
+    }
+    fun restorePublicationPermissionAfterUnlock() = synchronized(publicationLock) {
+        // The lock also serializes explicit stops: migration cannot overwrite a newly saved false.
+        PublicationActivation.restoreBootPermission(userUnlocked(),
+            publicationPermission(),
+            { EncryptedStore(context).publicationEnabled() }, ::setPublicationEnabled)
+    }
+    fun publicationPermission(): Boolean? =
+        if (prefs.contains("publication_allowed")) prefs.getBoolean("publication_allowed", false) else null
+    private fun publicationAllowed() = prefs.getBoolean("publication_allowed", false)
     fun shouldInvoke() = BootUnlockPolicy.eligible(enabled(), prefs.contains("credential"),
-        userUnlocked(), bootCount, prefs.getInt("invoked_boot", -1))
+        userUnlocked(), bootCount, prefs.getInt("invoked_boot", -1), publicationAllowed())
     fun reserveInvocation() {
         check(shouldInvoke()); check(prefs.edit().putInt("invoked_boot", bootCount).commit())
     }
-    override fun unlockAllowed() = enabled() && !userUnlocked() && bootCount >= 0
+    override fun unlockAllowed() = enabled() && publicationAllowed() && !userUnlocked() && bootCount >= 0
     override fun unlockAttempted() = bootCount < 0 || prefs.getInt("attempted_boot", -1) == bootCount
     override fun markUnlockAttempt() {
         check(unlockAllowed() && !unlockAttempted())
@@ -89,4 +101,5 @@ class BootUnlockStore(private val context: Context) : UnlockState {
     }
     private fun encode(value: ByteArray) = Base64.encodeToString(value, Base64.NO_WRAP)
     private fun decode(value: String) = Base64.decode(value, Base64.NO_WRAP)
+    private companion object { val publicationLock = Any() }
 }

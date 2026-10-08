@@ -77,7 +77,8 @@ class EncryptedStore(private val context: Context) : QueueStore, AgentAuthStateS
         check(prefs.edit().remove("server").remove("device_id").remove("token")
             .remove("outbox").remove("last_status").remove("account").remove("auth_pending")
             .remove("publication_profile").remove("unlock_credential").remove("unlock_attempted")
-            .remove("unlock_test_until").putBoolean("publication_enabled", false).commit())
+            .remove("unlock_test_until").putBoolean("publication_enabled", false)
+            .putBoolean("publication_global_enabled", false).commit())
         LocalUnlockTest.clear()
     }
 
@@ -92,11 +93,25 @@ class EncryptedStore(private val context: Context) : QueueStore, AgentAuthStateS
         check(prefs.edit().putString("publications", encrypt(value)).commit())
     }
     fun publicationProfile(): String = readSecret("publication_profile") ?: ""
-    fun publicationEnabled(): Boolean = prefs.getBoolean("publication_enabled", false)
+    private fun activation() = com.formafx.storyfx.agent.publication.PublicationActivation.restore(
+        if (prefs.contains("publication_global_enabled")) prefs.getBoolean("publication_global_enabled", false) else null,
+        prefs.getBoolean("publication_enabled", false),
+        com.formafx.storyfx.agent.publication.BootUnlockStore(context).publicationPermission())
+    fun publicationEnabled(): Boolean = activation().globalEnabled
+    fun whatsAppPublicationEnabled(): Boolean = activation().whatsAppEnabled
+    fun setPublicationEnabled(enabled: Boolean) {
+        if (enabled) require(session() != null && publicationProfile().isNotBlank())
+        com.formafx.storyfx.agent.publication.PublicationActivation.persistGlobal(enabled,
+            { check(prefs.edit().putBoolean("publication_global_enabled", it).commit()) },
+            com.formafx.storyfx.agent.publication.BootUnlockStore(context)::setPublicationEnabled)
+    }
     fun savePublicationBinding(profile: String, enabled: Boolean) {
+        val state = activation().withBinding(enabled)
         if (profile != publicationProfile()) com.formafx.storyfx.agent.publication.BootUnlockStore(context).disable()
+        com.formafx.storyfx.agent.publication.BootUnlockStore(context).setPublicationEnabled(state.globalEnabled)
         check(prefs.edit().putString("publication_profile", encrypt(profile))
-            .putBoolean("publication_enabled", enabled).commit())
+            .putBoolean("publication_enabled", state.whatsAppEnabled)
+            .putBoolean("publication_global_enabled", state.globalEnabled).commit())
     }
 
     fun saveUnlockPin(pin: String) {

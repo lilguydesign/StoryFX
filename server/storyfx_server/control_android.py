@@ -6,6 +6,7 @@ from uuid import uuid4
 from .store import DomainError, digest
 from .control_media_modes import supported_media, requires_media_v2, capable_version
 from .control_android_profile_bindings import AndroidProfileBindings, capabilities, require_idle, secondary_profile_bound
+from . import control_native_runtime as runtime
 
 
 class AndroidControl:
@@ -24,6 +25,7 @@ class AndroidControl:
             db.execute('INSERT OR IGNORE INTO control_media_rollout VALUES (?,?)', ('media_v2', self.store.clock()))
             self.media_enabled_from = db.execute('SELECT enabled_from FROM control_media_rollout WHERE name=?', ('media_v2',)).fetchone()[0]
         self.profile_bindings = AndroidProfileBindings(self)
+        runtime.initialize(self.store)
 
     def principal(self, identity):
         if not self.broker.sessions or not identity.auth_session_hash:
@@ -44,8 +46,10 @@ class AndroidControl:
                               'WHERE a.device_id=? AND a.owner_id=?',
                               (identity.id, identity.owner_id)).fetchone()
             authorized = self.profile_bindings.authorized(db, identity, link, self.store.clock())
+            physical = runtime.availability(db, identity.owner_id, identity.id, link['node_id'], self.store.clock()) if link else None
         return {'profiles': profiles, 'binding': {key: link[key] for key in ('profile', 'enabled', 'reason')} if link else None,
-                'executor': 'android_whatsapp_images_v1', 'authorized_profiles': authorized, 'capabilities': capabilities()}
+                'executor': 'android_whatsapp_images_v1', 'authorized_profiles': authorized,
+                'capabilities': capabilities(), 'native_runtime': physical}
 
     def bind(self, identity, body):
         user = self.principal(identity)
@@ -96,8 +100,10 @@ class AndroidControl:
         return dict(row)
 
     def heartbeat(self, identity, body):
+        runtime.check_contact(body)
         node = self.node(identity, require_ready=False)
-        reason = ('DISABLED' if not node['enabled'] else 'ACCESSIBILITY_REQUIRED' if not body.service_ready
+        reason = ('GLOBAL_AGENT_DISABLED' if body.native_runtime is not None and not body.native_runtime.global_enabled else
+                  'DISABLED' if not node['enabled'] else 'ACCESSIBILITY_REQUIRED' if not body.service_ready
                   else 'MEDIA_PERMISSION_REQUIRED' if not body.media_ready else 'SCREEN_LOCKED' if body.screen_locked else '')
         with self.store.transaction() as db:
             self.store.authenticate_in_transaction(db, identity)
@@ -111,6 +117,7 @@ class AndroidControl:
             db.execute('UPDATE devices SET last_seen=?,screen_locked=?,battery_percent=?,app_version=?,executor=? WHERE id=?',
                        (self.store.clock(), int(body.screen_locked), body.battery_percent, body.app_version,
                         'android_whatsapp_images_v1' if not reason else 'diagnostic', identity.id))
+            runtime.record(db, identity, node, body, self.store.clock())
         return {'ready': not reason, 'reason': reason}
 
     def enrich(self, nodes):
