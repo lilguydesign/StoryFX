@@ -55,6 +55,20 @@ def verify_shared_batch(driver, requested):
         raise BatchSelectionError('SHARED_BATCH_COUNT_MISMATCH')
 
 
+def scroll_selected_batch(driver, scroll_max, pause):
+    before = selection_count(driver.page_source)
+    size = driver.get_window_size()
+    for _ in range(random.randint(1, max(1, min(10, scroll_max)))):
+        try:
+            driver.swipe(size['width'] // 2, int(size['height'] * .75),
+                         size['width'] // 2, int(size['height'] * .25), 900)
+        except Exception:
+            raise BatchSelectionError('GALLERY_SCROLL_OUTCOME_UNCERTAIN') from None
+        pause(.4)
+        if selection_count(driver.page_source) != before:
+            raise BatchSelectionError('GALLERY_SELECTION_CHANGED_DURING_SCROLL')
+
+
 def select_exact_batch(driver, requested, *, album_total=0, scroll_max=3,
                        pause=time.sleep, shuffle=random.shuffle):
     if type(requested) is not int or not 1 <= requested <= 30:
@@ -64,7 +78,9 @@ def select_exact_batch(driver, requested, *, album_total=0, scroll_max=3,
     actual = selection_count(driver.page_source)
     if actual > requested:
         raise BatchSelectionError('INITIAL_SELECTION_EXCEEDS_REQUEST')
-    for _ in range(12):
+    if 0 < actual < requested and not (album_total and album_total <= 32):
+        scroll_selected_batch(driver, scroll_max, pause)
+    for _ in range(requested - actual + 12):
         if actual == requested:
             break
         thumbs = list(driver.find_elements('xpath', THUMBNAILS))
@@ -84,13 +100,12 @@ def select_exact_batch(driver, requested, *, album_total=0, scroll_max=3,
             if after != actual + 1:
                 raise BatchSelectionError('GALLERY_SELECTION_DID_NOT_INCREASE')
             actual = after
+            # Large albums: one confirmed image, then a random scroll.
+            if not (album_total and album_total <= 32):
+                break
         if actual == requested or album_total and album_total <= 32:
             break
-        size = driver.get_window_size()
-        for _ in range(random.randint(1, max(1, min(10, scroll_max)))):
-            driver.swipe(size['width'] // 2, int(size['height'] * .75),
-                         size['width'] // 2, int(size['height'] * .25), 900)
-            pause(.4)
+        scroll_selected_batch(driver, scroll_max, pause)
     if actual != requested or selection_count(driver.page_source) != requested:
         raise BatchSelectionError('EXACT_BATCH_SELECTION_NOT_CONFIRMED')
     return actual
