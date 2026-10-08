@@ -1,4 +1,4 @@
-# StoryFX — agent Android 0.4.15
+# StoryFX — agent Android 0.4.17
 
 Application native Kotlin Android 8+, connexion FormaFX sécurisée, association
 chiffrée et mise à jour signée depuis la dernière version officielle.
@@ -12,6 +12,9 @@ natifs restent non implémentés. Voir [le périmètre du pilote](docs/ANDROID_P
 et [les preuves et limites 0.4.14](docs/PUBLICATION_DIAGNOSTICS_0414.md).
 La [version 0.4.15](docs/PUBLICATION_VERIFICATION_0415.md) attend la fin du lot
 jusqu'à la limite de temps de la tentative, sans répéter l'envoi.
+La [version 0.4.17](docs/NATIVE_OBSERVATION_0417.md) ajoute une lecture technique
+explicite de la liste native pour diagnostiquer les lots partiellement visibles.
+Elle ne change ni la preuve exigée, ni les quantités, ni les règles de non-rejeu.
 
 Le déverrouillage local et Direct Boot disposent d'un consentement distinct,
 d'un stockage chiffré et d'un essai borné ; sans cette configuration, le premier
