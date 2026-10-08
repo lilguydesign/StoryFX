@@ -10,7 +10,8 @@ class NativePublisher(
     private val screen: () -> WhatsAppScreen,
     private val prepareProvider: () -> Unit,
     private val authorize: () -> Unit,
-    private val journal: PublicationJournal
+    private val journal: PublicationJournal,
+    private val deadlineMillis: Long
 ) {
     private val diagnostics = PublicationDiagnostics()
     private fun inspect(operation: (WhatsAppScreen) -> Unit) = ui {
@@ -26,8 +27,8 @@ class NativePublisher(
         operation(current)
     }
 
-    private fun action(operation: (WhatsAppScreen) -> Unit) {
-        authorize()
+    private fun action(guard: () -> Unit = authorize, operation: (WhatsAppScreen) -> Unit) {
+        guard()
         inspect(operation)
         Thread.sleep(1500)
     }
@@ -43,16 +44,27 @@ class NativePublisher(
         error("PROVIDER_SCREEN_TIMEOUT")
     }
 
-    private fun openOwn(beforeOwn: () -> Unit = {}) = PublicationNavigation({
+    private fun verificationGuard() {
+        check(android.os.SystemClock.elapsedRealtime() < deadlineMillis)
+        authorize()
+        check(android.os.SystemClock.elapsedRealtime() < deadlineMillis)
+    }
+
+    private fun openOwn(waitForUpload: Boolean = false, beforeOwn: () -> Unit = {}) = PublicationNavigation({
         var state = OwnScreen.UNKNOWN
         inspect { state = it.navigationState() }
         state
-    }, { action { it.updates() } }, { action { it.ownStatus() } }, authorize).openOwn(beforeOwn).also { state ->
+    }, { action(if (waitForUpload) ::verificationGuard else authorize) { it.updates() } },
+        { action(if (waitForUpload) ::verificationGuard else authorize) { it.ownStatus() } },
+        if (waitForUpload) ::verificationGuard else authorize,
+        maxObservations = if (waitForUpload) Int.MAX_VALUE else 20,
+        withinDeadline = { android.os.SystemClock.elapsedRealtime() < deadlineMillis }
+    ).openOwn(beforeOwn).also { state ->
         if (state == OwnScreen.OWN_LIST) PublicationListPosition.reset({
             var moved = false
             inspect { moved = it.scrollStatusesBack() }
             moved
-        }, authorize)
+        }, if (waitForUpload) ::verificationGuard else authorize)
     }
 
     fun execute(payload: JSONObject) {
@@ -107,27 +119,20 @@ class NativePublisher(
             action { check(it.contactsPreview()); it.send() }
             stage("own_status_verification")
             Thread.sleep(7000)
-            // Provider uploads can finish before its own-status target appears.
-            // Read only until the exact target is ready; never repeat the send.
-            openOwn()
-            val rows = mutableSetOf<Int>()
-            var countVerified = false
-            for (page in 0 until 8) {
-                authorize()
-                var moved = false
-                inspect { current ->
-                    val verified = current.verifiedRecentRows()
-                    rows.addAll(verified.filterNotNull())
-                    diagnostics.verification = PublicationProof.verified(count, verified.size, rows)
-                    countVerified = diagnostics.verification != "none"
-                    diagnostics.verified = if (countVerified) count else maxOf(verified.size, rows.size).coerceAtMost(30)
-                    if (!countVerified && verified.isNotEmpty() && verified.all { it != null } && rows.size < count)
-                        moved = current.scrollStatuses()
-                }
-                if (countVerified || !moved) break
-                Thread.sleep(1000)
-            }
-            check(countVerified)
+            PublicationVerification(deadlineMillis, android.os.SystemClock::elapsedRealtime, authorize).verify(count,
+                restart = { openOwn(waitForUpload = true) },
+                observe = {
+                    var completed = emptyList<Int?>()
+                    inspect { completed = it.verifiedRecentRows() }
+                    completed
+                }, scroll = {
+                    var moved = false
+                    inspect { moved = it.scrollStatuses() }
+                    moved
+                }, record = { evidence ->
+                    diagnostics.verification = evidence.method
+                    diagnostics.verified = evidence.count
+                })
             finish("CONFIRMED", "own_status_verified")
         } catch (_: Exception) {
             val (state, evidence) = progress.failure()

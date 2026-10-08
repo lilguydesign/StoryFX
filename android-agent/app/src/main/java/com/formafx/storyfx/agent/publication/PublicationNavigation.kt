@@ -8,12 +8,17 @@ class PublicationNavigation(
     private val updates: () -> Unit,
     private val own: () -> Unit,
     private val authorize: () -> Unit,
-    private val pause: (Long) -> Unit = Thread::sleep
+    private val pause: (Long) -> Unit = Thread::sleep,
+    private val maxObservations: Int = 20,
+    private val withinDeadline: () -> Boolean = { true }
 ) {
     private fun await(accepted: Set<OwnScreen>): OwnScreen {
-        repeat(20) {
+        repeat(maxObservations) {
+            check(withinDeadline())
             authorize()
+            check(withinDeadline())
             val state = observe()
+            check(withinDeadline())
             if (state in accepted) return state
             pause(500)
         }
