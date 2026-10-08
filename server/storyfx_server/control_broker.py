@@ -9,6 +9,7 @@ from .control_publications import reserve
 from .control_status_reviews import empty_review
 from .control_media_modes import requires_media_v2
 from .control_attempt_diagnostics import AttemptEvidence, schedule_status
+from .control_native_channel_guard import guard_job
 
 
 class Broker:
@@ -171,6 +172,7 @@ class Broker:
                              (node['id'], node['owner_id'])).fetchone()
             if not row:
                 return {'job': None}
+            guard_job(db, node, row, self.store.clock())
             from .control_phone_lock import phone_busy
             if phone_busy(db, node['owner_id'], json.loads(row['payload'])['device']):
                 return {'job': None}
@@ -189,6 +191,7 @@ class Broker:
                              (identity, node['id'], node['owner_id'])).fetchone()
             if not row or row['state'] not in {'CLAIMED', 'CANCEL_REQUESTED', 'NEEDS_REVIEW', state}:
                 raise DomainError('JOB_STATE_INVALID', 409)
+            guard_job(db, node, row, self.store.clock(), receipt=True)
             if row['completed'] is not None and (row['state'] != state or row['evidence'] != evidence):
                 raise DomainError('PUBLICATION_RESULT_ALREADY_RECORDED', 409)
             self.attempt_evidence.save(db, row, state, evidence, diagnostics)
@@ -205,6 +208,7 @@ class Broker:
                              (identity, node['id'], node['owner_id'])).fetchone()
             if not row or self.store.clock() - row['claimed'] > 900:
                 raise DomainError('JOB_AUTHORIZATION_EXPIRED', 409)
+            guard_job(db, node, row, self.store.clock())
             if 'media_modes_ready' in node and requires_media_v2(json.loads(row['payload'])) and not node['media_modes_ready']:
                 raise DomainError('ANDROID_MEDIA_PERMISSION_REQUIRED', 409)
             self.catalog.revision(db,node['owner_id'],json.loads(row['payload'])['catalog_revision'])

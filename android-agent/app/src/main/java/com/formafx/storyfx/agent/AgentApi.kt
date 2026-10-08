@@ -59,7 +59,12 @@ class AgentApi(server: String, private val token: String? = null) : AgentGateway
         }
     }
 
-    fun completionCompatibility(): CompletionCompatibility = runCatching {
+    fun completionCompatibility(): CompletionCompatibility = health()?.let(AgentErrorPolicy::completionCompatibility)
+        ?: CompletionCompatibility.FULL
+
+    fun nativeRuntimeSupported(): Boolean? = health()?.let(AgentErrorPolicy::nativeRuntimeSupported)
+
+    private fun health(): JSONObject? = runCatching {
         val connection = URL(base + "/health").openConnection() as HttpURLConnection
         try {
             connection.requestMethod = "GET"
@@ -67,7 +72,7 @@ class AgentApi(server: String, private val token: String? = null) : AgentGateway
             connection.readTimeout = 5000
             connection.instanceFollowRedirects = false
             connection.setRequestProperty("Accept", "application/json")
-            if (connection.responseCode != 200) return@runCatching CompletionCompatibility.FULL
+            if (connection.responseCode != 200) return@runCatching null
             val raw = connection.inputStream.bufferedReader(Charsets.UTF_8).use { reader ->
                 val buffer = CharArray(65537)
                 var count = 0
@@ -79,9 +84,9 @@ class AgentApi(server: String, private val token: String? = null) : AgentGateway
                 check(count <= 65536)
                 String(buffer, 0, count)
             }
-            AgentErrorPolicy.completionCompatibility(JSONObject(raw))
+            JSONObject(raw)
         } finally { connection.disconnect() }
-    }.getOrDefault(CompletionCompatibility.FULL)
+    }.getOrNull()
 }
 
 class AgentRequestException(val status: Int, val invalidRequest: Boolean = false) :

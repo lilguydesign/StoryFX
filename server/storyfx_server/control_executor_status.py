@@ -18,7 +18,7 @@ def executor_wait_reason(snapshot, value):
     if native:
         node = native[0]
         reason = node.get('wait_reason', '')
-        if reason == 'DISABLED':
+        if reason in {'DISABLED', 'GLOBAL_AGENT_DISABLED'}:
             return 'ANDROID_EXECUTOR_DISABLED'
         if reason in {'SCREEN_LOCKED', 'ACCESSIBILITY_REQUIRED', 'MEDIA_PERMISSION_REQUIRED',
                       'WAITING_PERMISSIONS'}:

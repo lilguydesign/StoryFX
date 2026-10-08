@@ -24,7 +24,9 @@ def test_additive_permissions_keep_primary_and_all_execution_state(private):
     assert data['authorized_profiles'][0]['primary'] is True
     assert data['authorized_profiles'][0]['ready'] is True
     assert all(not row['ready'] for row in data['authorized_profiles'][1:])
-    assert data['capabilities']['facebook'] == {'ready': False, 'reason': 'ADAPTER_NOT_VALIDATED'}
+    assert data['capabilities']['facebook'] == {'ready': False, 'reason': 'ADAPTER_NOT_VALIDATED',
+        'contract_version': 1, 'manual_trial_ready': False, 'auto_ready': False,
+        'identity_contract': None, 'media_contract': None, 'proof_contract': None}
     assert 'synthetic-shared-hardware' not in str(data)
     listing = browser.get(ROOT).json()
     assert len(listing['bindings']) == 2 and listing['revision'] == body['revision']

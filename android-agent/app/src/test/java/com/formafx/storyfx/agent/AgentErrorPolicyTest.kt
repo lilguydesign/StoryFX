@@ -28,6 +28,15 @@ class AgentErrorPolicyTest {
         assertFalse(AgentErrorPolicy.invalidRequest(JSONObject().put("error", "COUNT_MISMATCH")))
         assertFalse(AgentErrorPolicy.invalidRequest(JSONObject()))
     }
+    @Test fun nativeRuntimeFallbackRequiresKnownOldHealthWithNoNewMarker() {
+        assertEquals(false, AgentErrorPolicy.nativeRuntimeSupported(historical()))
+        assertEquals(true, AgentErrorPolicy.nativeRuntimeSupported(historical().put("native_runtime_contract_version", 1)))
+        for (value in listOf("1", true, 1.0, 0, 2, JSONObject.NULL)) {
+            assertNull(AgentErrorPolicy.nativeRuntimeSupported(historical().put("native_runtime_contract_version", value)))
+        }
+        assertNull(AgentErrorPolicy.nativeRuntimeSupported(JSONObject()))
+        assertNull(AgentErrorPolicy.nativeRuntimeSupported(historical().put("status", "degraded")))
+    }
 
     @Test fun onlyKnownStructuredBackendWithoutMetricsPermitsTheNarrowFallback() {
         val old = historical().put("structured_attempt_diagnostics", true)

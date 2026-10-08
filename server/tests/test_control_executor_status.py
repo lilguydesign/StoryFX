@@ -15,6 +15,7 @@ NATIVE = dict(profiles=['Validation technique'], connected=True,
     ({**NATIVE, 'connected': False}, 'ANDROID_DISCONNECTED'),
     ({**NATIVE, 'connected': False, 'wait_reason': 'SCREEN_LOCKED'}, 'SCREEN_LOCKED'),
     ({**NATIVE, 'connected': False, 'wait_reason': 'DISABLED'}, 'ANDROID_EXECUTOR_DISABLED'),
+    ({**NATIVE, 'connected': False, 'wait_reason': 'GLOBAL_AGENT_DISABLED'}, 'ANDROID_EXECUTOR_DISABLED'),
     ({**NATIVE, 'connected': False, 'wait_reason': 'ACCESSIBILITY_REQUIRED'}, 'ACCESSIBILITY_REQUIRED'),
     ({**NATIVE, 'media_modes_ready': True}, 'READY'),
 ])

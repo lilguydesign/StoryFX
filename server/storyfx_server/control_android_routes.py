@@ -7,6 +7,7 @@ from .models import Empty
 from .store import DomainError
 from .control_result_proofs import native_proof
 from .control_unlock import unlock_authorized
+from .control_native_runtime import NativeRuntime
 
 
 class Binding(Strict):
@@ -22,6 +23,7 @@ class NativeContact(Strict):
     media_modes_ready: StrictBool = False
     app_version: str = Field(pattern=r'^\d+\.\d+\.\d+$', max_length=32)
     battery_percent: int | None = Field(default=None, ge=0, le=100)
+    native_runtime: NativeRuntime | None = None
 
 
 def mount_android(router, broker, agent, completion):

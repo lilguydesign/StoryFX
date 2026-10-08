@@ -2,7 +2,8 @@ package com.formafx.storyfx.agent.publication
 
 object PublicationLabels {
     fun reason(value: String) = when (value) {
-        "DISABLED" -> "Pilotage désactivé"
+        "DISABLED" -> "WhatsApp désactivé"
+        "GLOBAL_AGENT_DISABLED" -> "Pilotage Android arrêté sur ce téléphone"
         "WAITING_PERMISSIONS" -> "En attente des autorisations Android"
         "ACCESSIBILITY_REQUIRED" -> "Activez le service Accessibilité StoryFX"
         "MEDIA_PERMISSION_REQUIRED" -> "Autorisez les photos des albums"

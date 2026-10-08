@@ -2,10 +2,11 @@
 import json
 from uuid import uuid4
 from .store import DomainError, fingerprint, timestamp
+from .control_facebook_foundation import capability
 
 
 def capabilities():
-    return {'facebook': {'ready': False, 'reason': 'ADAPTER_NOT_VALIDATED'}}
+    return {'facebook': capability()}
 
 
 def require_idle(db, owner, device):
