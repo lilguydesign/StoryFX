@@ -2,10 +2,11 @@ package com.formafx.storyfx.agent.publication
 
 import org.json.JSONArray
 import org.json.JSONObject
+import java.time.LocalTime
 
 /** Closed diagnostic facts only. A position or missing action never proves media identity. */
 object OwnStatusObservation {
-    enum class TimeClass { JUST_NOW, MINUTES, HOURS, YESTERDAY, CLOCK, UNKNOWN }
+    enum class TimeClass { JUST_NOW, MINUTES, HOURS, YESTERDAY, TODAY_AGED, CLOCK, UNKNOWN }
     data class Node(
         val parent: Int? = null, val visible: Boolean = true, val list: Boolean = false,
         val scrollable: Boolean = false, val backward: Boolean = false, val forward: Boolean = false,
@@ -16,11 +17,12 @@ object OwnStatusObservation {
     )
     private data class Row(val node: Int, val container: Int?, val time: TimeClass, val complete: Boolean)
 
-    fun timeClass(text: String): TimeClass = when {
+    fun timeClass(text: String, now: LocalTime = LocalTime.now()): TimeClass = when {
         text in setOf("Just now", "À l’instant", "À l'instant") -> TimeClass.JUST_NOW
         Regex("[1-9]\\d* minutes? ago|[Ii]l y a [1-9]\\d* min(?:ute)?s?").matches(text) -> TimeClass.MINUTES
         Regex("[1-9]\\d* hours? ago|[Ii]l y a [1-9]\\d* heures?").matches(text) -> TimeClass.HOURS
         Regex("Yesterday(?:,? .*)?|Hier(?:,? .*)?").matches(text) -> TimeClass.YESTERDAY
+        OwnStatusTodayAge.isAged(text, now) -> TimeClass.TODAY_AGED
         Regex("\\d{1,2}:\\d{2}(?: [AP]M)?").matches(text) -> TimeClass.CLOCK
         else -> TimeClass.UNKNOWN
     }
@@ -75,7 +77,7 @@ object OwnStatusObservation {
             else -> "unknown"
         }
         val rowIndices = rows.mapNotNull { known(nodes[it.node].rowIndex) }
-        val knownAges = setOf(TimeClass.MINUTES, TimeClass.HOURS, TimeClass.YESTERDAY)
+        val knownAges = setOf(TimeClass.MINUTES, TimeClass.HOURS, TimeClass.YESTERDAY, TimeClass.TODAY_AGED)
         val total = list?.let { nodes[it] }?.takeIf {
             complete && ownListRecognized && !player && !send && known(it.collectionColumns) == 1
         }
