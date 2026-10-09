@@ -32,6 +32,8 @@ class Broker:
                 UNIQUE(owner_id,occurrence));
               CREATE TABLE IF NOT EXISTS control_seed_reports (owner_id TEXT PRIMARY KEY);
             ''')
+            from .installation_hold import initialize
+            initialize(db, control=True)
         from .control_android import AndroidControl
         self.android = AndroidControl(self)
         self.attempt_evidence = AttemptEvidence(store)

@@ -44,6 +44,8 @@ class Store:
             db.executescript(Path(__file__).with_name('schema.sql').read_text())
             from .schema_upgrade import upgrade
             upgrade(db)
+            from .installation_hold import initialize
+            initialize(db)
 
     @contextmanager
     def transaction(self):
@@ -56,6 +58,11 @@ class Store:
             db.execute('BEGIN IMMEDIATE')
             yield db
             db.commit()
+        except sqlite3.IntegrityError as error:
+            db.rollback()
+            if str(error) == 'ANDROID_INSTALLATION_HOLD':
+                raise DomainError('ANDROID_INSTALLATION_HOLD') from None
+            raise
         except Exception:
             db.rollback()
             raise
