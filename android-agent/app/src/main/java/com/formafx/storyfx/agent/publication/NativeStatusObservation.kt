@@ -4,7 +4,7 @@ import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
 import org.json.JSONObject
 
-/** Only called by an explicit service dump. No node action, event log or persisted IDs. */
+/** Read-only structure for explicit dumps and manual slice baselines. No persisted IDs. */
 object NativeStatusObservation {
     fun capture(root: AccessibilityNodeInfo?): JSONObject = try {
         val provider = root?.packageName?.toString() == PublicationPolicy.provider

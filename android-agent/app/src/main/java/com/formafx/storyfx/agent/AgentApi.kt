@@ -63,6 +63,7 @@ class AgentApi(server: String, private val token: String? = null) : AgentGateway
         ?: CompletionCompatibility.FULL
 
     fun nativeRuntimeSupported(): Boolean? = health()?.let(AgentErrorPolicy::nativeRuntimeSupported)
+    fun sequentialProofSupported(): Boolean = health()?.optInt("native_sequential_proof_contract", 0) == 1
 
     private fun health(): JSONObject? = runCatching {
         val connection = URL(base + "/health").openConnection() as HttpURLConnection

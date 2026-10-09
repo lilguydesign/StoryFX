@@ -120,17 +120,23 @@ class PublicationService : AccessibilityService() {
             }
             val profiles = PublicationProfiles.read(api.post("/v1/control/android/settings", JSONObject()))
             profiles.requirePrimary(store.publicationProfile())
+            val claimStarted = android.os.SystemClock.elapsedRealtime()
             val job = api.post("/v1/control/android/claim", JSONObject()).optJSONObject("job") ?: return
             if (!journal.reserve(job)) { flush(api, journal); return }
             val payload = try { PublicationProviders.validate(job, profiles, store.publicationProfile()) } catch (_: Exception) {
                 journal.finish("FAILED_BEFORE_PUBLICATION", "preflight_refused"); flush(api, journal); return
             }
             val power = getSystemService(PowerManager::class.java)
+            val sequential = MediaPlan.total(payload) > 9
+            val sequentialAllowed = sequential && payload.optString("recipe_id").isNotBlank() && api.sequentialProofSupported()
+            if (sequential && !sequentialAllowed) {
+                journal.finish("FAILED_BEFORE_PUBLICATION", "preflight_refused"); flush(api, journal); return
+            }
             @Suppress("DEPRECATION")
             val awake = power.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "StoryFX:publication")
-            awake.acquire(240000)
+            awake.acquire(if (sequentialAllowed) 840000 else 240000)
             try {
-                val deadline = android.os.SystemClock.elapsedRealtime() + 210000
+                val deadline = if (sequentialAllowed) claimStarted + 780000 else android.os.SystemClock.elapsedRealtime() + 210000
                 NativePublicationRouter.execute(PublicationProvider.fromPlatform(payload.getString("platform")), payload) {
                     NativePublisher(this, ::onUi, { WhatsAppScreen(ProviderWindow.root(this)) { x, y ->
                     ProviderTap.perform(this, x, y)
@@ -141,7 +147,7 @@ class PublicationService : AccessibilityService() {
                     check(android.os.SystemClock.elapsedRealtime() < deadline)
                     check(contact(api, store).getBoolean("ready"))
                     check(api.post("/v1/control/android/jobs/${job.getString("id")}/ready", JSONObject()).getBoolean("authorized"))
-                }, journal, deadline)
+                }, journal, deadline, sequentialAllowed)
                 }
             } finally { if (awake.isHeld) awake.release() }
             flush(api, journal)

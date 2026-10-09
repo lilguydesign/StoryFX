@@ -5,6 +5,23 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PublicationDiagnosticsTest {
+    @Test fun aSliceProofCannotMasqueradeAsTheWholeBatchDuringAnInterruptedSave() {
+        val diagnostic = PublicationDiagnostics().apply { expected = 11; selected = 11 }
+        val proof = JSONObject().put("contract_version", 1).put("verified_counts", org.json.JSONArray())
+        diagnostic.recordSequential(proof, false)
+        diagnostic.observeVerification(PublicationVerification.Evidence(9, "recent_visible"))
+        val partial = diagnostic.snapshot(JSONObject())
+        assertEquals("none", partial.getString("verification_method"))
+        assertEquals(0, partial.getInt("verified_count"))
+        assertEquals(9, partial.getInt("peak_verified_count"))
+        proof.put("verified_counts", org.json.JSONArray(listOf(9, 2)))
+        diagnostic.recordSequential(proof, true)
+        val complete = diagnostic.snapshot(JSONObject())
+        assertEquals(11, complete.getInt("verified_count"))
+        assertEquals(9, complete.getInt("peak_verified_count"))
+        assertEquals(SequentialPublication.METHOD, complete.getString("verification_method"))
+        assertFalse(complete.getBoolean("account_verified"))
+    }
     @Test fun countUnknownIsAbsentAndDurationIsBounded() {
         var clock = 0L
         val diagnostics = PublicationDiagnostics { clock }

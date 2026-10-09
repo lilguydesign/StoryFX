@@ -41,6 +41,20 @@ class PublicationJournalTest {
         assertEquals(saved, memory.value)
     }
 
+    @Test fun immutableMediaPlanSurvivesFinalReceiptAndCannotBeSelectedAgain() {
+        val memory = Memory()
+        val journal = PublicationJournal(memory)
+        journal.reserve(job())
+        journal.recordMediaPlan("b".repeat(64))
+        val saved = memory.value
+        assertThrows(IllegalStateException::class.java) { journal.recordMediaPlan("c".repeat(64)) }
+        assertEquals(saved, memory.value)
+        journal.finish("CONFIRMED", "own_status_verified")
+        journal.acknowledged()
+        assertFalse(journal.reserve(job()))
+        assertEquals("b".repeat(64), journal.pending()!!.getString("media_plan_fingerprint"))
+    }
+
     @Test fun closedDiagnosticsSurviveCrashWithoutChangingTheUncertainReservation() {
         val memory = Memory()
         val journal = PublicationJournal(memory)

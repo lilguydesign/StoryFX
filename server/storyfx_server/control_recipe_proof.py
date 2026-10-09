@@ -19,5 +19,5 @@ def verified_receipt(job, diagnostics, publication):
                 and diagnostics.get('stage') in {'own_status_verification', 'complete'}
                 and diagnostics.get('service_ready') is True
                 and compatible_version(diagnostics.get('app_version'))
-                and diagnostics.get('verification_method') == 'recent_visible'
+                and diagnostics.get('verification_method') in {'recent_visible', 'sequential_recent_visible_v1'}
                 and quantified_batch(diagnostics, media_count(publication)))

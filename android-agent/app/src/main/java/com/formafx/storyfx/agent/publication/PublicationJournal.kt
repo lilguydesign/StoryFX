@@ -35,6 +35,18 @@ class PublicationJournal(private val store: PublicationStateStore) {
         store.savePublicationState(value.toString())
     }
 
+    /** The immutable local URI plan stays encrypted; it is never included in a server receipt. */
+    fun recordMediaPlan(fingerprint: String) {
+        require(fingerprint.matches(Regex("[a-f0-9]{64}")))
+        val value = state()
+        val pending = value.getJSONObject("pending")
+        check(!pending.has("media_plan_fingerprint"))
+        pending.put("media_plan_fingerprint", fingerprint)
+        value.getJSONObject("history").getJSONObject(pending.getString("occurrence_id"))
+            .put("media_plan_fingerprint", fingerprint)
+        store.savePublicationState(value.toString())
+    }
+
     fun reserve(job: JSONObject): Boolean {
         val value = state()
         check(!value.has("pending"))
@@ -59,6 +71,8 @@ class PublicationJournal(private val store: PublicationStateStore) {
         value.getJSONObject("history").put(pending.getString("occurrence_id"),
             JSONObject().put("state", state).put("evidence", evidence).apply {
                 if (diagnostics != null) put("diagnostics", diagnostics)
+                if (pending.has("media_plan_fingerprint"))
+                    put("media_plan_fingerprint", pending.getString("media_plan_fingerprint"))
             })
         store.savePublicationState(value.toString())
     }

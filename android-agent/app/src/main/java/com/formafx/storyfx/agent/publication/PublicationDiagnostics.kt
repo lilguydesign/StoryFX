@@ -16,15 +16,25 @@ class PublicationDiagnostics(private val now: () -> Long = System::nanoTime) {
     private var verificationStarted = false
     private var verificationObservations = 0
     private var peakVerified: Int? = null
+    private var sequential: JSONObject? = null
 
     fun beginVerification() { verificationStarted = true }
 
     fun observeVerification(evidence: PublicationVerification.Evidence) {
-        verified = evidence.count
-        verification = evidence.method
+        if (sequential == null) {
+            verified = evidence.count
+            verification = evidence.method
+        }
         // This is a maximum of individual views, never a sum or an identity-based proof.
         peakVerified = maxOf(peakVerified ?: 0, evidence.count)
         verificationObservations = (verificationObservations + 1).coerceAtMost(3000)
+    }
+
+    fun recordSequential(proof: JSONObject, complete: Boolean) {
+        sequential = JSONObject(proof.toString())
+        val counts = proof.getJSONArray("verified_counts")
+        verified = (0 until counts.length()).sumOf(counts::getInt)
+        verification = if (complete) SequentialPublication.METHOD else "none"
     }
 
     fun snapshot(runtime: JSONObject): JSONObject = JSONObject(runtime.toString())
@@ -35,5 +45,6 @@ class PublicationDiagnostics(private val now: () -> Long = System::nanoTime) {
         .put("account_verified", false).put("verification_method", verification)
         .put("verification_started", verificationStarted).put("verification_observations", verificationObservations)
         .put("peak_verified_count", peakVerified)
+        .put("sequential_proof", sequential)
         .put("elapsed_ms", ((now() - started) / 1_000_000).coerceIn(0, 900000))
 }
