@@ -1,7 +1,7 @@
 """Persistent manual validation isolation and read-only progress projections."""
 import json
 from .control_media_modes import media_count
-from .control_recipe_proof import verified_receipt
+from .control_recipe_proof import receipt_diagnostics, verified_receipt
 from .store import DomainError, timestamp
 
 
@@ -77,11 +77,11 @@ def pending_count(db, owner, recipe=None):
 
 
 def latest_verified_at(db, owner):
-    for row in db.execute('''SELECT j.state,j.evidence,j.completed,j.payload,d.value FROM control_jobs j
+    for row in db.execute('''SELECT j.id,j.state,j.evidence,j.completed,j.payload FROM control_jobs j
       JOIN control_attempt_diagnostics d ON d.job_id=j.id AND d.owner_id=j.owner_id
       WHERE j.owner_id=? AND j.state='CONFIRMED' AND j.evidence='own_status_verified'
       AND j.completed IS NOT NULL ORDER BY j.completed DESC''', (owner,)):
-        value = json.loads(row['value'])
+        value = receipt_diagnostics(db, owner, row['id'])
         if verified_receipt(row, value, json.loads(row['payload'])):
             return row['completed']
     return None
@@ -92,9 +92,7 @@ def steps_view(db, row):
     for step in db.execute('SELECT * FROM control_recipe_steps WHERE recipe_id=? ORDER BY position', (row['id'],)):
         publication = json.loads(step['publication'])
         job = db.execute('SELECT * FROM control_jobs WHERE id=? AND owner_id=?', (step['job_id'], row['owner_id'])).fetchone()
-        proof = db.execute('SELECT value FROM control_attempt_diagnostics WHERE job_id=? AND owner_id=?',
-                           (step['job_id'], row['owner_id'])).fetchone()
-        diagnostics = json.loads(proof['value']) if proof else None
+        diagnostics = receipt_diagnostics(db, row['owner_id'], step['job_id'])
         verified = verified_receipt(job, diagnostics, publication)
         steps.append({'id': step['id'], 'position': step['position'], 'row_id': step['row_id'],
                       'publication': publication, 'expected_media_count': media_count(publication),

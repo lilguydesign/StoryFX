@@ -1,8 +1,21 @@
 """A recipe requires the strict final-stage proof emitted by the native agent."""
-from .control_attempt_diagnostics import quantified_batch
+import json
+from .control_attempt_diagnostics import quantified_batch, with_observations
 from .control_media_modes import media_count
 
 MIN_VERSION = (0, 4, 15)
+
+
+def receipt_diagnostics(db, owner, job_id):
+    """Join the immutable split receipt using the same owner and attempt."""
+    core = db.execute('SELECT value FROM control_attempt_diagnostics WHERE job_id=? AND owner_id=?',
+                      (job_id, owner)).fetchone()
+    if core is None:
+        return None
+    observations = db.execute('SELECT value FROM control_attempt_observations WHERE job_id=? AND owner_id=?',
+                              (job_id, owner)).fetchone()
+    return with_observations(json.loads(core['value']),
+                             json.loads(observations['value']) if observations else None)
 
 
 def compatible_version(value):
