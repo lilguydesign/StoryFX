@@ -8,6 +8,22 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PublicationReceiptTest {
+    @Test fun sequentialProofIsNeverDowngradedAfterRollback() {
+        val journal = journal()
+        journal.finish("NEEDS_REVIEW", "result_uncertain", JSONObject()
+            .put("sequential_proof", JSONObject().put("contract_version", 1)))
+        var calls = 0
+        val api = object : AgentGateway {
+            override fun post(path: String, body: JSONObject): JSONObject {
+                calls++; throw AgentRequestException(422, true)
+            }
+        }
+        assertThrows(AgentRequestException::class.java) {
+            PublicationReceipt(api) { error("Do not negotiate away sequential evidence") }.flush(journal)
+        }
+        assertEquals(1, calls)
+        assertTrue(journal.pending()!!.getJSONObject("diagnostics").has("sequential_proof"))
+    }
     private class Memory : PublicationStateStore {
         var value = "{}"
         override fun publicationState() = value

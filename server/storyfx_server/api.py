@@ -140,6 +140,7 @@ def create_app(db_path: Path, owner_token: str | None, *, legacy_config: Path | 
                              'publication_flags_describe': 'adapter_capability_only',
                              'native_platforms_supported': ['WhatsApp'],
                              'native_runtime_contract_version': 1,
+                             'native_sequential_proof_contract': 1,
                              'facebook_manual_trial_ready': False, 'facebook_auto_ready': False,
                              'facebook_proof_contract': None,
                              'total_autonomy_verified': False, 'publication_verified_by_health': False,

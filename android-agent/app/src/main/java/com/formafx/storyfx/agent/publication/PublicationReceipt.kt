@@ -13,6 +13,8 @@ class PublicationReceipt(private val api: AgentGateway, private val compatibilit
         val body = receiptBody(pending, format)
         val path = "/v1/control/android/jobs/${pending.getString("job_id")}/complete"
         try { api.post(path, body) } catch (failure: AgentRequestException) {
+            // A rollback must retain the full new proof locally, never downgrade its meaning.
+            if (body.optJSONObject("diagnostics")?.has("sequential_proof") == true) throw failure
             if (failure.status != 422 || !failure.invalidRequest || !body.has("diagnostics") ||
                 format != CompletionCompatibility.FULL) throw failure
             val negotiated = compatibility()

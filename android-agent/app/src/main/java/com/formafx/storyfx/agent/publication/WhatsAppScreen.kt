@@ -5,7 +5,7 @@ import android.graphics.Rect
 import org.json.JSONObject
 
 /** Screen contents are inspected in memory, never logged or sent to the server. */
-class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) -> Boolean)? = null) {
+class WhatsAppScreen(private val root: AccessibilityNodeInfo?, private val tap: ((Int, Int) -> Boolean)? = null) {
     private val nodes = mutableListOf<AccessibilityNodeInfo>()
     private val bounds = Rect().also { root?.getBoundsInScreen(it) }
     private fun position(node: AccessibilityNodeInfo) = Rect().also { node.getBoundsInScreen(it) }
@@ -162,6 +162,8 @@ class WhatsAppScreen(root: AccessibilityNodeInfo?, private val tap: ((Int, Int) 
         check(isOwnStatusList())
         return nodes.count { it.isVisibleToUser && text(it) in setOf("Just now", "À l’instant", "À l'instant") }
     }
+    fun sequentialBaseline(minimumAged: Int) = SequentialBaseline.read(
+        NativeStatusObservation.capture(root), minimumAged, hasNoOwnStatus())
     /** Count only recent rows with a provider views indicator, never queued/uploading rows. */
     fun verifiedRecentRows(): List<Int?> {
         if (!isOwnStatusList()) return emptyList()

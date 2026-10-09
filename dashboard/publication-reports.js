@@ -14,7 +14,8 @@ const stages = {
   complete: 'Résultat enregistré',
 };
 const networks = { unknown: 'Non observé', offline: 'Hors ligne', wifi: 'Wi-Fi', cellular: 'Mobile', other: 'Autre réseau' };
-const methods = { recent_rows: 'Lignes récentes', recent_visible: 'Statuts récents visibles', none: 'Aucune preuve quantifiée' };
+const methods = { recent_rows: 'Lignes récentes', recent_visible: 'Statuts récents visibles',
+  sequential_recent_visible_v1: 'Tranches distinctes de statuts récents visibles', none: 'Aucune preuve quantifiée' };
 const waits = {
   ADAPTER_NOT_VALIDATED: 'Moteur non pris en charge', EXECUTOR_CONFLICT: 'Plusieurs moteurs concurrents',
   ANDROID_EXECUTOR_DISABLED: 'Agent Android désactivé', SCREEN_LOCKED: 'Écran verrouillé',

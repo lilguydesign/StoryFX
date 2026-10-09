@@ -5,6 +5,7 @@ from pydantic import Field, StrictBool
 from .control_models import Strict
 from .control_media_modes import media_count
 from .store import DomainError
+from .control_sequential_proof import SequentialProof, METHOD, quantified_sequential, valid_for_job
 
 
 class AttemptDiagnostics(Strict):
@@ -24,13 +25,15 @@ class AttemptDiagnostics(Strict):
     network: Literal['unknown', 'offline', 'wifi', 'cellular', 'other'] = 'unknown'
     provider_package: Literal['whatsapp_business', 'unknown'] = 'unknown'
     account_verified: StrictBool = False
-    verification_method: Literal['none', 'recent_rows', 'recent_visible'] = 'none'
+    verification_method: Literal['none', 'recent_rows', 'recent_visible', 'sequential_recent_visible_v1'] = 'none'
+    sequential_proof: SequentialProof | None = None
     navigation_state: Literal['unknown', 'provider_pending', 'updates_home',
                               'own_list', 'updates_tab', 'conversation'] = 'unknown'
     own_label_count: int = Field(default=0, strict=True, ge=0, le=2500)
 
 
 OBSERVATION_DEFAULTS = dict(peak_verified_count=None, verification_observations=None, verification_started=None)
+OBSERVATION_KEYS = set(OBSERVATION_DEFAULTS) | {'sequential_proof'}
 
 
 def with_observations(value, observations=None):
@@ -38,6 +41,8 @@ def with_observations(value, observations=None):
 
 
 def quantified_batch(value, expected):
+    if value and value.get('verification_method') == METHOD:
+        return quantified_sequential(value, expected)
     return bool(value and value.get('expected_count') == expected
                 and value.get('selected_count') == expected
                 and value.get('verified_count') == expected
@@ -60,8 +65,10 @@ class AttemptEvidence:
         if diagnostics is None:
             return
         value = diagnostics.model_dump()
+        if value['sequential_proof'] is None:
+            value.pop('sequential_proof')  # Preserve the historical wire and stored JSON shapes exactly.
         payload = json.loads(row['payload'])
-        if (value['expected_count'] != media_count(payload)
+        if (value['expected_count'] != media_count(payload) or not valid_for_job(value, payload, state)
                 or state == 'CONFIRMED' and not quantified_batch(value, media_count(payload))):
             raise DomainError('PUBLICATION_DIAGNOSTICS_INVALID', 422)
         prior = db.execute('SELECT value FROM control_attempt_diagnostics WHERE job_id=? AND owner_id=?',
@@ -80,8 +87,10 @@ class AttemptEvidence:
             raise DomainError('PUBLICATION_RESULT_ALREADY_RECORDED', 409)
         db.execute('INSERT INTO control_attempt_diagnostics VALUES (?,?,?,?)',
                    (row['id'], row['owner_id'], self.store.clock(), json.dumps(
-                       {key: item for key, item in value.items() if key not in OBSERVATION_DEFAULTS})))
+                       {key: item for key, item in value.items() if key not in OBSERVATION_KEYS})))
         observations = {key: value[key] for key in OBSERVATION_DEFAULTS}
+        if 'sequential_proof' in value:
+            observations['sequential_proof'] = value['sequential_proof']
         if any(item is not None for item in observations.values()):
             db.execute('INSERT INTO control_attempt_observations VALUES (?,?,?)',
                        (row['id'], row['owner_id'], json.dumps(observations)))

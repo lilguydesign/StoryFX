@@ -11,7 +11,8 @@ class NativePublisher(
     private val prepareProvider: () -> Unit,
     private val authorize: () -> Unit,
     private val journal: PublicationJournal,
-    private val deadlineMillis: Long
+    private val deadlineMillis: Long,
+    private val sequentialAllowed: Boolean = false
 ) : NativePublicationAdapter {
     override val provider = PublicationProvider.WHATSAPP_BUSINESS
     private val diagnostics = PublicationDiagnostics()
@@ -79,8 +80,15 @@ class NativePublisher(
         try {
             val count = MediaPlan.total(payload)
             diagnostics.expected = count
+            if (count > 9) check(sequentialAllowed && payload.optString("recipe_id").isNotBlank())
             val media = AlbumMedia.batch(context, payload)
             diagnostics.selected = media.size
+            if (count > 9) {
+                val bytes = media.joinToString("\n").toByteArray(Charsets.UTF_8)
+                val fingerprint = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
+                    .joinToString("") { "%02x".format(it) }
+                journal.recordMediaPlan(fingerprint)
+            }
             stage("provider_not_ready")
             authorize()
             prepareProvider()
@@ -103,36 +111,53 @@ class NativePublisher(
             }
             check(baselineReady)
             inspect { check(it.recentCount() == 0) }
-            authorize()
-            stage("share_selection_refused")
-            ui { AlbumMedia.share(context, media) }
-            await { it.ownPickerReady() }
-            action { it.selectOwnStatus() }
-            // Even the picker arrow may change behavior in a future provider version.
-            // A missing preview after this action must never authorize an automatic replay.
-            progress.beforeProviderSend()
-            action { check(it.selectionIsOwnOnly()); it.send() }
-            authorize()
-            stage("contacts_preview_refused")
-            await { it.contactsPreview() }
-            // The encrypted reservation already contains NEEDS_REVIEW before this final action.
-            progress.beforeProviderSend()
-            action { check(it.contactsPreview()); it.send() }
-            stage("own_status_verification")
-            Thread.sleep(7000)
-            diagnostics.beginVerification()
-            journal.recordDiagnostics(diagnostics.snapshot(PublicationRuntime.snapshot(context)))
-            PublicationVerification(deadlineMillis, android.os.SystemClock::elapsedRealtime, authorize).verify(count,
-                restart = { openOwn(waitForUpload = true) },
-                observe = {
-                    var completed = emptyList<Int?>()
-                    inspect { completed = it.verifiedRecentRows() }
-                    completed
-                }, scroll = {
-                    var moved = false
-                    inspect { moved = it.scrollStatuses() }
-                    moved
-                }, record = diagnostics::observeVerification)
+            fun sendAndVerify(batch: List<android.net.Uri>, requested: Int): PublicationVerification.Evidence {
+                authorize()
+                stage("share_selection_refused")
+                ui { AlbumMedia.share(context, ArrayList(batch)) }
+                await { it.ownPickerReady() }
+                action { it.selectOwnStatus() }
+                // Even the picker arrow may change behavior in a future provider version.
+                // A missing preview after this action must never authorize an automatic replay.
+                progress.beforeProviderSend()
+                action { check(it.selectionIsOwnOnly()); it.send() }
+                authorize()
+                stage("contacts_preview_refused")
+                await { it.contactsPreview() }
+                // The encrypted reservation already contains NEEDS_REVIEW before this final action.
+                progress.beforeProviderSend()
+                action { check(it.contactsPreview()); it.send() }
+                stage("own_status_verification")
+                Thread.sleep(7000)
+                diagnostics.beginVerification()
+                journal.recordDiagnostics(diagnostics.snapshot(PublicationRuntime.snapshot(context)))
+                return PublicationVerification(deadlineMillis, android.os.SystemClock::elapsedRealtime, authorize).verify(requested,
+                    restart = { openOwn(waitForUpload = true) },
+                    observe = {
+                        var completed = emptyList<Int?>()
+                        inspect { completed = it.verifiedRecentRows() }
+                        completed
+                    }, scroll = {
+                        var moved = false
+                        inspect { moved = it.scrollStatuses() }
+                        moved
+                    }, record = diagnostics::observeVerification)
+                }
+            if (count <= 9) sendAndVerify(media, count) else {
+                var verified: PublicationVerification.Evidence? = null
+                SequentialPublication<android.net.Uri>(android.os.SystemClock::elapsedRealtime, deadlineMillis, authorize)
+                    .execute(media, SequentialPublication.sizes(MediaPlan.parts(payload).map { it.count }),
+                        baseline = { minimum ->
+                            openOwn(waitForUpload = true)
+                            var ready: SequentialPublication.Baseline? = null
+                            inspect { ready = it.sequentialBaseline(minimum) }
+                            ready
+                        }, send = { batch -> verified = sendAndVerify(batch, batch.size) },
+                        verify = { requireNotNull(verified) }, persist = { proof, complete ->
+                            diagnostics.recordSequential(proof, complete)
+                            journal.recordDiagnostics(diagnostics.snapshot(PublicationRuntime.snapshot(context)))
+                        })
+            }
             finish("CONFIRMED", "own_status_verified")
         } catch (_: Exception) {
             val (state, evidence) = progress.failure()
