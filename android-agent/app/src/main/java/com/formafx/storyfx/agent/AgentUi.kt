@@ -13,6 +13,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 
 class AgentUi(private val context: Context) {
+    private val bodyFont by lazy { Typeface.createFromAsset(context.assets, "fonts/Century-Gothic.ttf") }
+    private val titleFont by lazy { Typeface.createFromAsset(context.assets, "fonts/LEMONMILK-Regular.otf") }
+
     val ink = Color.rgb(233, 243, 250)
     val muted = Color.rgb(157, 177, 193)
     val accent = Color.rgb(73, 224, 223)
@@ -25,9 +28,13 @@ class AgentUi(private val context: Context) {
     fun text(value: String, size: Float = 14f, color: Int = muted, bold: Boolean = false): TextView =
         TextView(context).apply {
             text = value; textSize = size; setTextColor(color)
-            if (bold) setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL))
+            setTypeface(bodyFont, if (bold) Typeface.BOLD else Typeface.NORMAL)
             setLineSpacing(dp(3).toFloat(), 1f)
         }
+
+    fun title(value: String, size: Float = 18f): TextView = text(value, size, ink).apply {
+        typeface = titleFont
+    }
 
     fun card(): LinearLayout = column().apply {
         background = surface(Color.rgb(15, 31, 47), Color.rgb(37, 62, 80), 20)
@@ -36,6 +43,7 @@ class AgentUi(private val context: Context) {
     }
 
     fun field(hint: String, input: Int): EditText = EditText(context).apply {
+        typeface = bodyFont
         this.hint = hint; inputType = input; isSingleLine = true
         textSize = 15f; setTextColor(ink); setHintTextColor(muted)
         background = surface(Color.rgb(9, 23, 36), Color.rgb(47, 74, 94), 12)
@@ -47,6 +55,7 @@ class AgentUi(private val context: Context) {
 
     fun button(value: String, primary: Boolean = false, danger: Boolean = false): Button =
         Button(context).apply {
+            typeface = bodyFont
             text = value; isAllCaps = false; textSize = 15f; gravity = Gravity.CENTER
             val color = if (danger) Color.rgb(246, 156, 150) else accent
             setTextColor(if (primary) Color.rgb(8, 28, 38) else color)
