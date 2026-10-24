@@ -1,0 +1,51 @@
+name: StoryFX native release candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: android-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Test, lint and build unsigned release
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --max-workers=2 :app:testDebugUnitTest :app:lintDebug :app:assembleRelease
+      - name: Bind candidate to the compiled source
+        shell: python
+        run: |
+          from pathlib import Path
+          import hashlib, json, os, re, subprocess
+          apk = Path('app/build/outputs/apk/release/app-release-unsigned.apk')
+          config = Path('app/build.gradle.kts').read_text()
+          version = re.search(r'versionName\s*=\s*"([0-9.]+)"', config).group(1)
+          code = int(re.search(r'versionCode\s*=\s*(\d+)', config).group(1))
+          proof = {'source_commit': os.environ['GITHUB_SHA'],
+                   'source_tree': subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}']).decode().strip(),
+                   'run_id': int(os.environ['GITHUB_RUN_ID']),
+                   'version': version, 'version_code': code,
+                   'unsigned_apk_sha256': hashlib.sha256(apk.read_bytes()).hexdigest(),
+                   'bytes': apk.stat().st_size, 'signed': False,
+                   'publication_executed': False, 'real_login_attempted': False}
+          Path('native-release-candidate.json').write_text(json.dumps(proof, indent=2) + '\n')
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storyfx-android-release-candidate
+          if-no-files-found: error
+          path: |
+            android-agent/app/build/outputs/apk/release/app-release-unsigned.apk
+            android-agent/native-release-candidate.json
+            android-agent/app/build/test-results/testDebugUnitTest/*.xml
+            android-agent/app/build/reports/lint-results-debug.*
