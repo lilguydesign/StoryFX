@@ -7,6 +7,7 @@ from .auth_models import (AgentAuthorize, AgentExchange, AgentStart, Email,
                           OtpVerify, PasswordLogin, PasswordUpdate)
 from .models import Empty
 from .store import DomainError
+from .password_help import password_help
 
 
 COOKIE = '__Host-storyfx_session'
@@ -44,6 +45,11 @@ def build_auth_router(sessions, origin):
         sessions.store.throttle('otp:' + body.email, maximum=1, period=60)
         sessions.client.request_otp(body.email)
         return {'requested': True, 'retry_after': 60}
+
+    @router.post('/v1/auth/password-help', dependencies=[Depends(browser_origin)])
+    def password_assistance(body: Email):
+        sessions.store.throttle('password-help:' + body.email, maximum=8, period=60)
+        return password_help(sessions.client, body.email)
 
     @router.post('/v1/auth/otp/verify', dependencies=[Depends(browser_origin)])
     def verify_otp(body: OtpVerify, response: Response):
