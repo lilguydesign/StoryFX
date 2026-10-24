@@ -27,7 +27,7 @@ class PublicationCard(private val activity: Activity, ui: AgentUi) {
     private var names = listOf<String>()
     private var bindingGeneration = 0
     val view = ui.card().apply {
-        addView(ui.text("Publication Android · pilote WhatsApp", 17f, ui.ink, true))
+        addView(ui.title("Publication Android · pilote WhatsApp", 17f))
         addView(ui.label("Sélectionnez le profil principal WhatsApp déjà enregistré pour ce téléphone. Le serveur garde vos horaires et albums."))
         addView(profiles)
         addView(enabled)

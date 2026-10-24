@@ -22,7 +22,7 @@ class UpdateCard(private val activity: Activity, ui: AgentUi) {
     private var pending = false
     private var busy = false
     val view: LinearLayout = ui.card().apply {
-        addView(ui.text("Mises à jour StoryFX", 18f, ui.ink, true))
+        addView(ui.title("Mises à jour StoryFX", 18f))
         addView(message)
         addView(button)
         addView(ui.label("Téléchargement officiel, contrôle SHA-256, version et signature. " +

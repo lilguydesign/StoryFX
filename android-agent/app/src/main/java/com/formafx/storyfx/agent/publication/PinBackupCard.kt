@@ -17,7 +17,7 @@ class PinBackupCard(private val activity: Activity, ui: AgentUi) {
         setTextColor(ui.ink)
     }
     val view = ui.card().apply {
-        addView(ui.text("Sauvegarde sécurisée du PIN", 17f, ui.ink, true))
+        addView(ui.title("Sauvegarde sécurisée du PIN", 17f))
         addView(ui.label("Facultatif : le code est transmis par HTTPS au coffre chiffré de votre compte FormaFX. " +
             "Seul le compte propriétaire actif et ce profil associé peuvent le restaurer. " +
             "Le premier déverrouillage au démarrage utilise toujours le code local ; Internet ne le remplace pas."))

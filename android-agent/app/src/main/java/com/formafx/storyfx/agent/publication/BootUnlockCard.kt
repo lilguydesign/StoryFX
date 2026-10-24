@@ -7,7 +7,7 @@ class BootUnlockCard(activity: Activity, ui: AgentUi) {
     private val store = BootUnlockStore(activity)
     private val status = ui.text("Au démarrage : ${if (store.enabled()) "autorisé" else "désactivé"}", 13f)
     val view = ui.card().apply {
-        addView(ui.text("Reprise après redémarrage", 17f, ui.ink, true))
+        addView(ui.title("Reprise après redémarrage", 17f))
         addView(ui.label("Autorisation facultative : le PIN local chiffré devient disponible avant le premier " +
             "déverrouillage. StoryFX saisit ce PIN dans le clavier Android reconnu, une seule fois par démarrage. " +
             "Cela permet au téléphone de se déverrouiller sans votre présence. Le verrouillage et Play Protect restent actifs. " +
