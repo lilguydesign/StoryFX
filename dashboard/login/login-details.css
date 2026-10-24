@@ -1,3 +1,10 @@
+@font-face { font-family:'Century Gothic';src:url('/dashboard/assets/Century-Gothic.ttf') format('truetype');font-display:swap; }
+@font-face { font-family:'LemonMilk';src:url('/dashboard/assets/LEMONMILK-Regular.otf') format('opentype');font-display:swap; }
+.login-card h2,.login-card h3,.password-help-dialog h2 {font-family:'LemonMilk',sans-serif;font-weight:400;letter-spacing:0;}
+.password-help-dialog {max-width:min(520px,calc(100vw - 32px));padding:24px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--ink);font-family:'Century Gothic',sans-serif;}
+.password-help-dialog::backdrop {background:#0008;backdrop-filter:blur(2px);}
+.password-help-actions {display:flex;justify-content:flex-end;gap:12px;}
+.password-help-actions button {padding:10px 20px;border:1px solid var(--border);border-radius:12px;background:var(--field);color:var(--ink);}
 #otp {
   letter-spacing:.2em;
   font-size:19px;

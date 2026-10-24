@@ -40,6 +40,10 @@ class AuthClient:
             if response.status_code == 429:
                 raise DomainError('RATE_LIMITED', 429)
             if response.status_code in (400, 401, 403, 422):
+                if path == '/auth/v1/token?grant_type=password':
+                    error = response.json()
+                    if isinstance(error, dict) and error.get('error_code') == 'invalid_credentials':
+                        raise DomainError('PASSWORD_CREDENTIALS_INVALID', 401)
                 raise DomainError('AUTH_REFUSED', 401)
             if response.status_code >= 300:
                 raise DomainError('AUTH_UNAVAILABLE', 503)

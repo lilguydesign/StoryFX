@@ -1,3 +1,4 @@
+import { offerPasswordHelp } from './password-help.js';
 const $ = selector => document.querySelector(selector);
 let mode = 'password', busy = false, requested = false, recovery = false;
 let requestId = new URLSearchParams(location.search).get('request_id');
@@ -9,11 +10,11 @@ function notice(message, error=false){$('#notice').textContent=message;$('#notic
 async function api(path, body, method='POST'){
   const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',referrerPolicy:'no-referrer',headers:body===undefined?{}:{'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})});
   const data=await response.json();
-  if(!response.ok)throw new Error(messages[data.error]||'La demande a été refusée ou le service est indisponible.');
+  if(!response.ok){const error=new Error(messages[data.error]||'La demande a été refusée ou le service est indisponible.');error.code=data.error;throw error;}
   return data;
 }
 async function action(work){if(busy)return;busy=true;document.querySelectorAll('button').forEach(button=>button.disabled=true);notice('');try{await work();}catch(error){notice(error.message,true);}finally{busy=false;document.querySelectorAll('button').forEach(button=>button.disabled=false);}}
-function selectMode(next){mode=next;recovery=next==='reset';requested=false;$('#password-fields').hidden=next!=='password';$('#otp-fields').hidden=next==='password';$('#password').required=next==='password';$('#otp').required=false;$('#back').hidden=!recovery;$('#login-title').textContent=recovery?'Réinitialiser le mot de passe':'Bienvenue dans StoryFX';$('#login-subtitle').textContent=recovery?'Vérifiez votre adresse par un code OTP, puis définissez votre nouveau mot de passe FormaFX.':'Retrouvez votre compte FormaFX. L’accès est réservé aux propriétaires actifs.';$('#submit').textContent=next==='password'?'Se connecter →':'Recevoir un code →';document.querySelectorAll('[data-mode]').forEach(button=>{button.classList.toggle('active',button.dataset.mode===next);button.setAttribute('aria-pressed',String(button.dataset.mode===next));});notice('');}
+function selectMode(next){mode=next;recovery=next==='reset'||next==='create';requested=false;$('#password-fields').hidden=next!=='password';$('#otp-fields').hidden=next==='password';$('#password').required=next==='password';$('#otp').required=false;$('#back').hidden=!recovery;$('#login-title').textContent=next==='create'?'Créer mon mot de passe':recovery?'Réinitialiser le mot de passe':'Bienvenue dans StoryFX';$('#login-subtitle').textContent=recovery?'Vérifiez votre adresse par un code OTP, puis définissez votre nouveau mot de passe FormaFX.':'Retrouvez votre compte FormaFX. L’accès est réservé aux propriétaires actifs.';$('#submit').textContent=next==='password'?'Se connecter →':'Recevoir un code →';document.querySelectorAll('[data-mode]').forEach(button=>{button.classList.toggle('active',button.dataset.mode===next);button.setAttribute('aria-pressed',String(button.dataset.mode===next));});notice('');}
 async function sendCode(){await api('/v1/auth/otp/request',{email:$('#email').value});requested=true;$('#otp').required=true;$('#submit').textContent='Vérifier le code →';notice('Si votre adresse est autorisée dans FormaFX, un code a été envoyé.');$('#otp').focus();}
 async function connected(){
   if(requestId){
@@ -24,7 +25,7 @@ async function connected(){
   }else location.replace('/dashboard/');
 }
 $('#login-form').addEventListener('submit',event=>{event.preventDefault();action(async()=>{
-  if(mode==='password'){const password=$('#password').value;$('#password').value='';await api('/v1/auth/login',{email:$('#email').value,password});await connected();}
+  if(mode==='password'){const password=$('#password').value;$('#password').value='';try{await api('/v1/auth/login',{email:$('#email').value,password});await connected();}catch(error){if(error.code==='PASSWORD_CREDENTIALS_INVALID'&&await offerPasswordHelp(api,$('#email').value,selectMode))return;throw error;}}
   else if(!requested)await sendCode();
   else{const code=$('#otp').value;$('#otp').value='';await api('/v1/auth/otp/verify',{email:$('#email').value,code});if(recovery){$('#login-content').hidden=true;$('#new-password-form').hidden=false;notice('Adresse vérifiée. Choisissez votre nouveau mot de passe.');}else await connected();}
 });});
