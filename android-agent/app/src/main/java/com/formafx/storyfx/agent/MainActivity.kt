@@ -54,7 +54,7 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams(ui.dp(50), ui.dp(50)))
         heading.addView(ui.column().apply {
             setPadding(ui.dp(12), 0, 0, 0)
-            addView(ui.text("STORYFX", 26f, ui.ink, true))
+            addView(ui.title("STORYFX", 26f))
             addView(ui.text("Votre téléphone, connecté au serveur", 12f))
         }, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(heading)
@@ -62,7 +62,7 @@ class MainActivity : Activity() {
             setPadding(0, ui.dp(16), 0, 0)
         })
         root.addView(ui.card().apply {
-            addView(ui.text("Compte FormaFX", 18f, ui.ink, true))
+            addView(ui.title("Compte FormaFX"))
             account = ui.text("Connexion requise", 13f, ui.gold).apply {
                 setPadding(0, ui.dp(10), 0, 0)
             }
@@ -106,7 +106,7 @@ class MainActivity : Activity() {
                 "sur la connexion FormaFX sécurisée. Un compte propriétaire actif est requis."))
         })
         if (BuildConfig.DEBUG) root.addView(ui.card().apply {
-            addView(ui.text("Association de validation", 16f, ui.ink, true))
+            addView(ui.title("Association de validation", 16f))
             addView(ui.label("Code du tableau de bord à usage unique"))
             code = ui.field("Code du tableau de bord", InputType.TYPE_CLASS_TEXT or
                 InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
@@ -124,7 +124,7 @@ class MainActivity : Activity() {
             addView(enroll)
         })
         root.addView(ui.card().apply {
-            addView(ui.text("Connexion et diagnostics", 18f, ui.ink, true))
+            addView(ui.title("Connexion et diagnostics"))
             status = ui.text("Association requise", 14f, ui.ink).apply {
                 setPadding(0, ui.dp(12), 0, ui.dp(4))
             }
